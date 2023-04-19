@@ -3,7 +3,7 @@ import { Dialog } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { AcademicCapIcon } from '@heroicons/react/24/solid'
 import Head from 'next/head'
-import { useAuth, useClerk, UserButton } from '@clerk/clerk-react';
+import { SignInButton, useAuth, useClerk, UserButton } from '@clerk/clerk-react';
 
 const navigation = [
   { name: 'Salmon Labs', href: '#' },
@@ -50,9 +50,11 @@ export default function Home() {
                 userId ? (
                   <UserButton />
                 ) : (
-                  <a href='/sign-in' className="text-sm font-semibold leading-6 text-gray-900">
-                    Log in <span aria-hidden="true">&rarr;</span>
-                  </a>
+                  <SignInButton mode="redirect">
+                    <a className="text-sm font-semibold leading-6 text-gray-900">
+                      Log in <span aria-hidden="true">&rarr;</span>
+                    </a>
+                  </SignInButton>
                 )
               }
             </div>
@@ -131,12 +133,13 @@ export default function Home() {
                 Enrolling in classes is a pain. We're here to make it easier.
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
-                <a
-                  href="/sign-in"
-                  className="rounded-md bg-emerald-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                >
-                  Get started
-                </a>
+                <SignInButton mode="redirect">
+                  <a
+                    className="rounded-md bg-emerald-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                  >
+                    Get started
+                  </a>
+                </SignInButton>
               </div>
             </div>
           </div>
