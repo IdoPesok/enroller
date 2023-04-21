@@ -51,7 +51,7 @@ export default function Home() {
                   <UserButton />
                 ) : (
                   <SignInButton mode="redirect">
-                    <a className="text-sm font-semibold leading-6 text-gray-900">
+                    <a className="cursor-pointer text-sm font-semibold leading-6 text-gray-900">
                       Log in <span aria-hidden="true">&rarr;</span>
                     </a>
                   </SignInButton>
@@ -135,7 +135,7 @@ export default function Home() {
               <div className="mt-10 flex items-center justify-center gap-x-6">
                 <SignInButton mode="redirect">
                   <a
-                    className="rounded-md bg-emerald-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                    className="cursor-pointer rounded-md bg-emerald-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
                   >
                     Get started
                   </a>

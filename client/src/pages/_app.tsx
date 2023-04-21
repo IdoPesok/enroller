@@ -1,10 +1,11 @@
 import { Toaster } from '@/components/ui/toaster'
 import '@/styles/globals.css'
-import type { AppProps } from 'next/app'
+import type { AppProps, AppType } from 'next/app'
 import { ClerkLoaded, ClerkLoading, ClerkProvider } from '@clerk/nextjs';
 import { LoadingPage } from '@/components/loading/loading-page';
+import { trpc } from '@/lib/trpc';
 
-export default function App({ Component, pageProps }: AppProps) {
+const MyApp: AppType = ({ Component, pageProps }: AppProps) => {
   return (
     <ClerkProvider>
       <ClerkLoading>
@@ -17,3 +18,5 @@ export default function App({ Component, pageProps }: AppProps) {
     </ClerkProvider>
   )
 }
+
+export default trpc.withTRPC(MyApp);
