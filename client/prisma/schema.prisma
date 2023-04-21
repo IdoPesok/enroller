@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Courses {
+  Code        String  @id @db.VarChar(10)
+  Prefix      String  @db.VarChar(6)
+  Number      Int
+  MinUnits    Int
+  MaxUnits    Int
+  Name        String  @db.VarChar(128)
+  Description String? @db.Text
+}
+
+model PrereqGroups {
+  Course String @db.VarChar(10)
+  Group  String @id @db.VarChar(36)
+}
+
+model Prereqs {
+  Group String       @db.VarChar(36)
+  Code  String       @db.VarChar(50)
+  Type  Prereqs_Type
+
+  @@id([Group, Code])
+}
+
+model Prereqs2 {
+  CourseCode String           @db.VarChar(8)
+  Id         Int              @id @default(autoincrement())
+  ParentId   Int?
+  Variant    Prereqs2_Variant
+  PrereqCode String?          @db.VarChar(8)
+  Type       Prereqs2_Type?
+}
+
+enum Prereqs_Type {
+  prerequisite
+  corequisite
+  reccomended
+  concurrent
+}
+
+enum Prereqs2_Variant {
+  and
+  or
+  prereq
+}
+
+enum Prereqs2_Type {
+  prerequisite
+  corequisite
+  reccomended
+  concurrent
+}
