@@ -16,6 +16,7 @@ model Courses {
   MaxUnits    Int
   Name        String  @db.VarChar(128)
   Description String? @db.Text
+  Prereqs     Json?
 }
 
 model PrereqGroups {
