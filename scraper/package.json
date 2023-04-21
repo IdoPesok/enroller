@@ -1,0 +1,21 @@
+{
+  "name": "scraper",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@types/jsdom": "^21.1.1",
+    "dotenv": "^16.0.3",
+    "jsdom": "^21.1.1",
+    "mysql2": "^3.2.3"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.2",
+    "@types/node": "^18.15.11"
+  }
+}
