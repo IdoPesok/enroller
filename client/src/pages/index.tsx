@@ -4,6 +4,7 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { AcademicCapIcon } from '@heroicons/react/24/solid'
 import Head from 'next/head'
 import { SignInButton, useAuth, useClerk, UserButton } from '@clerk/clerk-react';
+import { ArrowRightCircle } from 'lucide-react'
 
 const navigation = [
   { name: 'Salmon Labs', href: '#' },
@@ -133,13 +134,24 @@ export default function Home() {
                 Enrolling in classes is a pain. We're here to make it easier.
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
-                <SignInButton mode="redirect">
-                  <a
-                    className="cursor-pointer rounded-md bg-emerald-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                  >
-                    Get started
-                  </a>
-                </SignInButton>
+                {
+                  userId ? (
+                    <a
+                      className="cursor-pointer rounded-md bg-emerald-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 flex gap-2 items-center"
+                    >
+                      You are logged in - Go to portal
+                      <ArrowRightCircle size="16" />
+                    </a>
+                  ) : (
+                    <SignInButton mode="redirect">
+                      <a
+                        className="cursor-pointer rounded-md bg-emerald-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                      >
+                        Get started
+                      </a>
+                    </SignInButton>
+                  )
+                }
               </div>
             </div>
           </div>
