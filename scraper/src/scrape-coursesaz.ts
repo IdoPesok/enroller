@@ -2,7 +2,6 @@ require("dotenv").config();
 import mysql from "mysql2/promise";
 import { exit } from "process";
 import { JSDOM } from "jsdom";
-import { resolve } from "path";
 
 const PrereqTypeMap: { [type: string]: PrereqType } = {
   Prerequisite: PrereqType.Prerequisite,
