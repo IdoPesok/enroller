@@ -131,7 +131,7 @@ export default function Home() {
                 Class enrollment <br/>done better.
               </h1>
               <p className="mt-6 text-lg leading-8 text-gray-600">
-                Enrolling in classes is a pain. We're here to make it easier.
+                Enrolling in classes is a pain. We&apos;re here to make it easier.
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
                 {
