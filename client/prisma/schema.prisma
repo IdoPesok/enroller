@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -17,6 +18,9 @@ model Courses {
   Name        String  @db.VarChar(128)
   Description String? @db.Text
   Prereqs     Json?
+
+  @@fulltext([Code, Name])
+  @@fulltext([Code, Name, Description])
 }
 
 model PrereqGroups {
