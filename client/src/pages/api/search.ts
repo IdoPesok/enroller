@@ -1,24 +1,30 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import { Courses, PrismaClient } from '@prisma/client'
+import { Courses } from '@prisma/client'
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from '@/lib/db'
 
 type Data = Courses[] | {
   error: string
 }
 
+const PER_PAGE = 20
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
-  const search = req.query.q;
+  const { q: search, page: pageStr } = req.query;
   if (!search) {
     return res.status(400).json({ error: "request must include search parameter" })
   }
   if (Array.isArray(search)) {
     return res.status(400).json({ error: "only one search can be specified" })
   }
+  if (Array.isArray(pageStr)) {
+    return res.status(400).json({ error: "can only specify one page" })
+  }
+  const page = +(pageStr ?? "0") ?? 0;
 
-  const prisma = new PrismaClient()
 
   const courses = await prisma.courses.findMany(
     {
@@ -30,7 +36,8 @@ export default async function handler(
           search
         },
       },
-      take: 50,
+      skip: PER_PAGE * page,
+      take: PER_PAGE,
     }
   )
 

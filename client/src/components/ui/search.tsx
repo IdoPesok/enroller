@@ -1,7 +1,7 @@
-import * as React from "react";
+import * as React from "react"
 
-import { cn } from "@/lib/utils";
-import { SearchIcon } from "lucide-react";
+import { cn } from "@/lib/utils"
+import { SearchIcon } from "lucide-react"
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
@@ -9,11 +9,7 @@ export interface InputProps
 const Search = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
     return (
-      <div
-        className={cn(
-          "flex items-center justify-end border border-input file:border-0 rounded-lg"
-        )}
-      >
+      <div className="flex items-center justify-end border border-input file:border-0 rounded-lg">
         <input
           type={type ?? "search"}
           className={cn(
@@ -25,9 +21,9 @@ const Search = React.forwardRef<HTMLInputElement, InputProps>(
         />
         <SearchIcon className="m-2" />
       </div>
-    );
+    )
   }
-);
-Search.displayName = "Search";
+)
+Search.displayName = "Search"
 
-export { Search };
+export { Search }
