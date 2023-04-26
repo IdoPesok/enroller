@@ -1,5 +1,5 @@
 import { UserButton } from "@clerk/nextjs"
-import { useRouter } from 'next/router'
+import { useRouter } from "next/router"
 import { AcademicCapIcon } from "@heroicons/react/24/solid"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
@@ -12,18 +12,20 @@ const navigation = [
 ]
 
 interface HighlightBarSize {
-  left: number,
+  left: number
   width: number
 }
 
 export const MainNav = () => {
   const router = useRouter()
   const [activeRoute, setActiveRoute] = useState(router.pathname)
-  const [highlightBarSize, setHighlightBarSize] = useState<HighlightBarSize>({ left: 0, width: 0 })
+  const [highlightBarSize, setHighlightBarSize] = useState<HighlightBarSize>({
+    left: 0,
+    width: 0,
+  })
 
   const getHighlightBarSize = (): HighlightBarSize => {
     const navItems = document.querySelectorAll("#main-nav-active")
-    console.log(navItems)
     if (navItems.length === 0) return { left: 0, width: 0 }
     const navItem = navItems[0] as HTMLElement
     return { left: navItem.offsetLeft - 4, width: navItem.offsetWidth + 8 }
@@ -56,8 +58,8 @@ export const MainNav = () => {
           </div>
           <UserButton />
         </div>
-        <div 
-          className="bottom-0 w-48 h-px bg-emerald-500 absolute z-10 left-20" 
+        <div
+          className="bottom-0 w-48 h-px bg-emerald-500 absolute z-10 left-20"
           style={highlightBarSize}
         />
       </div>

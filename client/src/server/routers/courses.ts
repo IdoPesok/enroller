@@ -25,6 +25,13 @@ export const courseRouter = router({
             search,
           },
         },
+        orderBy: {
+          _relevance: {
+            fields: ["Code", "Name"],
+            search,
+            sort: "asc",
+          },
+        },
         take: limit + 1,
         cursor: cursor ? { Code: cursor } : undefined,
       })
