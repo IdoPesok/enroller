@@ -13,9 +13,7 @@ export const Layout = ({ children }: Props) => {
   if (!userId) {
     return (
       <>
-        <LandingNav>
-          {children}
-        </LandingNav>
+        <LandingNav>{children}</LandingNav>
       </>
     )
   }
@@ -24,7 +22,7 @@ export const Layout = ({ children }: Props) => {
     <>
       <div className="bg-white">
         <MainNav />
-        { children }
+        {children}
       </div>
     </>
   )
