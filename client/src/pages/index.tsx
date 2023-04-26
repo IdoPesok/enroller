@@ -1,19 +1,9 @@
-import { useState } from "react"
-import { Dialog } from "@headlessui/react"
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline"
-import { AcademicCapIcon } from "@heroicons/react/24/solid"
-import Head from "next/head"
-import { SignInButton, useAuth, useClerk, UserButton } from "@clerk/clerk-react"
+import { SignInButton, useAuth } from "@clerk/clerk-react"
 import { ArrowRightCircle } from "lucide-react"
-
-const navigation = [
-  { name: "Salmon Labs", href: "" },
-  { name: "Course Search", href: "/courses" },
-]
+import Head from "next/head"
 
 export default function Home() {
   const { userId } = useAuth()
-  const { signOut } = useClerk()
 
   return (
     <>
