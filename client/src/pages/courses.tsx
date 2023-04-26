@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 
 import { Search } from "@/components/ui/search"
-import useDebounce from "@/lib/debounce"
 import { Courses } from "@prisma/client"
 import {
   Card,
@@ -11,62 +10,52 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
+import { trpc } from "@/lib/trpc"
+import useDebounce from "@/lib/debounce"
+import { Button } from "@/components/ui/button"
 
 export default function Dashboard() {
   const [search, setSearch] = useState("")
-  const debouncedSearch = useDebounce(search, 400)
-  const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<Courses[]>([])
-  const [page, setPage] = useState(0)
-
-  useEffect(() => {
-    const fetchCourses = async () => {
-      setLoading(true)
-      const response = await fetch(
-        `/api/search?q=${debouncedSearch}&page=${page}`
-      )
-      if (response.status !== 200) {
-        console.error(`failed to fetch courses ${response.status}`)
-      }
-
-      setResults(await response.json())
-      setLoading(false)
+  const debouncedSearch = useDebounce(search, 500)
+  const courses = trpc.courses.list.useInfiniteQuery(
+    { search: debouncedSearch },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      enabled: !!debouncedSearch,
     }
-
-    if (debouncedSearch) {
-      fetchCourses()
-    }
-  }, [debouncedSearch, page])
+  )
 
   return (
-    <div className="mx-auto max-w-2xl pt-48 sm:pt-44 lg:pt-44">
+    <div className="mx-auto max-w-2xl pt-24">
       <Search
         placeholder="Search for classes..."
         onChange={(e) => setSearch(e.target.value.trim())}
       />
-      {loading ? (
-        <Spinner className="mt-3" />
+      {courses.data ? (
+        <>
+          {courses.data.pages
+            .flatMap(({ courses }) => courses)
+            .map(({ Code, Name, Description }) => {
+              return (
+                <Card className={"my-2"} key={Code}>
+                  <CardHeader>
+                    <CardTitle>{Name}</CardTitle>
+                    <CardDescription>{Code}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p>{Description}</p>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          {courses.hasNextPage && (
+            <Button className="w-full" onClick={() => courses.fetchNextPage()}>
+              Load More
+            </Button>
+          )}
+        </>
       ) : (
-        debouncedSearch &&
-        (results.length > 0 ? (
-          results.map(({ Code, Name, Description }) => {
-            return (
-              <Card className={"my-2"} key={Code}>
-                <CardHeader>
-                  <CardTitle>{Name}</CardTitle>
-                  <CardDescription>{Code}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>{Description}</p>
-                </CardContent>
-              </Card>
-            )
-          })
-        ) : (
-          <p className={"text-center my-2"}>
-            No courses match the specified search criteria
-          </p>
-        ))
+        courses.isFetching && <Spinner className="mt-3" />
       )}
     </div>
   )
