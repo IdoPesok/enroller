@@ -12,18 +12,16 @@ const isPublic = (path: string) => {
 }
 
 export default withClerkMiddleware((request: NextRequest) => {
-  if (isPublic(request.nextUrl.pathname)) {
-    return NextResponse.next()
-  }
   // if the user is not signed in redirect them to the sign in page.
   const { userId } = getAuth(request)
+  const isRoutePublic = isPublic(request.nextUrl.pathname)
 
-  if (!userId) {
-    // redirect the users to /pages/sign-in/[[...index]].ts
-    
-    const signInUrl = new URL('/sign-in', request.url)
-    signInUrl.searchParams.set('redirect_url', request.url)
+  if (!userId && !isRoutePublic) {
+    const signInUrl = new URL('/', request.url)
     return NextResponse.redirect(signInUrl)
+  } else if (isRoutePublic && userId) {
+    const coursesUrl = new URL('/courses', request.url)
+    return NextResponse.redirect(coursesUrl)
   }
   return NextResponse.next()
 })
