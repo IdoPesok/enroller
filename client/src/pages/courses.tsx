@@ -29,7 +29,15 @@ export default function Dashboard() {
     <div className="mx-auto max-w-2xl pt-24">
       <Search
         placeholder="Search for classes..."
-        onChange={(e) => setSearch(e.target.value.trim())}
+        onChange={(e) =>
+          setSearch(
+            e.target.value
+              .trim()
+              .split(/\s+/)
+              .map((s) => `+${s}`)
+              .join(" ")
+          )
+        }
       />
       {courses.data ? (
         <>
