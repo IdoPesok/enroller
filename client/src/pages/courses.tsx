@@ -112,7 +112,7 @@ export default function Courses() {
     { search: debouncedSearch },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-      enabled: !!debouncedSearch,
+      enabled: Boolean(debouncedSearch),
     }
   )
 
@@ -175,7 +175,7 @@ export default function Courses() {
           )}
         </>
       ) : (
-        (courses.isFetching && search) && <Spinner className="mt-3" />
+        courses.isFetching && search && <Spinner className="mt-3" />
       )}
     </div>
   )
