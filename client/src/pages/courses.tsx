@@ -69,11 +69,17 @@ export default function Dashboard() {
 
   const cards = courses.data?.pages
     .flatMap(({ courses }) => courses)
-    .map(({ Code, Name, Description }) => {
+    .map(({ Code, Name, Description, MinUnits, MaxUnits }) => {
       return (
         <Card className={"my-2"} key={Code}>
           <CardHeader>
-            <CardTitle>{Name}</CardTitle>
+            <CardTitle>
+              {Name}
+              <span className="text-right font-normal text-base float-right">
+                {MinUnits == MaxUnits ? MinUnits : `${MinUnits}-${MaxUnits}`}{" "}
+                units
+              </span>
+            </CardTitle>
             <CardDescription>{Code}</CardDescription>
           </CardHeader>
           <CardContent>
