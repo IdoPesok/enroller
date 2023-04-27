@@ -9,6 +9,7 @@ const navigation = [
   { name: "Shopping Cart", href: "/cart" },
   { name: "Enroll", href: "/enroll" },
   { name: "Drop", href: "/drop" },
+  { name: "Explore", href: "/explore" },
 ]
 
 interface HighlightBarSize {
