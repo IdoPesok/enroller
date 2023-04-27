@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 
 import { Search } from "@/components/ui/search"
-import { Courses } from "@prisma/client"
+import { Courses, Prisma } from "@prisma/client"
 import {
   Card,
   CardContent,
@@ -56,6 +56,54 @@ const STOPWORDS = new Set([
   "www",
 ])
 
+enum PrereqType {
+  And = "and",
+  Or = "or",
+  Prerequisite = "prerequisite",
+  Corequisite = "corequisite",
+  Reccomended = "reccomended",
+  Concurrent = "concurrent",
+}
+
+enum PrereqOpType {
+  And = "and",
+  Or = "or",
+}
+
+interface Prereq {
+  type: PrereqType | PrereqOpType
+}
+
+interface PrereqOp extends Prereq {
+  type: PrereqOpType
+  children: Prereq[]
+}
+
+interface PrereqLeaf extends Prereq {
+  code: string
+  type: PrereqType
+}
+
+function prereqString(prereq: Prereq, depth: number = 0): string | undefined {
+  if (Object.values(PrereqOpType).includes(prereq.type as PrereqOpType)) {
+    const prereqOp = prereq as PrereqOp
+    const format = prereqOp.children
+      .map((p) => prereqString(p, depth + 1))
+      .join(` ${prereqOp.type} `)
+    return depth > 0 ? `(${format})` : format
+  } else {
+    const prereqLeaf = prereq as PrereqLeaf
+    return prereqLeaf.code
+  }
+}
+
+function prereqsString(prereqs: Prereq[] | null) {
+  if (prereqs === null) {
+    return null
+  }
+  return prereqs.map(prereqString).join(" ")
+}
+
 export default function Dashboard() {
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 500)
@@ -69,7 +117,8 @@ export default function Dashboard() {
 
   const cards = courses.data?.pages
     .flatMap(({ courses }) => courses)
-    .map(({ Code, Name, Description, MinUnits, MaxUnits }) => {
+    .map(({ Code, Name, Description, MinUnits, MaxUnits, Prereqs }) => {
+      const prereqs = Prereqs as unknown as Prereq[] | null
       return (
         <Card className={"my-2"} key={Code}>
           <CardHeader>
@@ -80,7 +129,12 @@ export default function Dashboard() {
                 units
               </span>
             </CardTitle>
-            <CardDescription>{Code}</CardDescription>
+            <CardDescription>
+              {Code}
+              <span className="text-right float-right">
+                {prereqs ? prereqsString(prereqs) : "No prerequisistes"}
+              </span>
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p>{Description}</p>
