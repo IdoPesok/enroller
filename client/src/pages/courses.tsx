@@ -13,6 +13,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { trpc } from "@/lib/trpc"
 import useDebounce from "@/lib/debounce"
 import { Button } from "@/components/ui/button"
+import ScrollToTopButton from "@/components/ui/scroll-to-top"
 
 // see INFORMATION_SCHEMA.INNODB_FT_DEFAULT_STOPWORD
 // NOTE: future improvement could be query this in getStaticProps
@@ -104,7 +105,7 @@ function prereqsString(prereqs: Prereq[] | null) {
   return prereqs.map(prereqString).join(" ")
 }
 
-export default function Dashboard() {
+export default function Courses() {
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 500)
   const courses = trpc.courses.list.useInfiniteQuery(
@@ -144,7 +145,8 @@ export default function Dashboard() {
     })
 
   return (
-    <div className="mx-auto max-w-2xl pt-24">
+    <div className="mx-auto max-w-2xl">
+      <ScrollToTopButton />
       <Search
         placeholder="Search for classes..."
         onChange={(e) =>
@@ -152,12 +154,13 @@ export default function Dashboard() {
             e.target.value
               .trim()
               .split(/\s+/)
-              .filter((w) => !STOPWORDS.has(w.toLowerCase()))
+              .filter((w) => !STOPWORDS.has(w.toLowerCase()) && w.length > 0)
               .map((w) => `+${w}*`)
               .join(" ")
           )
         }
       />
+      <div className="h-10 w-full"></div>
       {cards ? (
         <>
           {cards.length > 0 ? (
@@ -172,7 +175,7 @@ export default function Dashboard() {
           )}
         </>
       ) : (
-        courses.isFetching && <Spinner className="mt-3" />
+        (courses.isFetching && search) && <Spinner className="mt-3" />
       )}
     </div>
   )

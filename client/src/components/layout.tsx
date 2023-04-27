@@ -22,7 +22,9 @@ export const Layout = ({ children }: Props) => {
     <>
       <div className="bg-white">
         <MainNav />
-        {children}
+        <div className="px-10 py-10">
+          {children}
+        </div>
       </div>
     </>
   )
