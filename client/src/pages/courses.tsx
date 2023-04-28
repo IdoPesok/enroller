@@ -169,7 +169,7 @@ export default function Courses() {
             <p className="text-center mt-3">No courses meet search criteria</p>
           )}
           {courses.hasNextPage && (
-            <Button className="w-full" onClick={() => courses.fetchNextPage()}>
+            <Button className="w-full mt-6" onClick={() => courses.fetchNextPage()}>
               Load More
             </Button>
           )}

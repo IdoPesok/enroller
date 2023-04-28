@@ -3,6 +3,7 @@ const mysql = require('mysql2/promise');
 const { Configuration, OpenAIApi } = require("openai");
 import { PineconeClient } from "@pinecone-database/pinecone";
 import { Buffer } from 'buffer';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Course {
   Code: string;
@@ -12,11 +13,59 @@ interface Course {
   MaxUnits: number;
   Name: string;
   Description: string;
-  Prereqs: Record<string, unknown>[];
+  Prereqs: Prereq[] | null;
 }
 
 interface CourseWithEmbedding extends Course {
   Embedding: number[];
+}
+
+enum PrereqType {
+  And = "and",
+  Or = "or",
+  Prerequisite = "prerequisite",
+  Corequisite = "corequisite",
+  Reccomended = "reccomended",
+  Concurrent = "concurrent",
+}
+
+enum PrereqOpType {
+  And = "and",
+  Or = "or",
+}
+
+interface Prereq {
+  type: PrereqType | PrereqOpType
+}
+
+interface PrereqOp extends Prereq {
+  type: PrereqOpType
+  children: Prereq[]
+}
+
+interface PrereqLeaf extends Prereq {
+  code: string
+  type: PrereqType
+}
+
+function prereqString(prereq: Prereq, depth: number = 0): string | undefined {
+  if (Object.values(PrereqOpType).includes(prereq.type as PrereqOpType)) {
+    const prereqOp = prereq as PrereqOp
+    const format = prereqOp.children
+      .map((p) => prereqString(p, depth + 1))
+      .join(` ${prereqOp.type} `)
+    return depth > 0 ? `(${format})` : format
+  } else {
+    const prereqLeaf = prereq as PrereqLeaf
+    return prereqLeaf.code
+  }
+}
+
+function prereqsString(prereqs: Prereq[] | null) {
+  if (prereqs === null) {
+    return null
+  }
+  return prereqs.map(prereqString).join(" ")
 }
 
 async function getEmbeddings(courses: Course[]): Promise<number[][]> {
@@ -31,16 +80,19 @@ async function getEmbeddings(courses: Course[]): Promise<number[][]> {
 
   const openai = new OpenAIApi(configuration);
 
+  const getCourseDocument = (course: Course) => {
+    return `Name: ${course.Name}, Code: (${course.Code})\n\nDescription: ${course.Description}\n\nPrerequisites: ${course.Prereqs ? prereqsString(course.Prereqs) : "No prerequisistes"}\n\nUnits: ${course.MinUnits}-${course.MaxUnits}`;
+  };
+
   const response = await openai.createEmbedding({
     model: "text-embedding-ada-002",
-    input: courses.map((c) => JSON.stringify(c)),
+    input: courses.map((c) => getCourseDocument(c)),
   });
 
   return response['data']['data'].map((d: any) => d['embedding']);
 }
 
-async function insertIntoPinecone(courses: Course[], deleteAll = 0) {
-  const pinecone = new PineconeClient();
+async function insertIntoPinecone(pinecone: PineconeClient, courses: Course[], deleteAll = 0) {
 
   const embeddings = await getEmbeddings(courses);
 
@@ -52,32 +104,24 @@ async function insertIntoPinecone(courses: Course[], deleteAll = 0) {
     });
   }
 
-  if (!process.env.PINECONE_API_KEY) {
+  if (!process.env.PINECONE_INDEX_NAME || !process.env.PINECONE_NAMESPACE) {
     console.error("missing pinecone api key");
     process.exit();
   }
 
-  await pinecone.init({
-    environment: "us-west1-gcp-free",
-    apiKey: process.env.PINECONE_API_KEY,
-  });
-
-  const INDEX_NAME = "courses";
-  const NAMESPACE = "courses";
-
-  const index = await pinecone.Index(INDEX_NAME);
+  const index = await pinecone.Index(process.env.PINECONE_INDEX_NAME);
 
   if (deleteAll === 1) {
     await index.delete1({
       deleteAll: true,
-      namespace: NAMESPACE,
+      namespace: process.env.PINECONE_NAMESPACE,
     });
   }
 
   const upsertRequest = {
     vectors: coursesWithEmbeddings.map((c) => {
       return {
-        id: Buffer.from(c.Code).toString('base64'),
+        id: uuidv4(),
         values: c.Embedding,
         metadata: {
           name: c.Name,
@@ -87,20 +131,51 @@ async function insertIntoPinecone(courses: Course[], deleteAll = 0) {
           number: c.Number,
           minUnits: c.MinUnits,
           maxUnits: c.MaxUnits,
-          prereqs: JSON.stringify(c.Prereqs),
+          prereqs: c.Prereqs ? prereqsString(c.Prereqs) : "No prerequisistes"
         },
       };
     }),
-    namespace: NAMESPACE
+    namespace: process.env.PINECONE_NAMESPACE,
   };
 
   await index.upsert({ upsertRequest });
 
-  console.log(`inserted ${courses.length} courses into pinecone index ${INDEX_NAME}`)
+  console.log(`inserted ${courses.length} courses into pinecone index "${process.env.PINECONE_INDEX_NAME}"`);
+}
+
+async function createPineconeIndex(pinecone: PineconeClient) {
+  if (!process.env.PINECONE_INDEX_NAME) {
+    console.error("missing pinecone api key");
+    process.exit();
+  }
+
+  try {
+    await pinecone.deleteIndex({
+      indexName: process.env.PINECONE_INDEX_NAME,
+    });
+
+    // sleep 5 seconds
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+  } catch {
+    // ignore
+  }
+
+  await pinecone.createIndex({
+    createRequest: {
+      name: process.env.PINECONE_INDEX_NAME,
+      dimension: 1536,
+      metadataConfig: {
+        indexed: ["code", "prefix", "number", "minUnits", "maxUnits", "name", "prereqs"],
+      },  
+    }
+  });
+
+  console.log("initializing pinecone index")
+  await new Promise((resolve) => setTimeout(resolve, 10000));
 }
 
 async function main() {
-  if (!process.env.DATABASE_URL) {
+  if (!process.env.DATABASE_URL || !process.env.PINECONE_API_KEY) {
     console.error("missing database url");
     process.exit();
   }
@@ -111,12 +186,21 @@ async function main() {
       debug: false,
     });
 
+    const pinecone = new PineconeClient();
+    await pinecone.init({
+      environment: "us-west1-gcp-free",
+      apiKey: process.env.PINECONE_API_KEY,
+    });
+
+    // ONLY USE THIS IF YOU WANT TO RECREATE THE PINECONE INDEX
+    // await createPineconeIndex(pinecone);
+
     // get all rows in Courses table
     const [rows, fields] = await connection.execute('SELECT * FROM `Courses`');
 
     // insert into pinecone, 50 rows at a time
     for (let i = 0; i < rows.length; i += 50) {
-      await insertIntoPinecone(rows.slice(i, i + 50) as Course[], i === 0 ? 1 : 0);
+      await insertIntoPinecone(pinecone, rows.slice(i, i + 50) as Course[], i === 0 ? 1 : 0);
     }
 
     await connection.end();

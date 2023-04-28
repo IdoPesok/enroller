@@ -37,7 +37,7 @@ export default function ScrollToTopButton() {
   return (
     <Button
       id="scroll-to-top"
-      className="fixed bottom-4 right-4 hidden"
+      className="fixed bottom-6 right-12 hidden"
       onClick={handleClick}
     >
       <ArrowUpIcon className="h-4 w-4" />

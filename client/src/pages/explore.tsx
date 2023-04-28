@@ -6,7 +6,9 @@ import { ReactMarkdown } from "react-markdown/lib/react-markdown"
 
 export default function Courses() {
   const [prompt, setSearch] = useState("")
-  const explore = trpc.explore.prompt.useQuery({ prompt })
+  const explore = trpc.explore.prompt.useQuery({ prompt }, {
+    refetchOnWindowFocus: false
+  })
 
   return (
     <div className="mx-auto max-w-2xl">
