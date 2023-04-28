@@ -19,7 +19,9 @@ export default class PromptBuilder {
       prereqs: string (text of course prereqs, e.g. CSC 101 and CSC 225)
 
       <documentation>
-      You must use the query language based on MongoDB's query and only the projection operators available below.
+      Pinecone Query API
+
+      Pinecone's filtering query language is based on MongoDB's query and projection operators. We currently support a subset of those selectors.
 
       Available projection operators:
       $eq - Equal to (number, string, boolean)
@@ -30,6 +32,12 @@ export default class PromptBuilder {
       $lte - Less than or equal to (number)
       $in - In array (string or number)
       $nin - Not in array (string or number)
+
+      Not supported projection operators:
+      $exists - Exists (boolean)
+      $regex - Regular expression (string)
+      $size - Size of array (number)
+      etc.
 
       A valid filter JSON looks like this to filter for CSC 225:
       {

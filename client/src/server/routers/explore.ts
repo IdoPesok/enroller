@@ -98,31 +98,41 @@ export const exploreRouter = router({
           numTries += 1;
 
           // find top 5 most relevant vectors / courses
-          const queryResponse = await pineconeIndex.query({
-            queryRequest: {
-              namespace: process.env.PINECONE_NAMESPACE,
-              topK: 5,
-              includeMetadata: true,
-              filter,
-              vector: queryEmbedding,
-            },
-          })
+          try {
+            const queryResponse = await pineconeIndex.query({
+              queryRequest: {
+                namespace: process.env.PINECONE_NAMESPACE,
+                topK: 5,
+                includeMetadata: true,
+                filter,
+                vector: queryEmbedding,
+              },
+            })
 
-          // if no matches are found
-          if (queryResponse.matches === undefined || queryResponse.matches.length === 0) {
-            // if filters were on, retry again, this time with no filters
+            // if no matches are found
+            if (queryResponse.matches === undefined || queryResponse.matches.length === 0) {
+              // if filters were on, retry again, this time with no filters
+              if (filter !== undefined) {
+                filter = undefined;
+                continue;
+              }
+
+              // otherwise no matches were found
+              return "No matches found."
+            }
+
+            // matches found, continue to next step
+            matches = queryResponse.matches;
+            break;
+          } catch (e) {
             if (filter !== undefined) {
+              // filter was probably invalid, try again with no filter
               filter = undefined;
               continue;
             }
 
-            // otherwise no matches were found
-            return "No matches found."
+            throw e;
           }
-
-          // matches found, continue to next step
-          matches = queryResponse.matches;
-          break;
         }
 
         const completion = await openai.createChatCompletion({
