@@ -39,7 +39,7 @@ export const MainNav = () => {
 
   return (
     <>
-      <div className="width-screen px-12 py-4 flex gap-6 flex-col border border-slate-200 mb-10 relative sticky top-0 left-0 bg-white">
+      <div className="width-screen px-12 py-4 flex gap-6 flex-col border border-slate-200 mb-10 sticky top-0 left-0 bg-white">
         <div className="justify-between flex items-center">
           <div className="flex items-center">
             <AcademicCapIcon className="h-8 text-emerald-500 mr-5" />
