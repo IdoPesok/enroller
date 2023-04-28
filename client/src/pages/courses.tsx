@@ -154,7 +154,7 @@ export default function Courses() {
             e.target.value
               .trim()
               .split(/\s+/)
-              .filter((w) => !STOPWORDS.has(w.toLowerCase()) && w.length > 0)
+              .filter((w) => w && !STOPWORDS.has(w.toLowerCase()))
               .map((w) => `+${w}*`)
               .join(" ")
           )

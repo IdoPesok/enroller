@@ -24,6 +24,9 @@ export const courseRouter = router({
           Name: {
             search,
           },
+          Description: {
+            search,
+          },
         },
         orderBy: {
           _relevance: {
