@@ -19,8 +19,9 @@ export default class PromptBuilder {
       prereqs: string (text of course prereqs, e.g. CSC 101 and CSC 225)
 
       <documentation>
-      You must use the query language based on MongoDB's query and projection operators.
+      You must use the query language based on MongoDB's query and only the projection operators available below.
 
+      Available projection operators:
       $eq - Equal to (number, string, boolean)
       $ne - Not equal to (number, string, boolean)
       $gt - Greater than (number)
@@ -30,15 +31,35 @@ export default class PromptBuilder {
       $in - In array (string or number)
       $nin - Not in array (string or number)
 
-      A valid filter JSON looks like this to filter for CSC 225
+      A valid filter JSON looks like this to filter for CSC 225:
       {
         "prefix": {"$eq": "CSC"},
         "number": {"$eq": "225"}
       }
+
+      A physics class or a computer science class:
+      {
+        "prefix": { "$in": ["PHYS", "CSC"] }
+      }
+
+      An uppper division CSC class:
+      {
+        "prefix": { "$eq": "CSC" },
+        "number": { "$gte": 300 }
+      }
+
+      An uppper division CSC class (equivalent to the previous example):
+      {
+        "$and": [{ "prefix": { "$eq": "CSC" } }, { "number": { "$gte": 300 } }]
+      }
+
+      I want a physics class that also does coding:
+      I cannot create a filter for this using the available projection operators.
       </documentation>
 
       Instructions:
       - You will ONLY RETURN the filter JSON.
+      - You will only use available projection operators.
       - You will try your best only create filters for fields you know
       - Upper division classes have a number >= 300, lower division classes have a number < 300
 
