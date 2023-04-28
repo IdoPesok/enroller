@@ -6,8 +6,10 @@ import { ReactMarkdown } from "react-markdown/lib/react-markdown"
 
 export default function Courses() {
   const [prompt, setSearch] = useState("")
-  const explore = trpc.explore.prompt.useQuery({ prompt }, {
-    refetchOnWindowFocus: false
+  const [filterDatabase, setFilterDatabase] = useState(true)
+  const explore = trpc.explore.prompt.useQuery({ prompt, filterDatabase }, {
+    refetchOnWindowFocus: false,
+    retry: false,
   })
 
   return (

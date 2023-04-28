@@ -4,7 +4,8 @@ import { z } from "zod"
 import { protectedProcedure, router } from "../trpc"
 import { OpenAIEmbeddings } from "langchain/embeddings/openai"
 import { Configuration, OpenAIApi } from "openai"
-import { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch"
+import { ScoredVector, VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch"
+import PromptBuilder from "@/lib/prompts"
 
 // these can get rebuilt a ton in development see prisma stuff
 // I can't be bothered to fix it
@@ -40,10 +41,11 @@ export const exploreRouter = router({
     .input(
       z.object({
         prompt: z.string(),
+        filterDatabase: z.boolean(),
       })
     )
     .query(async ({ input }) => {
-      const { prompt } = input
+      const { prompt, filterDatabase } = input
 
       if (!client || !pineconeIndex) {
         client = new PineconeClient()
@@ -58,55 +60,84 @@ export const exploreRouter = router({
         return null
       }
 
+      let tokensUsed = 0;
+
       try {
-        // get embedding from open ai
+        let filter: object | undefined;
+
+        if (filterDatabase) {
+          const filterCompletion = await openai.createChatCompletion({
+            model: "gpt-3.5-turbo",
+            messages: PromptBuilder.courseFilter(prompt)
+          })
+
+          // substring filter completion from first { to last }
+          if (filterCompletion.data.choices[0].message !== undefined) {
+            const f = filterCompletion.data.choices[0].message["content"]
+            const start = f.indexOf("{")
+            const end = f.lastIndexOf("}")
+
+            try {
+              filter = JSON.parse(f.substring(start, end + 1))
+              console.log(filter)
+            } catch {
+              console.error("Failed to parse filter: " + f)
+              filter = undefined;
+            }
+          }
+
+          tokensUsed += filterCompletion.data.usage?.total_tokens ?? 0;
+        }
+
         /* Embed queries */
         const queryEmbedding = await embeddings.embedQuery(prompt)
 
-        const queryResponse = await pineconeIndex.query({
-          queryRequest: {
-            namespace: process.env.PINECONE_NAMESPACE,
-            topK: 5,
-            includeMetadata: true,
-            vector: queryEmbedding,
-          },
-        })
+        let numTries = 0;
+        let matches: ScoredVector[] = []
+        while (numTries < 2) {
+          numTries += 1;
 
-        const sysPrompt = `
-          You are a helpful Cal Poly AI chatbot that uses course data to answer student question about courses.
+          // find top 5 most relevant vectors / courses
+          const queryResponse = await pineconeIndex.query({
+            queryRequest: {
+              namespace: process.env.PINECONE_NAMESPACE,
+              topK: 5,
+              includeMetadata: true,
+              filter,
+              vector: queryEmbedding,
+            },
+          })
 
-          You will only answer questions about Cal Poly courses. If a question is asked that is not about a course, you should respond with "I don't know, I am a Cal Poly courses AI".
-        `
+          // if no matches are found
+          if (queryResponse.matches === undefined || queryResponse.matches.length === 0) {
+            // if filters were on, retry again, this time with no filters
+            if (filter !== undefined) {
+              filter = undefined;
+              continue;
+            }
 
-        const fullPrompt = `
-          Given the following course data:
+            // otherwise no matches were found
+            return "No matches found."
+          }
 
-          ---
-          ${JSON.stringify(queryResponse.matches)}
-          ---
-
-          <student_question>
-          ${prompt}
-          </student_question>
-        `
+          // matches found, continue to next step
+          matches = queryResponse.matches;
+          break;
+        }
 
         const completion = await openai.createChatCompletion({
           model: "gpt-3.5-turbo",
-          messages: [
-            {
-              role: "system",
-              content: sysPrompt
-            },
-            { role: "user", content: fullPrompt },
-          ],
+          messages: PromptBuilder.studentCourseQuestion(prompt, matches)
         })
-
-        // log to user how many tokens were used
-        console.log(`Open AI was called, tokens used: ${completion.data.usage?.total_tokens}`)
 
         if (completion.data.choices[0].message === undefined) {
           throw new Error()
         }
+
+        tokensUsed += completion.data.usage?.total_tokens ?? 0;
+
+        // log to user how many tokens were used
+        console.log(`Open AI was called, tokens used: ${tokensUsed}`);
 
         return completion.data.choices[0].message["content"]
       } catch (e) {
