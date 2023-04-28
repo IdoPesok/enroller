@@ -43,7 +43,7 @@ export const exploreRouter = router({
       })
     )
     .query(async ({ input }) => {
-      const { prompt: search } = input
+      const { prompt } = input
 
       if (!client || !pineconeIndex) {
         client = new PineconeClient()
@@ -54,14 +54,14 @@ export const exploreRouter = router({
         pineconeIndex = client.Index(process.env.PINECONE_INDEX!)
       }
 
-      if (search.length < 5) {
+      if (prompt.length < 5) {
         return null
       }
 
       try {
         // get embedding from open ai
         /* Embed queries */
-        const queryEmbedding = await embeddings.embedQuery(search)
+        const queryEmbedding = await embeddings.embedQuery(prompt)
 
         const queryResponse = await pineconeIndex.query({
           queryRequest: {
@@ -72,14 +72,14 @@ export const exploreRouter = router({
           },
         })
 
-        const prompt = `
+        const fullPrompt = `
           Given the following course data:
 
           ---
           ${JSON.stringify(queryResponse.matches)}
           ---
 
-          ${search}
+          ${prompt}
         `
 
         const completion = await openai.createChatCompletion({
@@ -90,7 +90,7 @@ export const exploreRouter = router({
               content:
                 "You are a helpful AI chatbot that answers student questions about courses. You will only answer questions about courses or curriculum.",
             },
-            { role: "user", content: prompt },
+            { role: "user", content: fullPrompt },
           ],
         })
 

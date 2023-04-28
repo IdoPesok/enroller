@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Search } from "@/components/ui/search"
 import { trpc } from "@/lib/trpc"
 import { Spinner } from "@/components/ui/spinner"
+import { ReactMarkdown } from "react-markdown/lib/react-markdown"
 
 export default function Courses() {
   const [prompt, setSearch] = useState("")
@@ -20,11 +21,7 @@ export default function Courses() {
       />
       <div className="h-10 w-full"></div>
       {explore.data ? (
-        <>
-          {explore.data.split(/\r?\n/).map((line, i) => (
-            <p key={i}>{line}</p>
-          ))}
-        </>
+        <ReactMarkdown>{explore.data}</ReactMarkdown>
       ) : (
         explore.isLoading && prompt && <Spinner className="mt-3" />
       )}
