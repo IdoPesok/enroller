@@ -23,42 +23,22 @@ model Courses {
   @@fulltext([Code, Name, Description])
 }
 
-model PrereqGroups {
-  Course String @db.VarChar(10)
-  Group  String @id @db.VarChar(36)
-}
-
 model Prereqs {
-  Group String       @db.VarChar(36)
-  Code  String       @db.VarChar(50)
-  Type  Prereqs_Type
-
-  @@id([Group, Code])
-}
-
-model Prereqs2 {
   CourseCode String           @db.VarChar(8)
   Id         Int              @id @default(autoincrement())
   ParentId   Int?
-  Variant    Prereqs2_Variant
+  Variant    Prereqs_Variant
   PrereqCode String?          @db.VarChar(8)
-  Type       Prereqs2_Type?
+  Type       Prereqs_Type?
 }
 
-enum Prereqs_Type {
-  prerequisite
-  corequisite
-  reccomended
-  concurrent
-}
-
-enum Prereqs2_Variant {
+enum Prereqs_Variant {
   and
   or
   prereq
 }
 
-enum Prereqs2_Type {
+enum Prereqs_Type {
   prerequisite
   corequisite
   reccomended
