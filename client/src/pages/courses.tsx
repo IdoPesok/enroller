@@ -132,7 +132,7 @@ export default function Courses() {
             </CardTitle>
             <CardDescription>
               {Code}
-              <span className="text-right float-right">
+              <span className="text-right float-right w-3/5">
                 {prereqs ? prereqsString(prereqs) : "No prerequisistes"}
               </span>
             </CardDescription>
