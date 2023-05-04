@@ -3,6 +3,16 @@ import { z } from "zod"
 import { protectedProcedure, router } from "../trpc"
 
 export const courseRouter = router({
+  course: protectedProcedure
+    .input(z.object({ code: z.string() }))
+    .query(async ({ input }) => {
+      const course = await prisma.courses.findUnique({
+        where: {
+          Code: input.code,
+        },
+      })
+      return course
+    }),
   list: protectedProcedure
     .input(
       z.object({
