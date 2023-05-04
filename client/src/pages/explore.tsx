@@ -35,7 +35,7 @@ export default function Courses() {
   ))
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl py-10">
       <Search
         placeholder="Ask anything about Cal Poly courses..."
         disabled={explore.isLoading && Boolean(prompt)}
