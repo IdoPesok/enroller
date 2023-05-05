@@ -3,15 +3,6 @@ import mysql from "mysql2/promise";
 import { exit } from "process";
 import { JSDOM } from "jsdom";
 
-const PrereqTypeMap: { [type: string]: PrereqType } = {
-  Prerequisite: PrereqType.Prerequisite,
-  Prerequisites: PrereqType.Prerequisite,
-  Corequisite: PrereqType.Corequisite,
-  Corequisites: PrereqType.Corequisite,
-  Recommended: PrereqType.Reccomended,
-  Concurrent: PrereqType.Concurrent,
-};
-
 async function main() {
   if (!process.env.DATABASE_URL) {
     console.error("missing database url");
@@ -21,7 +12,27 @@ async function main() {
     uri: process.env.DATABASE_URL,
     debug: false,
   });
-  console.log("Connected to PlanetScale!");
+  console.log("Connected to Database!");
+  console.log("Creating table...");
+  await connection.query(
+    "CREATE TABLE IF NOT EXISTS `Courses` (\
+	    `Code` varchar(10) NOT NULL,\
+	    `Prefix` varchar(6) NOT NULL,\
+	    `Number` int NOT NULL,\
+	    `MinUnits` int NOT NULL,\
+	    `MaxUnits` int NOT NULL,\
+	    `Name` varchar(128) NOT NULL,\
+	    `Description` text,\
+	    `Prereqs` json,\
+	    PRIMARY KEY (`Code`),\
+	    FULLTEXT KEY `SearchIndex` (`Code`, `Name`, `Description`),\
+	    FULLTEXT KEY `ShortSearchIndex` (`Code`, `Name`)\
+    ) ENGINE InnoDB"
+  );
+  console.log("Deleting old data...");
+  await connection.query("DELETE FROM Courses");
+
+  console.log("Scraping courses...");
   const url = "https://catalog.calpoly.edu/coursesaz/";
   const response = await fetch(url);
   const body = await response.text();
@@ -41,7 +52,7 @@ async function main() {
 }
 
 function isCourseCode(code: string): boolean {
-  return /[A-Z]+\s[0-9]+/.test(code);
+  return /[A-Z]+\s*[0-9]+/.test(code);
 }
 
 const enum PrereqType {
@@ -79,47 +90,64 @@ class PrereqLeaf extends Prereq {
   }
 }
 
+const PrereqTypeMap: { [type: string]: PrereqType } = {
+  prerequisite: PrereqType.Prerequisite,
+  corequisite: PrereqType.Corequisite,
+  recommended: PrereqType.Reccomended,
+  concurrent: PrereqType.Concurrent,
+};
+
+function cleanPrereqSource(source: string): string {
+  return source.toLowerCase().replace("-", "").replace(/s$/, "");
+}
+
+function startsWithPrereqType(source: string): boolean {
+  source = cleanPrereqSource(source.substring(0, source.indexOf(":")));
+  return Object.keys(PrereqTypeMap).some((key) => source.startsWith(key));
+}
+
 function parsePrereqType(type: string): PrereqType | null {
+  type = cleanPrereqSource(type);
   return PrereqTypeMap[type] ?? null;
 }
 
-function extractPrereq(
-  source: string,
-  prereqType: PrereqType,
-  opType: PrereqOpType
-): Prereq | null {
-  let splitter;
-  if (opType === PrereqOpType.And) {
-    // if the source string includes semicolons they should be split on
-    if (source.includes(";")) {
-      splitter = /(?:\s+[;,]\s*and\s+|[;,])\s+/;
-    } else {
-      splitter = /(?:\s+and\s+|,\s*and\s+|,)/;
+function extractPrereq(source: string, prereqType: PrereqType): Prereq | null {
+  let opType;
+  let courses;
+  // if the source string contains a semicolon then assume it is semicolon delimited
+  if (source.includes(";")) {
+    // try to split on semicolon delimited or
+    // negative lookahead to avoid false positives
+    opType = PrereqOpType.Or;
+    courses = source.split(/;\s*or\s+/);
+    // no matches, try to split on semicolon
+    if (courses.length === 1) {
+      opType = PrereqOpType.And;
+      courses = source.split(/(?:;\s*and|;)\s+/);
     }
   } else {
-    splitter = /\s+or\s+/;
+    // check for comma or delimited
+    opType = PrereqOpType.Or;
+    courses = source.split(/,\s*or\s+/);
+    // try to split on and variants
+    if (courses.length === 1) {
+      opType = PrereqOpType.And;
+      courses = source.split(/(?:\s+and\s+|,\s*and\s+|,)/);
+    }
+    // lastly try for regular or
+    if (courses.length === 1) {
+      opType = PrereqOpType.Or;
+      courses = source.split(/\s+or\s+(?!better|earlier)/);
+    }
   }
-  const courses = source
-    .split(splitter)
-    .map((c) => c.trim())
-    .filter((c) => c);
+  courses = courses.map((c) => c.trim()).filter((c) => c);
   if (courses.length === 1) {
     const course = courses[0];
-    if (isCourseCode(course)) {
-      return new PrereqLeaf(course, prereqType);
-    } else {
-      return null;
-    }
+    return new PrereqLeaf(course, prereqType);
   }
 
   const children = courses
-    .map((p) =>
-      extractPrereq(
-        p,
-        prereqType,
-        opType === PrereqOpType.And ? PrereqOpType.Or : PrereqOpType.And
-      )
-    )
+    .map((p) => extractPrereq(p, prereqType))
     .filter((p) => p) as Prereq[];
   if (children.length > 1) {
     return new PrereqOp(opType, children);
@@ -131,29 +159,29 @@ function extractPrereq(
 }
 
 // this is super jank. I do not want to fix it.
-function extractPrereqs(source: string): Prereq[] {
+function extractPrereqs(source: string, course: string): Prereq[] {
   const sections = source
     .split(/\.\s+/)
     .map((s) => s.trim())
-    .filter((s) => s);
+    .filter((s) => s)
+    .map((s) => s.replace(/\.$/, ""));
 
   let groups: Prereq[] = [];
   for (const section of sections) {
     const [prefix, ...coursesArr] = section.split(":");
     const type = parsePrereqType(prefix);
     if (!type) {
-      console.error(`unknown prefix type ${prefix} in ${source}`);
+      if (prefix.includes("or")) {
+      } else {
+        console.error(
+          `${course}\n\tunknown prefix type ${prefix} in\n\t${source}`
+        );
+      }
       continue;
     }
 
     const courses = coursesArr.join(":");
-    let prereq;
-    if (/(;|,|\s+and\s+)/.test(courses)) {
-      prereq = extractPrereq(courses, type, PrereqOpType.And);
-    } else {
-      prereq = extractPrereq(courses, type, PrereqOpType.Or);
-    }
-
+    const prereq = extractPrereq(courses, type);
     if (prereq !== null) {
       groups.push(prereq);
     }
@@ -232,12 +260,13 @@ async function fetchCourses(connection: mysql.Connection, url: URL) {
     const prereqsRaw =
       course.getElementsByClassName("courseextendedwrap")[0].lastChild
         ?.textContent ?? "";
-    const prereqs = Object.keys(PrereqTypeMap).some((key) =>
-      prereqsRaw.startsWith(key)
-    )
-      ? extractPrereqs(prereqsRaw)
+
+    // console.log(`Course ${code}`);
+    // console.log(prereqsRaw);
+    const prereqs = startsWithPrereqType(prereqsRaw)
+      ? extractPrereqs(prereqsRaw, code)
       : null;
-    console.log(`Adding course ${code}`);
+    // console.log(JSON.stringify(prereqs, null, "  "));
     queries.push(
       connection.query(
         "INSERT INTO `Courses` VALUES (?, ?, ?, ?, ?, ?, ?, ?)",

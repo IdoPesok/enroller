@@ -11,10 +11,13 @@
   "dependencies": {
     "@pinecone-database/pinecone": "0.0.14",
     "@types/jsdom": "^21.1.1",
+    "cheerio": "^1.0.0-rc.12",
     "dotenv": "^16.0.3",
     "jsdom": "^21.1.1",
     "mysql2": "^3.2.3",
+    "ohm-js": "^17.1.0",
     "openai": "^3.2.1",
+    "pegjs": "^0.10.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
