@@ -19,23 +19,20 @@ const ADMIN_NAVIGATION = [
 ]
 
 interface HighlightBarSize {
-  left: number
-  width: number
+  left: number,
+  width: number,
 }
 
 export const MainNav = () => {
   const router = useRouter()
   const [activeRoute, setActiveRoute] = useState(router.pathname)
-  const [highlightBarSize, setHighlightBarSize] = useState<HighlightBarSize>({
-    left: 0,
-    width: 0,
-  })
+  const [highlightBarSize, setHighlightBarSize] = useState<HighlightBarSize | null>(null)
   const user = useUser()
 
   useEffect(() => {
-    const getHighlightBarSize = (): HighlightBarSize => {
+    const getHighlightBarSize = (): HighlightBarSize | null => {
       const navItems = document.querySelectorAll("#main-nav-active")
-      if (navItems.length === 0) return { left: 0, width: 0 }
+      if (navItems.length === 0) return null;
       const navItem = navItems[0] as HTMLElement
       return { left: navItem.offsetLeft - 4, width: navItem.offsetWidth + 8 }
     }
@@ -79,10 +76,14 @@ export const MainNav = () => {
           </div>
           <UserButton />
         </div>
-        <div
-          className="bottom-0 w-48 h-px bg-emerald-500 absolute z-10 left-20 transition-left duration-200 ease-in-out"
-          style={highlightBarSize}
-        />
+        {
+          highlightBarSize && (
+            <div
+              className="bottom-0 w-0 h-px bg-emerald-500 absolute z-10 left-20 transition-all duration-100 ease-in-out"
+              style={highlightBarSize}
+            />
+          )
+        }
       </div>
     </>
   )
