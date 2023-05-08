@@ -79,3 +79,7 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+.bar-of-progress {
+  z-index: 50;
+}
