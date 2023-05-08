@@ -2,7 +2,7 @@ import CourseCard from "@/components/courses/CourseCard";
 import { Spinner } from "@/components/ui/spinner";
 import { trpc } from "@/lib/trpc";
 import { useRouter } from "next/router";
-import Error404 from "../404";
+import Error404 from "../../404";
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Search } from "lucide-react";

@@ -1,15 +1,20 @@
-import { UserButton } from "@clerk/nextjs"
+import { UserButton, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/router"
 import { AcademicCapIcon } from "@heroicons/react/24/solid"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
+import { generateAdminRoute, generateStudentRoute, isUserAdmin } from "@/lib/auth"
 
-const navigation = [
-  { name: "Course Search", href: "/courses" },
-  { name: "Shopping Cart", href: "/cart" },
-  { name: "Enroll", href: "/enroll" },
-  { name: "Drop", href: "/drop" },
-  { name: "Explore", href: "/explore" },
+const STUDENT_NAVIGATION = [
+  { name: "Course Search", href: generateStudentRoute("/courses") },
+  { name: "Shopping Cart", href: generateStudentRoute("/cart") },
+  { name: "Enroll", href: generateStudentRoute("/enroll") },
+  { name: "Drop", href: generateStudentRoute("/drop") },
+  { name: "Explore", href: generateStudentRoute("/explore") },
+]
+
+const ADMIN_NAVIGATION = [
+  { name: "Overview", href: generateAdminRoute("/overview") },
 ]
 
 interface HighlightBarSize {
@@ -24,6 +29,7 @@ export const MainNav = () => {
     left: 0,
     width: 0,
   })
+  const user = useUser()
 
   const getHighlightBarSize = (): HighlightBarSize => {
     const navItems = document.querySelectorAll("#main-nav-active")
@@ -43,7 +49,7 @@ export const MainNav = () => {
         <div className="justify-between flex items-center">
           <div className="flex items-center">
             <AcademicCapIcon className="h-8 text-emerald-500 mr-5" />
-            {navigation.map((item) => (
+            { (isUserAdmin(user.user?.publicMetadata) ? ADMIN_NAVIGATION : STUDENT_NAVIGATION).map((item) => (
               <a
                 key={item.name}
                 href={item.href}

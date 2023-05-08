@@ -1,4 +1,4 @@
-import { useAuth } from "@clerk/clerk-react"
+import { useAuth, useUser } from "@clerk/clerk-react"
 import { ReactNode } from "react"
 import { LandingNav } from "./nav/landing-nav"
 import { MainNav } from "./nav/main-nav"

@@ -4,6 +4,7 @@ import { Courses } from "@prisma/client"
 import { Prereq } from "@/interfaces/PrereqTypes"
 import { Button } from "../ui/button"
 import Link from "next/link"
+import { generateStudentRoute } from "@/lib/auth"
 
 interface Props {
   course: Courses
@@ -37,7 +38,7 @@ export default function CourseCard({ course, showLink = true }: Props) {
           showLink && (
             <div className="flex justify-end">
               <Button className="mt-5">
-                <Link href={`/courses/${Code}`}>View Course</Link>
+                <Link href={generateStudentRoute(`/courses/${Code}`)}>View Course</Link>
               </Button>
             </div>
           )

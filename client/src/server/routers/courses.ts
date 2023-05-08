@@ -1,9 +1,9 @@
 import { prisma } from "@/server/prisma"
 import { z } from "zod"
-import { protectedProcedure, router } from "../trpc"
+import { studentProcedure, router } from "../trpc"
 
 export const courseRouter = router({
-  course: protectedProcedure
+  course: studentProcedure
     .input(z.object({ code: z.string() }))
     .query(async ({ input }) => {
       const course = await prisma.courses.findUnique({
@@ -13,7 +13,7 @@ export const courseRouter = router({
       })
       return course
     }),
-  list: protectedProcedure
+  list: studentProcedure
     .input(
       z.object({
         search: z.string(),
