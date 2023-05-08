@@ -1,7 +1,7 @@
 import { PineconeClient } from "@pinecone-database/pinecone"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
-import { protectedProcedure, router } from "../trpc"
+import { studentProcedure, router } from "../trpc"
 import { OpenAIEmbeddings } from "langchain/embeddings/openai"
 import { Configuration, OpenAIApi } from "openai"
 import { ScoredVector, VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch"
@@ -37,7 +37,7 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration)
 
 export const exploreRouter = router({
-  prompt: protectedProcedure
+  prompt: studentProcedure
     .input(
       z.object({
         prompt: z.string(),
