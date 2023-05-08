@@ -36,7 +36,7 @@ const isAdminAuth = t.middleware(async ({ next, ctx }) => {
   }
 
   const user = await clerkClient.users.getUser(ctx.auth.userId);
-  if (!user || isUserAdmin(user.publicMetadata)) {
+  if (!user || !isUserAdmin(user.publicMetadata)) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: "You do not have the required admin role." })
   }
 
