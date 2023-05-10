@@ -191,7 +191,7 @@ async function dropTables(connection: mysql.Connection) {
 async function saveCatalogs(connection: mysql.Connection, catalogs: Catalog[]) {
   try {
     for (const catalog of catalogs) {
-      await connection.query("INSERT INTO Catalogs (CatalogYear) VALUES (?)", [
+      await connection.query("INSERT IGNORE INTO Catalogs (CatalogYear) VALUES (?)", [
         catalog.name,
       ]);
     }
@@ -241,8 +241,11 @@ async function saveConcentrations(connection: mysql.Connection, concentrations: 
   }
 }
 
+const GENERAL_CONCENTRATION_ID = "GENERAL";
+
 function getFlowchartId(catalogYear: string, majorId: string, concentrationId: string) {
-  return `${catalogYear}-${majorId}-${concentrationId}`
+  const id = (!concentrationId || concentrationId === "") ? GENERAL_CONCENTRATION_ID : concentrationId;
+  return `${catalogYear}-${majorId}-${id}`
 }
 
 async function saveFlowchart(
@@ -255,7 +258,7 @@ async function saveFlowchart(
   try {
     const temp = {...concentration}
     if (!temp.id || temp.id.trim() === "") {
-      temp.id = "GENERAL"
+      temp.id = GENERAL_CONCENTRATION_ID
       temp.name = null
     }
 
@@ -286,6 +289,14 @@ async function saveFlowchart(
   }
 }
 
+async function haveGradRequirementsBeenAdded(connection: mysql.Connection, flowchartId: string): Promise<boolean> {
+  const result = await connection.query("SELECT 1 FROM `GraduationRequirements` WHERE FlowchartId = ? LIMIT 1", [
+    flowchartId
+  ]);
+
+  return (result[0] as unknown[]).length > 0;
+}
+
 async function main() {
   const connection = await getConnection();
 
@@ -294,13 +305,16 @@ async function main() {
 
   // get cookies to make requests
   // note it is recommended to run get cookies one time, then replace getCookies with the cookies as a string
-  const cookies = "_ga=GA1.1.2143786650.1683676847; _ga_G38JXCL5JS=GS1.1.1683676846.1.1.1683676851.0.0.0; _gat_gtag_UA_173468759_1=1; _gid=GA1.2.1132281474.1683676848; s=s%3A5qMrxSkcVrej8Hqb7kKUSQcLa8Uqqi1C.YFZFeLmkw4cPVA3HaFGlr6iO1%2BqRleliSgh6%2FG9wzWk" 
-  // const cookies = await getCookies();
+  const cookies = await getCookies();
 
-  await dropTables(connection);
-  await createTables(connection);
+  const START_FROM_SCRATCH = true;
 
-  await saveCatalogs(connection, catalogs);
+  if (START_FROM_SCRATCH) {
+    await dropTables(connection);
+    await createTables(connection);
+
+    await saveCatalogs(connection, catalogs);
+  }
 
   for (const catalog of catalogs) {
     const flowCatalogYear = catalog.name;
@@ -314,8 +328,15 @@ async function main() {
         const flowConcentration = concentration.id;
 
         const payload = generateGetDefaultFlowPayload(flowCatalogYear, major.id, flowConcentration);
+        const flowchartId = getFlowchartId(flowCatalogYear, major.id, flowConcentration);
 
         try {
+          const gradAdded = await haveGradRequirementsBeenAdded(connection, flowchartId);
+          if (!START_FROM_SCRATCH && gradAdded) {
+            console.log(`grad requirements for ${flowchartId} already exists`)
+            continue;
+          }
+
           const response = await getDefaultFlowData(payload, cookies);
 
           // only call once for now
