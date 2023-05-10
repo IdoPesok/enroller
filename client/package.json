@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate": "prisma generate",
+    "db-pull": "dotenv -e .env.local -- prisma db pull"
   },
   "dependencies": {
     "@badrap/bar-of-progress": "^0.2.2",
@@ -72,6 +74,11 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "prisma": "^4.13.0"
+    "dotenv-cli": "^7.2.1",
+    "prisma": "^4.13.0",
+    "ts-node": "^10.9.1"
+  },
+  "prisma": {
+    "seed": "dotenv -e .env.local -- ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   }
 }

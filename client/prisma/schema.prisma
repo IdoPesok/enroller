@@ -19,28 +19,68 @@ model Courses {
   Description String? @db.Text
   Prereqs     Json?
 
-  @@fulltext([Code, Name])
-  @@fulltext([Code, Name, Description])
+  @@fulltext([Code, Name, Description], map: "SearchIndex")
+  @@fulltext([Code, Name], map: "ShortSearchIndex")
 }
 
-model Prereqs {
-  CourseCode String           @db.VarChar(8)
-  Id         Int              @id @default(autoincrement())
-  ParentId   Int?
-  Variant    Prereqs_Variant
-  PrereqCode String?          @db.VarChar(8)
-  Type       Prereqs_Type?
+model Enrolled {
+  User      String @id @db.VarChar(35)
+  SectionId Int
 }
 
-enum Prereqs_Variant {
-  and
-  or
-  prereq
+model Sections {
+  Course           String           @db.VarChar(10)
+  Start            DateTime         @db.Date
+  End              DateTime         @db.Date
+  Sunday           Boolean?         @db.Bit(1)
+  Monday           Boolean?         @db.Bit(1)
+  Tuesday          Boolean?         @db.Bit(1)
+  Wednesday        Boolean?         @db.Bit(1)
+  Thursday         Boolean?         @db.Bit(1)
+  Friday           Boolean?         @db.Bit(1)
+  Saturday         Boolean?         @db.Bit(1)
+  Capacity         Int?
+  WaitlistCapacity Int?
+  Professor        String           @db.VarChar(255)
+  Room             String?          @db.VarChar(10)
+  Format           Sections_Format?
+
+  @@id([Course, Start, Professor])
 }
 
-enum Prereqs_Type {
-  prerequisite
-  corequisite
-  reccomended
-  concurrent
+model Flowcharts {
+  FlowchartId     String @id @db.VarChar(255)
+  CatalogYear     String @db.VarChar(10)
+  MajorId         String @db.VarChar(24)
+  ConcentrationId String @db.VarChar(24)
+}
+
+model Catalogs {
+  CatalogYear String @id @db.VarChar(10)
+}
+
+model Concentrations {
+  Id      String  @db.VarChar(10)
+  Name    String? @db.VarChar(255)
+  MajorId String  @db.VarChar(255)
+
+  @@id([Id, MajorId])
+}
+
+model GraduationRequirements {
+  FlowchartId String @db.VarChar(255)
+  Code        String @db.VarChar(10)
+
+  @@id([FlowchartId, Code])
+}
+
+model Majors {
+  Id   String @id @db.VarChar(24)
+  Name String @db.VarChar(255)
+}
+
+enum Sections_Format {
+  online
+  in_person @map("in person")
+  TBD
 }
