@@ -121,33 +121,17 @@ async function getConnection(): Promise<mysql.Connection> {
 async function createTables(connection: mysql.Connection) {
   try {
     await connection.query(
-      "CREATE TABLE IF NOT EXISTS `Catalogs` (\
-        CatalogYear VARCHAR(10) PRIMARY KEY\
+      "CREATE TABLE IF NOT EXISTS `Flowcharts` (\
+        FlowchartId VARCHAR(255) PRIMARY KEY,\
+        CatalogYear VARCHAR(10),\
+        MajorId VARCHAR(255) NOT NULL,\
+        MajorName VARCHAR(255) NOT NULL,\
+        ConcentrationName VARCHAR(255) NOT NULL,\
+        ConcentrationId VARCHAR(24)\
       )"
     );
 
-    console.log("created catalogs table");
-
-    await connection.query(
-      "CREATE TABLE IF NOT EXISTS `Majors` (\
-        Id VARCHAR(255) PRIMARY KEY,\
-        Name VARCHAR(255) NOT NULL,\
-        CatalogYear VARCHAR(10)\
-      )"
-    );
-
-    console.log("created majors table");
-
-    await connection.query(
-      "CREATE TABLE IF NOT EXISTS `Concentrations` (\
-        Id VARCHAR(10),\
-        Name VARCHAR(255) NOT NULL,\
-        MajorId VARCHAR(255),\
-        PRIMARY KEY (MajorId, Id),\
-      )"
-    );
-
-    console.log("created concentrations table");
+    console.log("created flowcharts table");
   } catch (e) {
     console.error("error creating tables", e);
     exit(1);
@@ -157,9 +141,7 @@ async function createTables(connection: mysql.Connection) {
 
 async function dropTables(connection: mysql.Connection) {
   try {
-    await connection.query("DROP TABLE IF EXISTS `Concentrations`");
-    await connection.query("DROP TABLE IF EXISTS `Majors`");
-    await connection.query("DROP TABLE IF EXISTS `Catalogs`");
+    await connection.query("DROP TABLE IF EXISTS `Flowcharts`");
 
     console.log("dropped tables");
   } catch (e) {
@@ -168,53 +150,26 @@ async function dropTables(connection: mysql.Connection) {
   }
 }
 
-async function saveCatalogs(connection: mysql.Connection, catalogs: Catalog[]) {
-  try {
-    for (const catalog of catalogs) {
-      await connection.query("INSERT INTO Catalogs (CatalogYear) VALUES (?)", [
-        catalog.name,
-      ]);
-    }
-    console.log("saved catalogs");
-  } catch (e) {
-    console.error("error saving catalogs", e);
-    exit(1);
-  }
-}
-
-async function saveMajors(connection: mysql.Connection, majors: Major[], catalogYear: string) {
-  try {
-    for (const major of majors) {
-      await connection.query("INSERT INTO Majors (Id, Name, CatalogYear) VALUES (?, ?, ?)", [
-        major.id,
-        major.name,
-        catalogYear
-      ]);
-    }
-
-    console.log("saved majors for catalog year " + catalogYear);
-  } catch (e) {
-    console.error("error saving majors", e);
-    exit(1);
-  }
-}
-
-async function saveConcentrations(connection: mysql.Connection, concentrations: Concentration[], majorId: string) {
+async function saveFlowchart(connection: mysql.Connection, concentrations: Concentration[], major: Major, catalogYear: string) {
   try {
     for (const concentration of concentrations) {
       const temp = {...concentration}
       if (!temp.id || temp.id === "") {
         temp.id = "GENERAL"
+        temp.name = "NO CONCENTRATION"
       }
 
-      await connection.query("INSERT INTO Concentrations (Id, Name, MajorId) VALUES (?, ?, ?)", [
-        concentration.id,
-        concentration.name,
-        majorId
+      await connection.query("INSERT INTO `Flowcharts` (FlowchartId, CatalogYear, MajorId, MajorName, ConcentrationName, ConcentrationId) VALUES (?, ?, ?, ?, ?, ?)", [
+        `${catalogYear}-${major.id}-${temp.id}`,
+        catalogYear,
+        major.id,
+        major.name,
+        temp.name,
+        temp.id
       ]);
     }
 
-    console.log("saved concentrations for major " + majorId);
+    console.log("saved concentrations for major " + major.id);
   } catch (e) {
     console.error("error saving concentrations", e);
     exit(1);
@@ -235,37 +190,32 @@ async function main() {
   await dropTables(connection);
   await createTables(connection);
 
-  await saveCatalogs(connection, catalogs);
-
   for (const catalog of catalogs) {
     const flowCatalogYear = catalog.name;
 
-    await saveMajors(connection, catalog.majors, flowCatalogYear)
-
     for (const major of catalog.majors) {
-      const flowMajor = major.id;
-      await saveConcentrations(connection, major.concentrations, flowMajor)
+      await saveFlowchart(connection, major.concentrations, major, flowCatalogYear)
 
       for (const concentration of major.concentrations) {
         const flowConcentration = concentration.id;
 
-        const payload = generateGetDefaultFlowPayload(flowCatalogYear, flowMajor, flowConcentration);
+        const payload = generateGetDefaultFlowPayload(flowCatalogYear, major.id, flowConcentration);
 
-        try {
-          const response = await getDefaultFlowData(payload, cookies);
+        // try {
+        //   const response = await getDefaultFlowData(payload, cookies);
+        //   console.log(response);
 
-          console.log(response);
-
-          // only call once for now
-          return
-        } catch (e) {
-          console.log(e);
-          exit(1);
-        }
+        //   // only call once for now
+        //   return
+        // } catch (e) {
+        //   console.log(e);
+        //   exit(1);
+        // }
       }
     }
   }
 
+  await connection.end();
 }
 
 main();
