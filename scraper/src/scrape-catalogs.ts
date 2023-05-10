@@ -5,7 +5,7 @@ import puppeteer from 'puppeteer';
 const fetch = require('node-fetch');
 
 interface Concentration {
-  name: string;
+  name: string | null;
   id: string;
   fullFlowId: string;
 }
@@ -121,13 +121,39 @@ async function getConnection(): Promise<mysql.Connection> {
 async function createTables(connection: mysql.Connection) {
   try {
     await connection.query(
+      "CREATE TABLE IF NOT EXISTS `Catalogs` (\
+        CatalogYear VARCHAR(10) PRIMARY KEY\
+      )"
+    );
+
+    console.log("created catalogs table");
+
+    await connection.query(
+      "CREATE TABLE IF NOT EXISTS `Majors` (\
+        Id VARCHAR(24) PRIMARY KEY,\
+        Name VARCHAR(255) NOT NULL\
+      )"
+    );
+
+    console.log("created majors table");
+
+    await connection.query(
+      "CREATE TABLE IF NOT EXISTS `Concentrations` (\
+        Id VARCHAR(10),\
+        Name VARCHAR(255),\
+        MajorId VARCHAR(255),\
+        PRIMARY KEY (Id, MajorId)\
+      )"
+    );
+
+    console.log("created concentrations table");
+
+    await connection.query(
       "CREATE TABLE IF NOT EXISTS `Flowcharts` (\
         FlowchartId VARCHAR(255) PRIMARY KEY,\
-        CatalogYear VARCHAR(10),\
-        MajorId VARCHAR(255) NOT NULL,\
-        MajorName VARCHAR(255) NOT NULL,\
-        ConcentrationName VARCHAR(255) NOT NULL,\
-        ConcentrationId VARCHAR(24)\
+        CatalogYear VARCHAR(10) NOT NULL,\
+        MajorId VARCHAR(24) NOT NULL,\
+        ConcentrationId VARCHAR(24) NOT NULL\
       )"
     );
 
@@ -141,11 +167,67 @@ async function createTables(connection: mysql.Connection) {
 
 async function dropTables(connection: mysql.Connection) {
   try {
+    await connection.query("DROP TABLE IF EXISTS `Concentrations`");
+    await connection.query("DROP TABLE IF EXISTS `Majors`");
+    await connection.query("DROP TABLE IF EXISTS `Catalogs`");
     await connection.query("DROP TABLE IF EXISTS `Flowcharts`");
 
     console.log("dropped tables");
   } catch (e) {
     console.error("error dropping tables", e);
+    exit(1);
+  }
+}
+
+async function saveCatalogs(connection: mysql.Connection, catalogs: Catalog[]) {
+  try {
+    for (const catalog of catalogs) {
+      await connection.query("INSERT INTO Catalogs (CatalogYear) VALUES (?)", [
+        catalog.name,
+      ]);
+    }
+    console.log("saved catalogs");
+  } catch (e) {
+    console.error("error saving catalogs", e);
+    exit(1);
+  }
+}
+
+async function saveMajors(connection: mysql.Connection, majors: Major[], catalogYear: string) {
+  try {
+    for (const major of majors) {
+      await connection.query("INSERT IGNORE INTO Majors (Id, Name) VALUES (?, ?)", [
+        major.id,
+        major.name
+      ]);
+    }
+
+    console.log("saved majors for catalog year " + catalogYear);
+  } catch (e) {
+    console.error("error saving majors", e);
+    exit(1);
+  }
+}
+
+async function saveConcentrations(connection: mysql.Connection, concentrations: Concentration[], majorId: string) {
+  try {
+    for (const concentration of concentrations) {
+      const temp = {...concentration}
+      if (!temp.id || temp.id === "") {
+        temp.id = "GENERAL"
+        temp.name = null;
+      }
+
+      await connection.query("INSERT IGNORE INTO Concentrations (Id, Name, MajorId) VALUES (?, ?, ?)", [
+        concentration.id,
+        concentration.name,
+        majorId
+      ]);
+    }
+
+    console.log("saved concentrations for major " + majorId);
+  } catch (e) {
+    console.error("error saving concentrations", e);
     exit(1);
   }
 }
@@ -156,20 +238,20 @@ async function saveFlowchart(connection: mysql.Connection, concentrations: Conce
       const temp = {...concentration}
       if (!temp.id || temp.id === "") {
         temp.id = "GENERAL"
-        temp.name = "NO CONCENTRATION"
+        temp.name = null
       }
 
-      await connection.query("INSERT INTO `Flowcharts` (FlowchartId, CatalogYear, MajorId, MajorName, ConcentrationName, ConcentrationId) VALUES (?, ?, ?, ?, ?, ?)", [
-        `${catalogYear}-${major.id}-${temp.id}`,
+      const flowchartId = `${catalogYear}-${major.id}-${temp.id}`
+
+      await connection.query("INSERT INTO `Flowcharts` (FlowchartId, CatalogYear, MajorId, ConcentrationId) VALUES (?, ?, ?, ?)", [
+        flowchartId,
         catalogYear,
         major.id,
-        major.name,
-        temp.name,
         temp.id
       ]);
-    }
 
-    console.log("saved concentrations for major " + major.id);
+      console.log(`saved flowchart ${flowchartId}`)
+    }
   } catch (e) {
     console.error("error saving concentrations", e);
     exit(1);
@@ -190,28 +272,33 @@ async function main() {
   await dropTables(connection);
   await createTables(connection);
 
+  await saveCatalogs(connection, catalogs);
+
   for (const catalog of catalogs) {
     const flowCatalogYear = catalog.name;
 
+    await saveMajors(connection, catalog.majors, flowCatalogYear);
+
     for (const major of catalog.majors) {
+      await saveConcentrations(connection, major.concentrations, major.id);
       await saveFlowchart(connection, major.concentrations, major, flowCatalogYear)
 
-      for (const concentration of major.concentrations) {
-        const flowConcentration = concentration.id;
+      // for (const concentration of major.concentrations) {
+      //   const flowConcentration = concentration.id;
 
-        const payload = generateGetDefaultFlowPayload(flowCatalogYear, major.id, flowConcentration);
+      //   const payload = generateGetDefaultFlowPayload(flowCatalogYear, major.id, flowConcentration);
 
-        // try {
-        //   const response = await getDefaultFlowData(payload, cookies);
-        //   console.log(response);
+      //   try {
+      //     const response = await getDefaultFlowData(payload, cookies);
+      //     console.log(response);
 
-        //   // only call once for now
-        //   return
-        // } catch (e) {
-        //   console.log(e);
-        //   exit(1);
-        // }
-      }
+      //     // only call once for now
+      //     return
+      //   } catch (e) {
+      //     console.log(e);
+      //     exit(1);
+      //   }
+      // }
     }
   }
 
