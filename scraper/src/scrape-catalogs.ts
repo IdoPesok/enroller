@@ -67,8 +67,6 @@ async function getDefaultFlowData(payload: GetDefaultFlowPayload, cookieJar: str
     body: JSON.stringify(payload)
   });
 
-  console.log(response)
-
   return await response.json() as GetDefaultFlowResponse;
 }
 
@@ -158,6 +156,16 @@ async function createTables(connection: mysql.Connection) {
     );
 
     console.log("created flowcharts table");
+
+    await connection.query(
+      "CREATE TABLE IF NOT EXISTS `GraduationRequirements` (\
+        FlowchartId VARCHAR(255),\
+        Code varchar(10) NOT NULL,\
+        PRIMARY KEY (FlowchartId, Code)\
+      )"
+    );
+
+    console.log("created graduation requirements table");
   } catch (e) {
     console.error("error creating tables", e);
     exit(1);
@@ -171,6 +179,7 @@ async function dropTables(connection: mysql.Connection) {
     await connection.query("DROP TABLE IF EXISTS `Majors`");
     await connection.query("DROP TABLE IF EXISTS `Catalogs`");
     await connection.query("DROP TABLE IF EXISTS `Flowcharts`");
+    await connection.query("DROP TABLE IF EXISTS `GraduationRequirements`");
 
     console.log("dropped tables");
   } catch (e) {
@@ -232,26 +241,45 @@ async function saveConcentrations(connection: mysql.Connection, concentrations: 
   }
 }
 
-async function saveFlowchart(connection: mysql.Connection, concentrations: Concentration[], major: Major, catalogYear: string) {
+function getFlowchartId(catalogYear: string, majorId: string, concentrationId: string) {
+  return `${catalogYear}-${majorId}-${concentrationId}`
+}
+
+async function saveFlowchart(
+  connection: mysql.Connection, 
+  concentration: Concentration, 
+  major: Major, 
+  catalogYear: string,
+  courseData: CourseData[]
+) {
   try {
-    for (const concentration of concentrations) {
-      const temp = {...concentration}
-      if (!temp.id || temp.id === "") {
-        temp.id = "GENERAL"
-        temp.name = null
-      }
-
-      const flowchartId = `${catalogYear}-${major.id}-${temp.id}`
-
-      await connection.query("INSERT INTO `Flowcharts` (FlowchartId, CatalogYear, MajorId, ConcentrationId) VALUES (?, ?, ?, ?)", [
-        flowchartId,
-        catalogYear,
-        major.id,
-        temp.id
-      ]);
-
-      console.log(`saved flowchart ${flowchartId}`)
+    const temp = {...concentration}
+    if (!temp.id || temp.id.trim() === "") {
+      temp.id = "GENERAL"
+      temp.name = null
     }
+
+    const flowchartId = getFlowchartId(catalogYear, major.id, temp.id);
+
+    await connection.query("INSERT INTO `Flowcharts` (FlowchartId, CatalogYear, MajorId, ConcentrationId) VALUES (?, ?, ?, ?)", [
+      flowchartId,
+      catalogYear,
+      major.id,
+      temp.id
+    ]);
+
+    for (const course of courseData) {
+      // insert space before the course number in the course id
+      const ix = course.cID.indexOf(course.cNum.toString());
+      const courseCode = course.cID.slice(0, ix) + " " + course.cID.slice(ix);
+      console.log(courseCode)
+      await connection.query("INSERT IGNORE INTO `GraduationRequirements` (FlowchartId, Code) VALUES (?, ?)", [
+        flowchartId,
+        courseCode
+      ]);
+    }
+
+    console.log(`saved flowchart ${flowchartId}`)
   } catch (e) {
     console.error("error saving concentrations", e);
     exit(1);
@@ -281,24 +309,22 @@ async function main() {
 
     for (const major of catalog.majors) {
       await saveConcentrations(connection, major.concentrations, major.id);
-      await saveFlowchart(connection, major.concentrations, major, flowCatalogYear)
 
-      // for (const concentration of major.concentrations) {
-      //   const flowConcentration = concentration.id;
+      for (const concentration of major.concentrations) {
+        const flowConcentration = concentration.id;
 
-      //   const payload = generateGetDefaultFlowPayload(flowCatalogYear, major.id, flowConcentration);
+        const payload = generateGetDefaultFlowPayload(flowCatalogYear, major.id, flowConcentration);
 
-      //   try {
-      //     const response = await getDefaultFlowData(payload, cookies);
-      //     console.log(response);
+        try {
+          const response = await getDefaultFlowData(payload, cookies);
 
-      //     // only call once for now
-      //     return
-      //   } catch (e) {
-      //     console.log(e);
-      //     exit(1);
-      //   }
-      // }
+          // only call once for now
+          await saveFlowchart(connection, concentration, major, flowCatalogYear, response.courseData)
+        } catch (e) {
+          console.log(e);
+          exit(1);
+        }
+      }
     }
   }
 
