@@ -219,8 +219,8 @@ async function saveConcentrations(connection: mysql.Connection, concentrations: 
       }
 
       await connection.query("INSERT IGNORE INTO Concentrations (Id, Name, MajorId) VALUES (?, ?, ?)", [
-        concentration.id,
-        concentration.name,
+        temp.id,
+        temp.name,
         majorId
       ]);
     }
