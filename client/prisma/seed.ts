@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client"
+import { set } from "date-fns"
 
 const prisma = new PrismaClient()
 
@@ -7,15 +8,15 @@ async function main() {
     where: {
       Course_Start_Professor: {
         Course: "CSC 307",
-        Start: new Date("2023-09-04"),
+        Start: set(new Date(), { hours: 10, minutes: 10, seconds: 0 }),
         Professor: "Fox",
       },
     },
     update: {},
     create: {
       Course: "CSC 307",
-      Start: new Date("2023-09-04"),
-      End: new Date("2023-12-08"),
+      Start: set(new Date(), { hours: 10, minutes: 10, seconds: 0 }),
+      End: set(new Date(), { hours: 11, minutes: 0, seconds: 0 }),
       Sunday: false,
       Monday: true,
       Tuesday: false,
@@ -35,15 +36,15 @@ async function main() {
     where: {
       Course_Start_Professor: {
         Course: "CSC 307",
-        Start: new Date("2023-09-05"),
+        Start: set(new Date(), { hours: 10, minutes: 10, seconds: 0 }),
         Professor: "Gonzalez",
       },
     },
     update: {},
     create: {
       Course: "CSC 307",
-      Start: new Date("2023-09-05"),
-      End: new Date("2023-12-09"),
+      Start: set(new Date(), { hours: 10, minutes: 10, seconds: 0 }),
+      End: set(new Date(), { hours: 11, minutes: 0, seconds: 0 }),
       Sunday: false,
       Monday: true,
       Tuesday: false,
@@ -63,15 +64,15 @@ async function main() {
     where: {
       Course_Start_Professor: {
         Course: "CSC 307",
-        Start: new Date("2023-09-06"),
+        Start: set(new Date(), { hours: 10, minutes: 10, seconds: 0 }),
         Professor: "Perez",
       },
     },
     update: {},
     create: {
       Course: "CSC 307",
-      Start: new Date("2023-09-06"),
-      End: new Date("2023-12-10"),
+      Start: set(new Date(), { hours: 10, minutes: 10, seconds: 0 }),
+      End: set(new Date(), { hours: 11, minutes: 0, seconds: 0 }),
       Sunday: false,
       Monday: true,
       Tuesday: false,
