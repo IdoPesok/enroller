@@ -322,7 +322,6 @@ async function main() {
           await saveFlowchart(connection, concentration, major, flowCatalogYear, response.courseData)
         } catch (e) {
           console.log(e);
-          exit(1);
         }
       }
     }
