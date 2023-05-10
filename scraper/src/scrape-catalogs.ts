@@ -3,6 +3,7 @@ import mysql from "mysql2/promise";
 import { exit } from "process";
 import puppeteer from 'puppeteer';
 const fetch = require('node-fetch');
+const prompt = require('prompt-sync')({sigint: true});
 
 interface Concentration {
   name: string | null;
@@ -190,11 +191,14 @@ async function dropTables(connection: mysql.Connection) {
 
 async function saveCatalogs(connection: mysql.Connection, catalogs: Catalog[]) {
   try {
+    const queries = []
     for (const catalog of catalogs) {
-      await connection.query("INSERT IGNORE INTO Catalogs (CatalogYear) VALUES (?)", [
+      queries.push(connection.query("INSERT IGNORE INTO Catalogs (CatalogYear) VALUES (?)", [
         catalog.name,
-      ]);
+      ]));
     }
+
+    await Promise.all(queries);
     console.log("saved catalogs");
   } catch (e) {
     console.error("error saving catalogs", e);
@@ -204,12 +208,15 @@ async function saveCatalogs(connection: mysql.Connection, catalogs: Catalog[]) {
 
 async function saveMajors(connection: mysql.Connection, majors: Major[], catalogYear: string) {
   try {
+    const queries = []
     for (const major of majors) {
-      await connection.query("INSERT IGNORE INTO Majors (Id, Name) VALUES (?, ?)", [
+      queries.push(connection.query("INSERT IGNORE INTO Majors (Id, Name) VALUES (?, ?)", [
         major.id,
         major.name
-      ]);
+      ]));
     }
+
+    await Promise.all(queries);
 
     console.log("saved majors for catalog year " + catalogYear);
   } catch (e) {
@@ -220,6 +227,7 @@ async function saveMajors(connection: mysql.Connection, majors: Major[], catalog
 
 async function saveConcentrations(connection: mysql.Connection, concentrations: Concentration[], majorId: string) {
   try {
+    const queries = []
     for (const concentration of concentrations) {
       const temp = {...concentration}
       if (!temp.id || temp.id === "") {
@@ -227,13 +235,14 @@ async function saveConcentrations(connection: mysql.Connection, concentrations: 
         temp.name = null;
       }
 
-      await connection.query("INSERT IGNORE INTO Concentrations (Id, Name, MajorId) VALUES (?, ?, ?)", [
+      queries.push(connection.query("INSERT IGNORE INTO Concentrations (Id, Name, MajorId) VALUES (?, ?, ?)", [
         temp.id,
         temp.name,
         majorId
-      ]);
+      ]));
     }
 
+    await Promise.all(queries);
     console.log("saved concentrations for major " + majorId);
   } catch (e) {
     console.error("error saving concentrations", e);
@@ -250,28 +259,44 @@ function getFlowchartId(catalogYear: string, majorId: string, concentrationId: s
 
 async function saveFlowchart(
   connection: mysql.Connection, 
-  concentration: Concentration, 
+  conc: Concentration, 
   major: Major, 
   catalogYear: string,
-  courseData: CourseData[]
-) {
+  START_FROM_SCRATCH: boolean,
+  cookies: string
+): Promise<void> {
+  const payload = generateGetDefaultFlowPayload(catalogYear, major.id, conc.id);
+
+  const concentration = {...conc}
+  if (!conc.id || conc.id.trim() === "") {
+    concentration.id = GENERAL_CONCENTRATION_ID
+    concentration.name = null
+  }
+
   try {
-    const temp = {...concentration}
-    if (!temp.id || temp.id.trim() === "") {
-      temp.id = GENERAL_CONCENTRATION_ID
-      temp.name = null
+    const flowchartId = getFlowchartId(catalogYear, major.id, concentration.id);
+
+    if (!START_FROM_SCRATCH) {
+      const gradAdded = await haveGradRequirementsBeenAdded(connection, flowchartId);
+      if (gradAdded) {
+        console.log(`grad requirements for ${flowchartId} already exists`)
+        return;
+      }
     }
 
-    const flowchartId = getFlowchartId(catalogYear, major.id, temp.id);
+    // get the grad requirements for the flowchart
+    const response = await getDefaultFlowData(payload, cookies);
 
+    // insert flowchart
     await connection.query("INSERT INTO `Flowcharts` (FlowchartId, CatalogYear, MajorId, ConcentrationId) VALUES (?, ?, ?, ?)", [
       flowchartId,
       catalogYear,
       major.id,
-      temp.id
+      concentration.id
     ]);
 
-    for (const course of courseData) {
+    // insert grad requirements
+    for (const course of response.courseData) {
       // insert space before the course number in the course id
       const ix = course.cID.indexOf(course.cNum.toString());
       const courseCode = course.cID.slice(0, ix) + " " + course.cID.slice(ix);
@@ -284,8 +309,7 @@ async function saveFlowchart(
 
     console.log(`saved flowchart ${flowchartId}`)
   } catch (e) {
-    console.error("error saving concentrations", e);
-    exit(1);
+    console.error("error saving concentrations", payload);
   }
 }
 
@@ -307,7 +331,9 @@ async function main() {
   // note it is recommended to run get cookies one time, then replace getCookies with the cookies as a string
   const cookies = await getCookies();
 
-  const START_FROM_SCRATCH = true;
+  const START_FROM_SCRATCH = prompt("Start from scratch? (y/n) ").toLowerCase() === "y";
+
+  const flowchartQueries: (() => Promise<void>)[] = [];
 
   if (START_FROM_SCRATCH) {
     await dropTables(connection);
@@ -325,27 +351,15 @@ async function main() {
       await saveConcentrations(connection, major.concentrations, major.id);
 
       for (const concentration of major.concentrations) {
-        const flowConcentration = concentration.id;
-
-        const payload = generateGetDefaultFlowPayload(flowCatalogYear, major.id, flowConcentration);
-        const flowchartId = getFlowchartId(flowCatalogYear, major.id, flowConcentration);
-
-        try {
-          const gradAdded = await haveGradRequirementsBeenAdded(connection, flowchartId);
-          if (!START_FROM_SCRATCH && gradAdded) {
-            console.log(`grad requirements for ${flowchartId} already exists`)
-            continue;
-          }
-
-          const response = await getDefaultFlowData(payload, cookies);
-
-          // only call once for now
-          await saveFlowchart(connection, concentration, major, flowCatalogYear, response.courseData)
-        } catch (e) {
-          console.log(e);
-        }
+        flowchartQueries.push(() => saveFlowchart(connection, concentration, major, flowCatalogYear, START_FROM_SCRATCH, cookies));
       }
     }
+  }
+
+  // run 10 flowchart queries at a time
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < flowchartQueries.length; i += BATCH_SIZE) {
+    await Promise.all(flowchartQueries.slice(i, i + BATCH_SIZE).map(q => q()));
   }
 
   await connection.end();
