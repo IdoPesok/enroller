@@ -2,7 +2,6 @@ require("dotenv").config();
 const mysql = require('mysql2/promise');
 const { Configuration, OpenAIApi } = require("openai");
 import { PineconeClient } from "@pinecone-database/pinecone";
-import { Buffer } from 'buffer';
 import { v4 as uuidv4 } from 'uuid';
 
 interface Course {
