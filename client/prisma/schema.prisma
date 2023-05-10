@@ -29,9 +29,10 @@ model Enrolled {
 }
 
 model Sections {
-  Course           String           @db.VarChar(10)
-  Start            DateTime         @db.Date
-  End              DateTime         @db.Date
+  Id               Int              @id
+  Course           String?          @db.VarChar(10)
+  Start            DateTime?        @db.Time(0)
+  End              DateTime?        @db.Time(0)
   Sunday           Boolean?         @db.Bit(1)
   Monday           Boolean?         @db.Bit(1)
   Tuesday          Boolean?         @db.Bit(1)
@@ -41,45 +42,20 @@ model Sections {
   Saturday         Boolean?         @db.Bit(1)
   Capacity         Int?
   WaitlistCapacity Int?
-  Professor        String           @db.VarChar(255)
+  Professor        String?          @db.VarChar(255)
   Room             String?          @db.VarChar(10)
   Format           Sections_Format?
-
-  @@id([Course, Start, Professor])
-}
-
-model Flowcharts {
-  FlowchartId     String @id @db.VarChar(255)
-  CatalogYear     String @db.VarChar(10)
-  MajorId         String @db.VarChar(24)
-  ConcentrationId String @db.VarChar(24)
 }
 
 model Catalogs {
   CatalogYear String @id @db.VarChar(10)
 }
 
-model Concentrations {
-  Id      String  @db.VarChar(10)
-  Name    String? @db.VarChar(255)
-  MajorId String  @db.VarChar(255)
-
-  @@id([Id, MajorId])
-}
-
-model GraduationRequirements {
-  FlowchartId String @db.VarChar(255)
-  Code        String @db.VarChar(10)
-
-  @@id([FlowchartId, Code])
-}
-
-model Majors {
-  Id   String @id @db.VarChar(24)
-  Name String @db.VarChar(255)
-}
-
 enum Sections_Format {
+  online
+  in_person @map("in person")
+  TBD
+  enum Sections_Format {
   online
   in_person @map("in person")
   TBD
