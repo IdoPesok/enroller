@@ -4,7 +4,7 @@ import { Courses } from "@prisma/client"
 import { Prereq } from "@/interfaces/PrereqTypes"
 import { Button } from "../ui/button"
 import Link from "next/link"
-import { generateStudentRoute } from "@/lib/auth"
+import { generateStudentRoute } from "@/lib/routes"
 
 interface Props {
   course: Courses
