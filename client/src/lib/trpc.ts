@@ -1,6 +1,6 @@
 import { httpBatchLink, loggerLink } from '@trpc/client';
 import { createTRPCNext } from '@trpc/next';
-import { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
+import { TRPCError, inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import { NextPageContext } from 'next';
 // ℹ️ Type-only import:
 // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-8.html#type-only-imports-and-export
@@ -126,3 +126,11 @@ export const trpc = createTRPCNext<AppRouter, SSRContext>({
 
 export type RouterInput = inferRouterInputs<AppRouter>;
 export type RouterOutput = inferRouterOutputs<AppRouter>;
+
+export const internalServerError = (message: string, e: unknown) => {
+  return new TRPCError({
+    code: "INTERNAL_SERVER_ERROR",
+    message: message,
+    cause: JSON.stringify(e),
+  })
+}

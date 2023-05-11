@@ -3,8 +3,9 @@ import { useRouter } from "next/router"
 import { AcademicCapIcon } from "@heroicons/react/24/solid"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
-import { generateAdminRoute, generateStudentRoute, isUserAdmin } from "@/lib/auth"
 import Link from "next/link"
+import { generateAdminRoute, generateStudentRoute } from "@/lib/routes"
+import { isUserAdmin } from "@/lib/auth"
 
 const STUDENT_NAVIGATION = [
   { name: "Course Search", href: generateStudentRoute("/courses") },

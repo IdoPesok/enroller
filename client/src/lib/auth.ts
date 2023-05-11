@@ -1,21 +1,15 @@
-export const STUDENT_NAMESPACE = "/student"
-export const ADMIN_NAMESPACE = "/admin"
-
-export const generateRoute = (namespace: string, route: string) => {
-  let cleanedRoute = route
-  if (cleanedRoute.startsWith("/")) {
-    cleanedRoute = cleanedRoute.substring(1)
-  }
-
-  return (namespace + "/" + cleanedRoute)
-}
-
-export const generateStudentRoute = (route: string) => generateRoute(STUDENT_NAMESPACE, route)
-export const generateAdminRoute = (route: string) => generateRoute(ADMIN_NAMESPACE, route)
+import { PUBLIC_METADATA_KEYS } from "@/interfaces/PublicMetadata"
 
 export const isUserAdmin = (user: UserPublicMetadata | undefined) => {
   if (!user) {
     return false
   }
-  return user.role === "ADMIN"
+  return user[PUBLIC_METADATA_KEYS.role] === "ADMIN"
+}
+
+export const doesUserNeedOnboarding = (user: UserPublicMetadata | undefined) => {
+  if (!user) {
+    return false
+  }
+  return user[PUBLIC_METADATA_KEYS.role] !== "ADMIN" && user[PUBLIC_METADATA_KEYS.onboarding] !== true
 }
