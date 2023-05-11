@@ -10,14 +10,15 @@ datasource db {
 }
 
 model Courses {
-  Code        String  @id @db.VarChar(10)
-  Prefix      String  @db.VarChar(6)
+  Code        String     @id @db.VarChar(10)
+  Prefix      String     @db.VarChar(6)
   Number      Int
   MinUnits    Int
   MaxUnits    Int
-  Name        String  @db.VarChar(128)
-  Description String? @db.Text
+  Name        String     @db.VarChar(128)
+  Description String?    @db.Text
   Prereqs     Json?
+  Sections    Sections[]
 
   @@fulltext([Code, Name, Description], map: "SearchIndex")
   @@fulltext([Code, Name], map: "ShortSearchIndex")
@@ -44,8 +45,10 @@ model Sections {
   Professor        String           @db.VarChar(255)
   Room             String?          @db.VarChar(10)
   Format           Sections_Format?
+  Courses          Courses          @relation(fields: [Course], references: [Code])
 
   @@id([Course, Start, Professor])
+  @@index([Course], map: "Course")
 }
 
 model Flowcharts {

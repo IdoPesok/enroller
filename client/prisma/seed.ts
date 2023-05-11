@@ -3,20 +3,29 @@ import { set } from "date-fns"
 
 const prisma = new PrismaClient()
 
+function zero(date: Date): Date {
+  return set(date, { seconds: 0, milliseconds: 0 })
+}
+
 async function main() {
   const csc307Section1 = await prisma.sections.upsert({
     where: {
       Course_Start_Professor: {
         Course: "CSC 307",
-        Start: set(new Date(), { hours: 10, minutes: 10, seconds: 0 }),
+        Start: zero(
+          set(new Date(), {
+            hours: 10,
+            minutes: 10,
+          })
+        ),
         Professor: "Fox",
       },
     },
     update: {},
     create: {
       Course: "CSC 307",
-      Start: set(new Date(), { hours: 10, minutes: 10, seconds: 0 }),
-      End: set(new Date(), { hours: 11, minutes: 0, seconds: 0 }),
+      Start: zero(set(new Date(), { hours: 10, minutes: 10 })),
+      End: zero(set(new Date(), { hours: 11, minutes: 0 })),
       Sunday: false,
       Monday: true,
       Tuesday: false,
@@ -36,15 +45,15 @@ async function main() {
     where: {
       Course_Start_Professor: {
         Course: "CSC 307",
-        Start: set(new Date(), { hours: 10, minutes: 10, seconds: 0 }),
+        Start: zero(set(new Date(), { hours: 10, minutes: 10 })),
         Professor: "Gonzalez",
       },
     },
     update: {},
     create: {
       Course: "CSC 307",
-      Start: set(new Date(), { hours: 10, minutes: 10, seconds: 0 }),
-      End: set(new Date(), { hours: 11, minutes: 0, seconds: 0 }),
+      Start: zero(set(new Date(), { hours: 10, minutes: 10 })),
+      End: zero(set(new Date(), { hours: 11, minutes: 0 })),
       Sunday: false,
       Monday: true,
       Tuesday: false,
@@ -64,15 +73,15 @@ async function main() {
     where: {
       Course_Start_Professor: {
         Course: "CSC 307",
-        Start: set(new Date(), { hours: 10, minutes: 10, seconds: 0 }),
+        Start: zero(set(new Date(), { hours: 10, minutes: 10 })),
         Professor: "Perez",
       },
     },
     update: {},
     create: {
       Course: "CSC 307",
-      Start: set(new Date(), { hours: 10, minutes: 10, seconds: 0 }),
-      End: set(new Date(), { hours: 11, minutes: 0, seconds: 0 }),
+      Start: zero(set(new Date(), { hours: 10, minutes: 10 })),
+      End: zero(set(new Date(), { hours: 11, minutes: 0 })),
       Sunday: false,
       Monday: true,
       Tuesday: false,
