@@ -56,3 +56,19 @@ export enum RouteType {
   STUDENT = 3,
   ONBOARDING = 4,
 }
+
+export const getRouteType = (path: string): RouteType | null => {
+  let currentRouteType: RouteType | null = null;
+
+  if (isAdminRoute(path)) {
+    currentRouteType = RouteType.ADMIN
+  } else if (isStudentRoute(path)) {
+    currentRouteType = RouteType.STUDENT
+  } else if (isOnboardingRoute(path)) {
+    currentRouteType = RouteType.ONBOARDING
+  } else if (isPublicRoute(path)) {
+    currentRouteType = RouteType.PUBLIC
+  }
+
+  return currentRouteType;
+}

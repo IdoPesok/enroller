@@ -6,7 +6,7 @@ import anime from 'animejs';
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronLeft, ChevronsUpDown, LogOut, RotateCcw } from "lucide-react"
 import {
   Command,
   CommandEmpty,
@@ -17,6 +17,8 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/router";
 import { generateStudentRoute } from "@/lib/routes";
+import { useClerk } from "@clerk/nextjs";
+import { AcademicCapIcon } from "@heroicons/react/24/solid";
 
 export default function Onboarding() {
   const [stage, setStage] = useState(1)
@@ -25,6 +27,7 @@ export default function Onboarding() {
   const [selectedMajor, setSelectedMajor] = useState("")
   const [selectedConcentration, setSelectedConcentration] = useState("")
   const router = useRouter()
+  const { signOut } = useClerk()
 
   const catalogs = trpc.onboard.catalogs.useQuery();
   const majors = trpc.onboard.majors.useQuery({
@@ -35,14 +38,35 @@ export default function Onboarding() {
     majorId: selectedMajor
   });
 
-  const handleMutationSuccess = () => {
+  const handleMutationSuccess = async () => {
+    await animateStage(5)
+
+    // rotate the cap icon 3 times
+    const element = document.getElementById(`cap-icon`)
+    if (!element) return
+
+    await anime({
+      targets: element,
+      rotate: 360 * 3,
+      easing: 'easeInOutQuad',
+      duration: 1000,
+    }).finished
+
     const nextRoute = generateStudentRoute("courses")
     // redirect to next route
     router.replace(nextRoute)
   }
+
   const mutation = trpc.onboard.saveUserFlowchart.useMutation({
     onSuccess: handleMutationSuccess
   })
+
+  const handleRestart = () => {
+    setStage(1)
+    setSelectedCatalog(undefined)
+    setSelectedMajor("")
+    setSelectedConcentration("")
+  }
 
   const animateStage = async (newStage: number) => {
     const element = document.getElementById(`stage-${stage}`)
@@ -285,14 +309,64 @@ export default function Onboarding() {
     </>
   )
 
+  const stageFive = (
+    <>
+      <AcademicCapIcon className="h-8 text-emerald-500 mr-5" id="cap-icon" />
+      <h1 className="text-3xl font-bold flex items-center text-center justify-center">
+        You&apos;re all set!
+      </h1>
+      <p className="my-0">
+        You can now start using Enroller!
+      </p>
+    </>
+  )
+
   return (
-    <div className="mx-auto max-w-2xl py-10 text-center flex flex-col gap-10 items-center justify-center mb-20" id={'stage-' + stage}>
-      {{
-        1: stageOne,
-        2: stageTwo,
-        3: stageThree,
-        4: stageFour,
-      }[stage] || <></>}
-    </div>
+    <>
+      <div className="mx-auto max-w-2xl py-10 text-center flex flex-col gap-10 items-center justify-center mb-20" id={'stage-' + stage}>
+        {{
+          1: stageOne,
+          2: stageTwo,
+          3: stageThree,
+          4: stageFour,
+          5: stageFive,
+        }[stage] || <></>}
+      </div>
+      {
+        stage < 5 && (
+          <>
+            {
+              stage > 1 && (
+                <div className="flex justify-center absolute bottom-10 gap-10">
+                  <>
+                    <Button
+                      className="bg-slate-0 hover:bg-slate-200 text-black"
+                      onClick={() => animateStage(stage - 1)}
+                    >
+                      <ChevronLeft className="mr-2" />
+                      Back
+                    </Button>
+                    <Button
+                      className="bg-slate-0 hover:bg-slate-200 text-black"
+                      onClick={() => handleRestart()}
+                    >
+                      <RotateCcw className="mr-2" height={18} />
+                      Reset
+                    </Button>
+                  </>
+                </div>
+              )
+            }
+            <Button
+              className="bg-slate-0 hover:bg-slate-200 text-black absolute top-5 right-10"
+              onClick={() => signOut()}
+            >
+              <LogOut className="mr-2" height={18} />
+              Logout
+            </Button>
+          </>
+        )
+      }
+    </>
   )
 }

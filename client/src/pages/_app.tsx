@@ -40,7 +40,7 @@ const MyApp: AppType = ({ Component, pageProps }: AppProps) => {
   }, [router])
 
   return (
-    <ClerkProvider>
+    <ClerkProvider publishableKey="pk_test_c3VpdGFibGUtcHJpbWF0ZS0xNy5jbGVyay5hY2NvdW50cy5kZXYk">
       <ClerkLoading>
         <LoadingPage />
       </ClerkLoading>

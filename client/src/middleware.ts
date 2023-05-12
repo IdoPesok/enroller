@@ -1,7 +1,7 @@
 import { withClerkMiddleware, getAuth, clerkClient } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { RouteType, generateAdminRoute, generateOnboardingRoute, generateStudentRoute, isAdminRoute, isApiPath, isErrorPath, isOnboardingRoute, isPublicRoute, isStudentRoute } from './lib/routes'
+import { RouteType, generateAdminRoute, generateOnboardingRoute, generateStudentRoute, getRouteType, isAdminRoute, isApiPath, isErrorPath, isOnboardingRoute, isPublicRoute, isStudentRoute } from './lib/routes'
 import { doesUserNeedOnboarding, isUserAdmin } from './lib/auth'
 
 export default withClerkMiddleware(async (request: NextRequest) => {
@@ -18,17 +18,7 @@ export default withClerkMiddleware(async (request: NextRequest) => {
   }
 
   // figure out the current route being requested
-  let currentRouteType: RouteType | null = null;
-
-  if (isAdminRoute(request.nextUrl.pathname)) {
-    currentRouteType = RouteType.ADMIN
-  } else if (isStudentRoute(request.nextUrl.pathname)) {
-    currentRouteType = RouteType.STUDENT
-  } else if (isOnboardingRoute(request.nextUrl.pathname)) {
-    currentRouteType = RouteType.ONBOARDING
-  } else if (isPublicRoute(request.nextUrl.pathname)) {
-    currentRouteType = RouteType.PUBLIC
-  }
+  let currentRouteType: RouteType | null = getRouteType(request.nextUrl.pathname);
 
   if (currentRouteType === null) {
     return redirectTo404()

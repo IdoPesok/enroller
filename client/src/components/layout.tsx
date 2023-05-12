@@ -3,7 +3,8 @@ import { ReactNode, useEffect, useState } from "react"
 import { LandingNav } from "./nav/landing-nav"
 import { MainNav } from "./nav/main-nav"
 import { useRouter } from "next/router"
-import { isOnboardingRoute } from "@/lib/routes"
+import { RouteType, getRouteType } from "@/lib/routes"
+import { LoadingPage } from "./loading/loading-page"
 
 type Props = {
   children: ReactNode
@@ -11,22 +12,21 @@ type Props = {
 
 export const Layout = ({ children }: Props) => {
   const { userId } = useAuth()
-  const [showNav, setShowNav] = useState(false)
+  const [routeType, setRouteType] = useState<RouteType | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    if (isOnboardingRoute(router.pathname)) {
-      setShowNav(false)
-    } else {
-      setShowNav(true)
-    }
+    const rt = getRouteType(router.pathname)
+    setRouteType(rt);
   }, [router, router.pathname])
 
   if (!userId) {
     return (
-      <>
+      (routeType === RouteType.PUBLIC) ? (<>
         <LandingNav>{children}</LandingNav>
-      </>
+      </>) : (
+        <LoadingPage />
+      )
     )
   }
 
@@ -34,7 +34,7 @@ export const Layout = ({ children }: Props) => {
     <>
       <div className="bg-white">
         { 
-          !showNav ? (
+          (routeType === RouteType.ONBOARDING) ? (
             <div className="h-screen w-screen flex justify-center items-center">
               { children }
             </div>
