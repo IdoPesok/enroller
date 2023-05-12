@@ -3,7 +3,7 @@ import { internalServerError } from "@/lib/trpc"
 import { prisma } from "@/server/prisma"
 import { clerkClient } from '@clerk/nextjs'
 import { z } from "zod"
-import { onboardProcedure, router } from "../trpc"
+import { onboardProcedure, router, studentProcedure } from "../trpc"
 
 export const onboardRouter = router({
   catalogs: onboardProcedure
@@ -20,28 +20,20 @@ export const onboardRouter = router({
         return []
       }
 
-      const majorIdsFromCatalogYear = await prisma.flowcharts.findMany({
+      return (await prisma.flowcharts.findMany({
         where: {
           CatalogYear: input.catalogYear
         },
-        select: {
-          MajorId: true
-        }
-      })
-
-      const majorIds = majorIdsFromCatalogYear.map(major => major.MajorId)
-
-      // return all majors with the ids from the catalog year
-      return await prisma.majors.findMany({
-        where: {
-          Id: {
-            in: majorIds
-          }
+        include: {
+          Major: true
         },
         orderBy: {
-          Name: "asc"
-        }
-      })
+          Major: {
+            Name: "asc"
+          }
+        },
+        distinct: ["MajorId"]
+      })).map(flowchart => flowchart.Major)
     }),
   concentrations: onboardProcedure
     .input(z.object({ 
@@ -53,7 +45,7 @@ export const onboardRouter = router({
         return []
       }
 
-      const concentrations = await prisma.flowcharts.findMany({
+      return (await prisma.flowcharts.findMany({
         where: {
           AND: [
             {
@@ -64,31 +56,16 @@ export const onboardRouter = router({
             }
           ]
         },
-        select: {
-          ConcentrationId: true
-        }
-      })
-
-      const concentrationIds = concentrations.map(concentration => concentration.ConcentrationId)
-
-      // return all concentrations with the ids from the catalog year
-      return await prisma.concentrations.findMany({
-        where: {
-          AND: [
-            {
-              Id: {
-                in: concentrationIds
-              }
-            },
-            {
-              MajorId: input.majorId
-            }
-          ]
+        include: {
+          Concentration: true,
         },
         orderBy: {
-          Name: "asc"
-        }
-      })
+          Concentration: {
+            Name: "asc"
+          }
+        },
+        distinct: ["ConcentrationId"]
+      })).map(flowchart => flowchart.Concentration)
     }),
   saveUserFlowchart: onboardProcedure
     .input(z.object({ 
@@ -153,6 +130,28 @@ export const onboardRouter = router({
         }
       } catch (e) {
         throw internalServerError("Failed to find the flowchart", e)
+      }
+    }),
+  resetOnboarding: studentProcedure
+    .mutation(async ({ ctx }) => {
+      // update the user's metadata
+      try {
+        const user = await clerkClient.users.getUser(ctx.auth.userId);
+
+        await clerkClient.users.updateUser(
+          ctx.auth.userId,
+          {
+            publicMetadata: {
+              ...user.publicMetadata,
+              [PUBLIC_METADATA_KEYS.onboarding]: undefined,
+              [PUBLIC_METADATA_KEYS.flowchartId]: undefined
+            }
+          }
+        )
+
+        return true;
+      } catch (e) {
+        throw internalServerError("Failed to save reset user onboarding", e)
       }
     }),
 })

@@ -42,13 +42,6 @@ export default function CourseViewer() {
     code: router.query.code as string,
   })
 
-  const handleRateMyProfessor = () => {
-    window.open(
-      "https://www.ratemyprofessors.com/search.jsp?query=" + "John Smith",
-      "_blank"
-    )
-  }
-
   if (course.isLoading) {
     return <Spinner />
   }
@@ -56,47 +49,6 @@ export default function CourseViewer() {
   if (course.error || !course.data) {
     return <Error404 />
   }
-
-  const rows = DummyData.map((row) => (
-    <tr key={row.professorName + row.meetingTimes}>
-      <td className="px-6 py-4 whitespace-nowrap">{row.professorName}</td>
-      <td className="px-6 py-4 whitespace-nowrap">{row.meetingTimes}</td>
-      <td className="px-6 py-4 whitespace-nowrap">{row.enrolled}</td>
-      <td className="px-6 py-4 whitespace-nowrap">{row.waitlist}</td>
-      <td className="px-6 py-4 whitespace-nowrap">{row.classType}</td>
-      <td className="px-6 py-4 whitespace-nowrap">{row.modality}</td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <EllipsisVerticalIcon className="h-6" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 mr-10">
-            <DropdownMenuItem onClick={() => handleRateMyProfessor()}>
-              <Search className="h-5 mr-2" />
-              Rate my professor
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </td>
-    </tr>
-  ))
-
-  const headers = [
-    "Professor Name",
-    "Meeting Times",
-    "Enrolled",
-    "Waitlist",
-    "Class Type",
-    "Modality",
-    "",
-  ].map((header) => (
-    <th
-      key={header}
-      className="px-6 py-4 text-left text-xs font-medium text-slate-600 uppercase tracking-wider"
-    >
-      {header}
-    </th>
-  ))
 
   return (
     <div>
