@@ -30,22 +30,23 @@ model Enrolled {
 }
 
 model Sections {
-  Course           String           @db.VarChar(10)
-  Start            DateTime         @db.Time(0)
-  End              DateTime         @db.Time(0)
-  Sunday           Boolean?         @db.Bit(1)
-  Monday           Boolean?         @db.Bit(1)
-  Tuesday          Boolean?         @db.Bit(1)
-  Wednesday        Boolean?         @db.Bit(1)
-  Thursday         Boolean?         @db.Bit(1)
-  Friday           Boolean?         @db.Bit(1)
-  Saturday         Boolean?         @db.Bit(1)
+  Course           String             @db.VarChar(10)
+  Start            DateTime           @db.Time(0)
+  End              DateTime           @db.Time(0)
+  Sunday           Boolean?           @db.Bit(1)
+  Monday           Boolean?           @db.Bit(1)
+  Tuesday          Boolean?           @db.Bit(1)
+  Wednesday        Boolean?           @db.Bit(1)
+  Thursday         Boolean?           @db.Bit(1)
+  Friday           Boolean?           @db.Bit(1)
+  Saturday         Boolean?           @db.Bit(1)
   Capacity         Int?
   WaitlistCapacity Int?
-  Professor        String           @db.VarChar(255)
-  Room             String?          @db.VarChar(10)
+  Professor        String             @db.VarChar(255)
+  Room             String?            @db.VarChar(10)
   Format           Sections_Format?
-  Courses          Courses          @relation(fields: [Course], references: [Code])
+  Modality         Sections_Modality?
+  Courses          Courses            @relation(fields: [Course], references: [Code])
 
   @@id([Course, Start, Professor])
   @@index([Course], map: "Course")
@@ -83,8 +84,14 @@ model Majors {
 }
 
 enum Sections_Format {
-  online
-  in_person @map("in person")
+  Lecture
+  Seminar
+  Lab
+}
+
+enum Sections_Modality {
+  Online
+  InPerson
   TBD
   enum Sections_Format {
   online
