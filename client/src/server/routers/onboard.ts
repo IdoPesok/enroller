@@ -20,28 +20,21 @@ export const onboardRouter = router({
         return []
       }
 
-      const majorIdsFromCatalogYear = await prisma.flowcharts.findMany({
+      const res = await prisma.flowcharts.findMany({
         where: {
           CatalogYear: input.catalogYear
         },
-        select: {
-          MajorId: true
-        }
-      })
-
-      const majorIds = majorIdsFromCatalogYear.map(major => major.MajorId)
-
-      // return all majors with the ids from the catalog year
-      return await prisma.majors.findMany({
-        where: {
-          Id: {
-            in: majorIds
-          }
+        include: {
+          Major: true
         },
         orderBy: {
-          Name: "asc"
-        }
+          Major: {
+            Name: "asc"
+          }
+        },
       })
+
+      return res.map(flowchart => flowchart.Major)
     }),
   concentrations: onboardProcedure
     .input(z.object({ 
@@ -53,7 +46,7 @@ export const onboardRouter = router({
         return []
       }
 
-      const concentrations = await prisma.flowcharts.findMany({
+      const res = await prisma.flowcharts.findMany({
         where: {
           AND: [
             {
@@ -64,31 +57,12 @@ export const onboardRouter = router({
             }
           ]
         },
-        select: {
-          ConcentrationId: true
+        include: {
+          Concentration: true
         }
       })
 
-      const concentrationIds = concentrations.map(concentration => concentration.ConcentrationId)
-
-      // return all concentrations with the ids from the catalog year
-      return await prisma.concentrations.findMany({
-        where: {
-          AND: [
-            {
-              Id: {
-                in: concentrationIds
-              }
-            },
-            {
-              MajorId: input.majorId
-            }
-          ]
-        },
-        orderBy: {
-          Name: "asc"
-        }
-      })
+      return res.map(flowchart => flowchart.Concentration)
     }),
   saveUserFlowchart: onboardProcedure
     .input(z.object({ 

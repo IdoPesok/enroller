@@ -10,15 +10,16 @@ datasource db {
 }
 
 model Courses {
-  Code        String     @id @db.VarChar(10)
-  Prefix      String     @db.VarChar(6)
-  Number      Int
-  MinUnits    Int
-  MaxUnits    Int
-  Name        String     @db.VarChar(128)
-  Description String?    @db.Text
-  Prereqs     Json?
-  Sections    Sections[]
+  Code                   String                   @id @db.VarChar(10)
+  Prefix                 String                   @db.VarChar(6)
+  Number                 Int
+  MinUnits               Int
+  MaxUnits               Int
+  Name                   String                   @db.VarChar(128)
+  Description            String?                  @db.Text
+  Prereqs                Json?
+  Sections               Sections[]
+  GraduationRequirements GraduationRequirements[]
 
   @@fulltext([Code, Name, Description], map: "SearchIndex")
   @@fulltext([Code, Name], map: "ShortSearchIndex")
@@ -53,34 +54,52 @@ model Sections {
 }
 
 model Flowcharts {
-  FlowchartId     String @id @db.VarChar(255)
-  CatalogYear     String @db.VarChar(10)
-  MajorId         String @db.VarChar(24)
-  ConcentrationId String @db.VarChar(24)
+  FlowchartId            String                   @id @db.VarChar(255)
+  CatalogYear            String                   @db.VarChar(10)
+  MajorId                String                   @db.VarChar(24)
+  ConcentrationId        String                   @db.VarChar(24)
+  Catalog                Catalogs                 @relation(fields: [CatalogYear], references: [CatalogYear])
+  Major                  Majors                   @relation(fields: [MajorId], references: [Id])
+  Concentration          Concentrations           @relation(fields: [ConcentrationId, MajorId], references: [Id, MajorId])
+  GraduationRequirements GraduationRequirements[]
+
+  @@index([CatalogYear])
+  @@index([MajorId])
+  @@index([ConcentrationId, MajorId])
 }
 
 model Catalogs {
-  CatalogYear String @id @db.VarChar(10)
+  CatalogYear String       @id @db.VarChar(10)
+  Flowcharts  Flowcharts[]
 }
 
 model Concentrations {
-  Id      String  @db.VarChar(10)
-  Name    String? @db.VarChar(255)
-  MajorId String  @db.VarChar(255)
+  Id         String       @db.VarChar(10)
+  Name       String?      @db.VarChar(255)
+  MajorId    String       @db.VarChar(255)
+  Major      Majors       @relation(fields: [MajorId], references: [Id])
+  Flowcharts Flowcharts[]
 
   @@id([Id, MajorId])
+  @@index([MajorId])
 }
 
 model GraduationRequirements {
-  FlowchartId String @db.VarChar(255)
-  Code        String @db.VarChar(10)
+  FlowchartId String     @db.VarChar(255)
+  Code        String     @db.VarChar(10)
+  Flowchart   Flowcharts @relation(fields: [FlowchartId], references: [FlowchartId])
+  Course      Courses    @relation(fields: [Code], references: [Code])
 
   @@id([FlowchartId, Code])
+  @@index([FlowchartId])
+  @@index([Code])
 }
 
 model Majors {
-  Id   String @id @db.VarChar(24)
-  Name String @db.VarChar(255)
+  Id             String           @id @db.VarChar(24)
+  Name           String           @db.VarChar(255)
+  Flowcharts     Flowcharts[]
+  Concentrations Concentrations[]
 }
 
 enum Sections_Format {
