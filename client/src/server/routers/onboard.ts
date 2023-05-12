@@ -32,6 +32,7 @@ export const onboardRouter = router({
             Name: "asc"
           }
         },
+        distinct: ["MajorId"]
       })).map(flowchart => flowchart.Major)
     }),
   concentrations: onboardProcedure
@@ -56,8 +57,14 @@ export const onboardRouter = router({
           ]
         },
         include: {
-          Concentration: true
-        }
+          Concentration: true,
+        },
+        orderBy: {
+          Concentration: {
+            Name: "asc"
+          }
+        },
+        distinct: ["ConcentrationId"]
       })).map(flowchart => flowchart.Concentration)
     }),
   saveUserFlowchart: onboardProcedure
