@@ -93,8 +93,4 @@ enum Sections_Modality {
   Online
   InPerson
   TBD
-  enum Sections_Format {
-  online
-  in_person @map("in person")
-  TBD
 }
