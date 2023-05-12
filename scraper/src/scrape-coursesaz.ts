@@ -249,7 +249,7 @@ async function fetchCourses(connection: mysql.Connection, url: URL) {
     }
     const [codeRaw, ...fullnameParts] = title.split(".");
     // class code e.g. CSC 307
-    const code = codeRaw.trim();
+    const code = codeRaw.trim().replace(/\s/g, " ");
     const fullname = fullnameParts.join(".").trim().slice(0, -1);
     // split code into fields, (regex used because unicode space)
     const [prefix, numberStr] = code.split(/\s/);
