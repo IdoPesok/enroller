@@ -1,55 +1,53 @@
 import { withClerkMiddleware, getAuth, clerkClient } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { generateAdminRoute, generateStudentRoute, isUserAdmin } from './lib/auth'
-
-// Set the paths that don't require the user to be signed in
-const publicPaths = ['/', '/sign-in*', '/sign-up*']
-
-const studentPaths = [generateStudentRoute("*")]
-const adminPaths = [generateAdminRoute("*")]
-
-const isPublic = (path: string) => {
-  return publicPaths.find(x =>
-    path.match(new RegExp(`^${x}$`.replace('*$', '($|/)')))
-  )
-}
-
-const isAdmin = (path: string) => {
-  return path.startsWith(generateAdminRoute(""))
-}
-
-const isStudent = (path: string) => {
-  return path.startsWith(generateStudentRoute(""))
-}
+import { RouteType, generateAdminRoute, generateOnboardingRoute, generateStudentRoute, getRouteType, isAdminRoute, isApiPath, isErrorPath, isOnboardingRoute, isPublicRoute, isStudentRoute } from './lib/routes'
+import { doesUserNeedOnboarding, isUserAdmin } from './lib/auth'
 
 export default withClerkMiddleware(async (request: NextRequest) => {
   // if the user is not signed in redirect them to the sign in page.
   const { userId } = getAuth(request)
   const user = userId ? await clerkClient.users.getUser(userId) : null;
 
-  // route checks
-  const isRoutePublic = isPublic(request.nextUrl.pathname)
-  const isRouteAdmin = isAdmin(request.nextUrl.pathname)
-  const isRouteStudent = isStudent(request.nextUrl.pathname)
+  const redirectTo404 = () => {
+    return NextResponse.redirect(new URL('/404', request.url))
+  }
+
+  if (isErrorPath(request.nextUrl.pathname) || isApiPath(request.nextUrl.pathname)) {
+    return NextResponse.next()
+  }
+
+  // figure out the current route being requested
+  let currentRouteType: RouteType | null = getRouteType(request.nextUrl.pathname);
+
+  if (currentRouteType === null) {
+    return redirectTo404()
+  }
 
   // setup redirect urls
-  const coursesUrl = new URL(generateStudentRoute("courses"), request.url)
-  const adminUrl = new URL(generateAdminRoute("overview"), request.url)
-  const signInUrl = new URL('/', request.url)
+  const redirectMap: Map<RouteType, URL> = new Map();
+  redirectMap.set(RouteType.PUBLIC, new URL('/', request.url))
+  redirectMap.set(RouteType.ADMIN, new URL(generateAdminRoute("overview"), request.url))
+  redirectMap.set(RouteType.STUDENT, new URL(generateStudentRoute("courses"), request.url))
+  redirectMap.set(RouteType.ONBOARDING, new URL(generateOnboardingRoute(""), request.url))
 
-  if (!userId && !isRoutePublic) {
-    // if they are trying to access a private route while not logged in
-    return NextResponse.redirect(signInUrl)
-  } else if (isRoutePublic && userId) {
-    // if they are trying to access a public route while logged in
-    return NextResponse.redirect(user && isUserAdmin(user.publicMetadata) ? adminUrl : coursesUrl)
-  } else if (user && isRouteStudent && isUserAdmin(user.publicMetadata)) {
-    // if they are a admin trying to access a student route
-    return NextResponse.redirect(adminUrl)
-  } else if (user && isRouteAdmin && !isUserAdmin(user.publicMetadata)) {
-    // if they are a student trying to access an admin route
-    return NextResponse.redirect(coursesUrl)
+  // define all the conditions that need to be true in order to visit a page
+  const routeValidMap: Map<RouteType, boolean> = new Map();
+  routeValidMap.set(RouteType.PUBLIC, !Boolean(userId));
+  routeValidMap.set(RouteType.ADMIN, user !== null && isUserAdmin(user.publicMetadata));
+  routeValidMap.set(RouteType.ONBOARDING, Boolean(userId) && user !== null && doesUserNeedOnboarding(user.publicMetadata));
+  routeValidMap.set(RouteType.STUDENT, user !== null && !isUserAdmin(user.publicMetadata) && !doesUserNeedOnboarding(user.publicMetadata));
+
+  // check if the current route is not valid
+  if (routeValidMap.has(currentRouteType) && routeValidMap.get(currentRouteType) === false) {
+    // if not valid, find the first valid route and redirect to it
+    const validRoute = Array.from(routeValidMap.keys()).find(key => routeValidMap.get(key) === true)
+    const redirectUrl = validRoute !== undefined ? redirectMap.get(validRoute) : null
+    if (validRoute && redirectUrl) {
+      return NextResponse.redirect(redirectUrl)
+    } else {
+      redirectTo404();
+    }
   }
 
   return NextResponse.next()
