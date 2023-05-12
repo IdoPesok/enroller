@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Search } from "lucide-react"
-import { DataTable } from "@/components/ui/data-table"
+import { DataTable } from "@/components/courses/data-table"
 import { columns } from "@/components/courses/columns"
 
 const DummyData = [

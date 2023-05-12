@@ -3,6 +3,9 @@
 import { Sections } from "@prisma/client"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
+import { Button } from "@/components/ui/button"
+import { ArrowUpDown } from "lucide-react"
+import { DataTableSortableColumnHeader } from "./data-table-sortable-column-header"
 
 type SectionDays = { [key: string]: boolean | null | undefined }
 
@@ -39,7 +42,9 @@ function daysFormat({ Start, End, ...section }: Sections): string {
 
 export const columns: ColumnDef<Sections>[] = [
   {
-    header: "Professor",
+    header: ({ column }) => (
+      <DataTableSortableColumnHeader column={column} title="Professor" />
+    ),
     accessorKey: "Professor",
   },
   {
@@ -47,7 +52,9 @@ export const columns: ColumnDef<Sections>[] = [
     accessorFn: (section) => daysFormat(section),
   },
   {
-    header: "Start",
+    header: ({ column }) => (
+      <DataTableSortableColumnHeader column={column} title="Start" />
+    ),
     accessorKey: "Start",
     cell: ({ row }) => {
       const start = row.getValue<Date>("Start")
@@ -55,11 +62,13 @@ export const columns: ColumnDef<Sections>[] = [
     },
   },
   {
-    header: "End",
+    header: ({ column }) => (
+      <DataTableSortableColumnHeader column={column} title="End" />
+    ),
     accessorKey: "End",
     cell: ({ row }) => {
-      const End = row.getValue<Date>("End")
-      return hmFormat(End)
+      const end = row.getValue<Date>("End")
+      return hmFormat(end)
     },
   },
   {
@@ -73,10 +82,24 @@ export const columns: ColumnDef<Sections>[] = [
   },
   {
     header: "Class Type",
-    accessorFn: ({ Format }) => camelAddSpace(Format),
+    accessorFn: ({ Format }) => Format,
+    cell: ({ row }) => {
+      const format = row.getValue<string>("Class Type")
+      return camelAddSpace(format)
+    },
+    filterFn: (row, id, value) => {
+      return value.has(row.getValue(id))
+    },
   },
   {
     header: "Modality",
-    accessorFn: ({ Modality }) => camelAddSpace(Modality),
+    accessorFn: ({ Modality }) => Modality,
+    cell: ({ row }) => {
+      const modality = row.getValue<string>("Modality")
+      return camelAddSpace(modality)
+    },
+    filterFn: (row, id, value) => {
+      return value.has(row.getValue(id))
+    },
   },
 ]
