@@ -3,7 +3,7 @@ import { internalServerError } from "@/lib/trpc"
 import { prisma } from "@/server/prisma"
 import { clerkClient } from '@clerk/nextjs'
 import { z } from "zod"
-import { onboardProcedure, router } from "../trpc"
+import { onboardProcedure, router, studentProcedure } from "../trpc"
 
 export const onboardRouter = router({
   catalogs: onboardProcedure
@@ -130,6 +130,28 @@ export const onboardRouter = router({
         }
       } catch (e) {
         throw internalServerError("Failed to find the flowchart", e)
+      }
+    }),
+  resetOnboarding: studentProcedure
+    .mutation(async ({ ctx }) => {
+      // update the user's metadata
+      try {
+        const user = await clerkClient.users.getUser(ctx.auth.userId);
+
+        await clerkClient.users.updateUser(
+          ctx.auth.userId,
+          {
+            publicMetadata: {
+              ...user.publicMetadata,
+              [PUBLIC_METADATA_KEYS.onboarding]: undefined,
+              [PUBLIC_METADATA_KEYS.flowchartId]: undefined
+            }
+          }
+        )
+
+        return true;
+      } catch (e) {
+        throw internalServerError("Failed to save reset user onboarding", e)
       }
     }),
 })

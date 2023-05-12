@@ -1,11 +1,16 @@
-import { UserButton, useUser } from "@clerk/nextjs"
+import { useClerk, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/router"
 import { AcademicCapIcon } from "@heroicons/react/24/solid"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { generateAdminRoute, generateStudentRoute } from "@/lib/routes"
-import { isUserAdmin } from "@/lib/auth"
+import { doesUserNeedOnboarding, isUserAdmin } from "@/lib/auth"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
+import { Button } from "../ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
+import { LogOut, RotateCcw } from "lucide-react"
+import { trpc } from "@/lib/trpc"
 
 const STUDENT_NAVIGATION = [
   { name: "Course Search", href: generateStudentRoute("/courses") },
@@ -29,6 +34,7 @@ export const MainNav = () => {
   const [activeRoute, setActiveRoute] = useState(router.pathname)
   const [highlightBarSize, setHighlightBarSize] = useState<HighlightBarSize | null>(null)
   const user = useUser()
+  const { signOut } = useClerk()
 
   useEffect(() => {
     const getHighlightBarSize = (): HighlightBarSize | null => {
@@ -55,6 +61,15 @@ export const MainNav = () => {
     }
   }, [router])
 
+  const resetMutation = trpc.onboard.resetOnboarding.useMutation({
+    onSuccess: () => {
+      router.reload()
+    }
+  });
+  const resetOnboarding = async () => {
+    await resetMutation.mutate();
+  }
+
   return (
     <>
       <div className="width-screen px-12 py-4 flex gap-6 flex-col border border-slate-200 mb-10 sticky top-0 left-0 bg-white">
@@ -75,7 +90,54 @@ export const MainNav = () => {
               </Link>
             ))}
           </div>
-          <UserButton />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user.user?.profileImageUrl} alt="@shadcn" />
+                  <AvatarFallback>SC</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  {
+                    user.user?.firstName && (
+                      <p className="text-sm font-medium leading-none">
+                        { user.user?.firstName } { user.user?.lastName }
+                      </p>
+                    )
+                  }
+                  {
+                    user.user?.primaryEmailAddress && (
+                      <p className="text-xs leading-none text-muted-foreground">
+                        { user.user?.primaryEmailAddress.emailAddress }
+                      </p>
+                    )
+                  }
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+                {
+                  (!isUserAdmin(user.user?.publicMetadata) && !doesUserNeedOnboarding(user.user?.publicMetadata)) && (
+                    <>
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem onClick={() => resetOnboarding()}>
+                          <RotateCcw className="mr-2 h-4 w-4" />
+                          <span>Reset Onboarding</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                      <DropdownMenuSeparator />
+                    </>
+                  )
+                }
+              <DropdownMenuItem onClick={() => signOut()}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         {
           highlightBarSize && (

@@ -13,6 +13,7 @@ import { STOPWORDS } from "@/lib/utils"
 export default function Courses() {
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 500)
+
   const courses = trpc.courses.list.useInfiniteQuery(
     { search: debouncedSearch },
     {
