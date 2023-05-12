@@ -20,7 +20,7 @@ export const onboardRouter = router({
         return []
       }
 
-      const res = await prisma.flowcharts.findMany({
+      return (await prisma.flowcharts.findMany({
         where: {
           CatalogYear: input.catalogYear
         },
@@ -32,9 +32,7 @@ export const onboardRouter = router({
             Name: "asc"
           }
         },
-      })
-
-      return res.map(flowchart => flowchart.Major)
+      })).map(flowchart => flowchart.Major)
     }),
   concentrations: onboardProcedure
     .input(z.object({ 
@@ -46,7 +44,7 @@ export const onboardRouter = router({
         return []
       }
 
-      const res = await prisma.flowcharts.findMany({
+      return (await prisma.flowcharts.findMany({
         where: {
           AND: [
             {
@@ -60,9 +58,7 @@ export const onboardRouter = router({
         include: {
           Concentration: true
         }
-      })
-
-      return res.map(flowchart => flowchart.Concentration)
+      })).map(flowchart => flowchart.Concentration)
     }),
   saveUserFlowchart: onboardProcedure
     .input(z.object({ 
