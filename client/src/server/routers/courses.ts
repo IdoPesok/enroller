@@ -13,6 +13,19 @@ export const courseRouter = router({
       })
       return course
     }),
+  withSections: studentProcedure
+    .input(z.object({ code: z.string() }))
+    .query(async ({ input }) => {
+      const course = await prisma.courses.findUnique({
+        where: {
+          Code: input.code,
+        },
+        include: {
+          Sections: true,
+        },
+      })
+      return course
+    }),
   list: studentProcedure
     .input(
       z.object({

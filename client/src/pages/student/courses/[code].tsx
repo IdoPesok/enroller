@@ -1,11 +1,21 @@
-import CourseCard from "@/components/courses/CourseCard";
-import { Spinner } from "@/components/ui/spinner";
-import { trpc } from "@/lib/trpc";
-import { useRouter } from "next/router";
-import Error404 from "../../404";
-import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search } from "lucide-react";
+import CourseCard from "@/components/courses/CourseCard"
+import { Spinner } from "@/components/ui/spinner"
+import { Table, TableHeader } from "@/components/ui/table"
+import { trpc } from "@/lib/trpc"
+import { useRouter } from "next/router"
+import Error404 from "../../404"
+import { EllipsisVerticalIcon } from "@heroicons/react/24/outline"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Search } from "lucide-react"
+import { DataTable } from "@/components/courses/data-table"
+import { columns } from "@/components/courses/columns"
 
 const DummyData = [
   {
@@ -23,15 +33,20 @@ const DummyData = [
     waitlist: "0",
     classType: "Seminar",
     modality: "Online",
-  }
+  },
 ]
 
-export default function CourseViewer () {
+export default function CourseViewer() {
   const router = useRouter()
-  const course = trpc.courses.course.useQuery({ code: router.query.code as string })
+  const course = trpc.courses.withSections.useQuery({
+    code: router.query.code as string,
+  })
 
   const handleRateMyProfessor = () => {
-    window.open("https://www.ratemyprofessors.com/search.jsp?query=" + "John Smith", "_blank")
+    window.open(
+      "https://www.ratemyprofessors.com/search.jsp?query=" + "John Smith",
+      "_blank"
+    )
   }
 
   if (course.isLoading) {
@@ -73,24 +88,20 @@ export default function CourseViewer () {
     "Waitlist",
     "Class Type",
     "Modality",
-    ""
+    "",
   ].map((header) => (
-    <th key={header} className="px-6 py-4 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">{ header }</th>
+    <th
+      key={header}
+      className="px-6 py-4 text-left text-xs font-medium text-slate-600 uppercase tracking-wider"
+    >
+      {header}
+    </th>
   ))
 
   return (
     <div>
       <CourseCard course={course.data} showLink={false} />
-      <table className="min-w-full divide-y divide-slate-200 w-full mt-10">
-        <thead className="bg-slate-100">
-          <tr>
-            {headers}
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-slate-200">
-          { rows }
-        </tbody>
-    </table>
+      <DataTable columns={columns} data={course.data.Sections} />
     </div>
   )
 }

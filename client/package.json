@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "generate": "prisma generate",
-    "db-pull": "dotenv -e .env.local -- prisma db pull"
+    "db-pull": "dotenv -e .env.local -- prisma db pull",
+    "db-push": "dotenv -e .env.local -- prisma db push",
+    "db-seed": "dotenv -e .env.local -- prisma db seed"
   },
   "dependencies": {
     "@badrap/bar-of-progress": "^0.2.2",
@@ -43,6 +45,7 @@
     "@radix-ui/react-toggle": "^1.0.2",
     "@radix-ui/react-tooltip": "^1.0.5",
     "@tanstack/react-query": "^4.29.3",
+    "@tanstack/react-table": "^8.9.1",
     "@trpc/client": "^10.20.0",
     "@trpc/next": "^10.20.0",
     "@trpc/react-query": "^10.20.0",
@@ -73,10 +76,12 @@
     "tailwindcss": "3.3.1",
     "tailwindcss-animate": "^1.0.5",
     "typescript": "5.0.4",
-    "zod": "^3.21.4"
+    "zod": "^3.21.4",
+    "date-fns": "^2.30.0"
   },
   "devDependencies": {
     "@types/animejs": "^3.1.7",
+    "date-fns": "^2.30.0",
     "dotenv-cli": "^7.2.1",
     "prisma": "^4.13.0",
     "ts-node": "^10.9.1"
