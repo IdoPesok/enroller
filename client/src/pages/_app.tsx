@@ -39,8 +39,10 @@ const MyApp: AppType = ({ Component, pageProps }: AppProps) => {
     }
   }, [router])
 
+  const clerk_pub_key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
   return (
-    <ClerkProvider publishableKey="pk_test_c3VpdGFibGUtcHJpbWF0ZS0xNy5jbGVyay5hY2NvdW50cy5kZXYk">
+    <ClerkProvider publishableKey={clerk_pub_key}>
       <ClerkLoading>
         <LoadingPage />
       </ClerkLoading>
