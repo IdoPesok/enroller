@@ -88,7 +88,7 @@ export const columns: ColumnDef<Sections>[] = [
       return camelAddSpace(format)
     },
     filterFn: (row, id, value) => {
-      return value.has(row.getValue(id))
+      return value.includes(row.getValue(id))
     },
   },
   {
@@ -99,7 +99,7 @@ export const columns: ColumnDef<Sections>[] = [
       return camelAddSpace(modality)
     },
     filterFn: (row, id, value) => {
-      return value.has(row.getValue(id))
+      return value.includes(row.getValue(id))
     },
   },
 ]

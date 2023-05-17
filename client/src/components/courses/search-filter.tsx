@@ -1,6 +1,7 @@
+"use client"
+
 import * as React from "react"
-import { Column } from "@tanstack/react-table"
-import { Check, LucideIcon, PlusCircle } from "lucide-react"
+import { Check, ChevronsUpDown, PlusCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -11,8 +12,6 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
-  CommandSeparator,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -20,32 +19,31 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "../ui/scroll-area"
 
-interface DataTableFacetedFilter<TData, TValue> {
-  column?: Column<TData, TValue>
-  title?: string
-  options: {
-    label: string
-    value: string
-    icon?: LucideIcon
-  }[]
+export interface Option {
+  label: string
+  value: string
 }
 
-export function DataTableFacetedFilter<TData, TValue>({
-  column,
-  title,
-  options,
-}: DataTableFacetedFilter<TData, TValue>) {
-  const facets = column?.getFacetedUniqueValues()
-  const selectedValues = new Set(column?.getFilterValue() as string[])
+interface Props {
+  options: Option[]
+  values: string[] | undefined
+  setValues: (values: string[] | undefined) => void
+}
+
+export function SearchFilterCombobox({ options, values, setValues }: Props) {
+  const [open, setOpen] = React.useState(false)
+
+  const selectedValues = new Set(values)
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 border-dashed">
+        <Button variant="outline" size="sm" className="h-10 border-dashed">
           <PlusCircle className="mr-2 h-4 w-4" />
-          {title}
-          {selectedValues?.size > 0 && (
+          Prefix...
+          {selectedValues.size > 0 && (
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
               <Badge
@@ -80,12 +78,12 @@ export function DataTableFacetedFilter<TData, TValue>({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0" align="start">
-        <Command>
-          <CommandInput placeholder={title} />
-          <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
-            <CommandGroup>
+      <PopoverContent className="w-[200px] overflow-hidden p-0">
+        <ScrollArea>
+          <Command>
+            <CommandInput placeholder="Prefix..." />
+            <CommandEmpty>No framework found.</CommandEmpty>
+            <CommandGroup className="overflow-scroll max-h-[600px]">
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value)
                 return (
@@ -97,10 +95,8 @@ export function DataTableFacetedFilter<TData, TValue>({
                       } else {
                         selectedValues.add(option.value)
                       }
-                      const filterValues = Array.from(selectedValues)
-                      column?.setFilterValue(
-                        filterValues.length ? filterValues : undefined
-                      )
+                      const values = Array.from(selectedValues)
+                      setValues(values.length > 0 ? values : undefined)
                     }}
                   >
                     <div
@@ -113,34 +109,18 @@ export function DataTableFacetedFilter<TData, TValue>({
                     >
                       <Check className={cn("h-4 w-4")} />
                     </div>
-                    {option.icon && (
-                      <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-                    )}
+                    {/*
+                  {option.icon && (
+                    <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
+                  )}
+                  */}
                     <span>{option.label}</span>
-                    {facets?.get(option.value) && (
-                      <span className="ml-auto flex h-4 w-4 items-center justify-center font-mono text-xs">
-                        {facets.get(option.value)}
-                      </span>
-                    )}
                   </CommandItem>
                 )
               })}
             </CommandGroup>
-            {selectedValues.size > 0 && (
-              <>
-                <CommandSeparator />
-                <CommandGroup>
-                  <CommandItem
-                    onSelect={() => column?.setFilterValue(undefined)}
-                    className="justify-center text-center"
-                  >
-                    Clear filters
-                  </CommandItem>
-                </CommandGroup>
-              </>
-            )}
-          </CommandList>
-        </Command>
+          </Command>
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   )

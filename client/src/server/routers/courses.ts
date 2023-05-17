@@ -1,6 +1,7 @@
 import { prisma } from "@/server/prisma"
 import { z } from "zod"
 import { studentProcedure, router } from "../trpc"
+import { Prisma } from "@prisma/client"
 
 export const courseRouter = router({
   course: studentProcedure
@@ -30,6 +31,11 @@ export const courseRouter = router({
     .input(
       z.object({
         search: z.string(),
+        filters: z
+          .object({
+            prefixes: z.array(z.string()).nullish(),
+          })
+          .nullish(),
         limit: z.number().min(1).max(100).nullish(),
         cursor: z.string().nullish(),
       })
@@ -37,7 +43,7 @@ export const courseRouter = router({
     .query(async ({ input }) => {
       const PER_PAGE = 20
       const limit = input.limit ?? PER_PAGE
-      const { search, cursor } = input
+      const { search, cursor, filters } = input
 
       const courses = await prisma.courses.findMany({
         where: {
@@ -50,6 +56,11 @@ export const courseRouter = router({
           // Description: {
           //   search,
           // },
+          Prefix: filters?.prefixes
+            ? {
+                in: filters.prefixes,
+              }
+            : undefined,
         },
         orderBy: {
           _relevance: {

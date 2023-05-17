@@ -1,6 +1,5 @@
-import CourseCard from "@/components/courses/CourseCard"
+import CourseCard from "@/components/courses/course-card"
 import { Spinner } from "@/components/ui/spinner"
-import { Table, TableHeader } from "@/components/ui/table"
 import { trpc } from "@/lib/trpc"
 import { useRouter } from "next/router"
 import Error404 from "../../404"
@@ -9,8 +8,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Search } from "lucide-react"
