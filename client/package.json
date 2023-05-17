@@ -13,6 +13,10 @@
     "db-seed": "dotenv -e .env.local -- prisma db seed"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.1.6",
+    "@fullcalendar/daygrid": "^6.1.6",
+    "@fullcalendar/react": "^6.1.6",
+    "@fullcalendar/timegrid": "^6.1.6",
     "@badrap/bar-of-progress": "^0.2.2",
     "@clerk/nextjs": "^4.17.1",
     "@headlessui/react": "^1.7.14",

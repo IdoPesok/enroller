@@ -18,6 +18,7 @@ const STUDENT_NAVIGATION = [
   { name: "Enroll", href: generateStudentRoute("/enroll") },
   { name: "Drop", href: generateStudentRoute("/drop") },
   { name: "Explore", href: generateStudentRoute("/explore") },
+  { name: "Calendar", href: generateStudentRoute("/calendar") },
 ]
 
 const ADMIN_NAVIGATION = [
