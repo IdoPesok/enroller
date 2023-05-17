@@ -14,7 +14,7 @@ interface props {
 
 // currently hard coded to show the same exact week since events need 
 // dates in order to be placed on the calendar
-// might be a better way of doing this but this is the best I have found
+// might be a better way of doing this but this is the best I have found so far
 const MONDAY_DATE = "2023-05-07"
 const TUESDAY_DATE = "2023-05-08"
 const WEDNESDAY_DATE = "2023-05-09"
