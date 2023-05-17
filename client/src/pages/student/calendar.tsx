@@ -40,7 +40,7 @@ export default function Calendar(props:props){
           </div>
         </div>
 
-        <WeekCalendar currentQuarter={CURRENT_QUARTER} height={calendarHeight} width="" events={null}></WeekCalendar>
+        <WeekCalendar currentQuarter={CURRENT_QUARTER} height={calendarHeight} width="" courses={[]}></WeekCalendar>
       </>
 
   );
