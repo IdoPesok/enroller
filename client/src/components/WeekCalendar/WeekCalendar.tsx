@@ -9,7 +9,7 @@ interface props {
     currentQuarter: string,
     height: number,
     width: string,
-    events: Section[] | null
+    courses: EnrollCourse[] | null
 }
 
 // currently hard coded to show the same exact week since events need 
@@ -20,6 +20,18 @@ const TUESDAY_DATE = "2023-05-08"
 const WEDNESDAY_DATE = "2023-05-09"
 const THURSDAY_DATE = "2023-05-10"
 const FRIDAY_DATE = "2023-05-11"
+
+interface EnrollCourse {
+    number: string, // "CSC 248"
+    name: string, // "Discrete Structures",
+    section: string, // "01"
+    units: string, // "4"
+    meetingTimes: string, // "TR 12:10 PM to 02:00 PM"
+    professor: string, // "Siu, Christopher E."
+    location: string, // "20-129 (Engineering East)"
+    status: string, //"Enrolled"
+}
+
 
 // start/end format: YYYY-MM-DDTHH:MM:SS 
 interface Event {
