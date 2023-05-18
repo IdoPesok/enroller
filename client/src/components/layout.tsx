@@ -33,20 +33,10 @@ export const Layout = ({ children }: Props) => {
   return (
     <>
       <div className="bg-white">
-        { 
-          (routeType === RouteType.ONBOARDING) ? (
-            <div className="h-screen w-screen flex justify-center items-center">
-              { children }
-            </div>
-          ) : (
-            <>
-              <MainNav /> 
-              <div className="px-10">
-                {children}
-              </div>
-            </>
-          )
-        }
+        <MainNav /> 
+        <div className="px-10">
+          {children}
+        </div>
       </div>
     </>
   )

@@ -337,7 +337,7 @@ export default function Onboarding() {
           <>
             {
               stage > 1 && (
-                <div className="flex justify-center absolute bottom-10 gap-10">
+                <div className="flex justify-center absolute bottom-10 gap-10 left-1/2 transform -translate-x-1/2">
                   <>
                     <Button
                       className="bg-slate-0 hover:bg-slate-200 text-black"
@@ -357,13 +357,6 @@ export default function Onboarding() {
                 </div>
               )
             }
-            <Button
-              className="bg-slate-0 hover:bg-slate-200 text-black absolute top-5 right-10"
-              onClick={() => signOut()}
-            >
-              <LogOut className="mr-2" height={18} />
-              Logout
-            </Button>
           </>
         )
       }

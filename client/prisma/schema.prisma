@@ -11,16 +11,16 @@ datasource db {
 }
 
 model Courses {
-  Code                   String                   @id @db.VarChar(10)
-  Prefix                 String                   @db.VarChar(6)
-  Number                 Int
-  MinUnits               Int
-  MaxUnits               Int
-  Name                   String                   @db.VarChar(128)
-  Description            String?                  @db.Text
-  Prereqs                Json?
-  Sections               Sections[]
-  GraduationRequirements GraduationRequirements[]
+  Code               String              @id @db.VarChar(10)
+  Prefix             String              @db.VarChar(6)
+  Number             Int
+  MinUnits           Int
+  MaxUnits           Int
+  Name               String              @db.VarChar(128)
+  Description        String?             @db.Text
+  Prereqs            Json?
+  Sections           Sections[]
+  CourseCodeMappings CourseCodeMapping[]
 
   @@fulltext([Code, Name, Description], map: "SearchIndex")
   @@fulltext([Code, Name], map: "ShortSearchIndex")
@@ -86,10 +86,10 @@ model Concentrations {
 }
 
 model GraduationRequirements {
-  FlowchartId String     @db.VarChar(255)
-  Code        String     @db.VarChar(10)
-  Flowchart   Flowcharts @relation(fields: [FlowchartId], references: [FlowchartId])
-  Course      Courses    @relation(fields: [Code], references: [Code])
+  FlowchartId       String            @db.VarChar(255)
+  Code              String            @db.VarChar(10)
+  Flowchart         Flowcharts        @relation(fields: [FlowchartId], references: [FlowchartId])
+  CourseCodeMapping CourseCodeMapping @relation(fields: [Code], references: [OldCode])
 
   @@id([FlowchartId, Code])
   @@index([FlowchartId])
@@ -101,6 +101,15 @@ model Majors {
   Name           String           @db.VarChar(255)
   Flowcharts     Flowcharts[]
   Concentrations Concentrations[]
+}
+
+model CourseCodeMapping {
+  OldCode                String                   @id @db.VarChar(20)
+  NewCode                String?                  @db.VarChar(20)
+  Course                 Courses?                 @relation(fields: [NewCode], references: [Code])
+  GraduationRequirements GraduationRequirements[]
+
+  @@index([NewCode])
 }
 
 enum Sections_Format {
