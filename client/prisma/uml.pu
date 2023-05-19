@@ -1,0 +1,119 @@
+@startuml uml
+
+skinparam linetype ortho
+
+left to right direction
+
+enum Sections_Format {
+  Lecture
+  Seminar
+  Lab
+}
+
+enum Sections_Modality {
+  Online
+  InPerson
+  TBD
+}
+
+enum Enrolled_Type {
+  Enrolled
+  Waitlist
+  ShoppingCart
+}
+
+entity Courses {
+  * CatalogYear: String
+  * Code: String
+  * Prefix: String
+  * Number: Int
+  MinUnits: Int?
+  MaxUnits: Int?
+  * Name: String
+  Description: String?
+  Prereqs: Json?
+  * Sections: Sections[]
+}
+
+entity Enrolled {
+  * User: String
+  * SectionId: Int
+  * Section: Sections
+  * Seat: Int?
+  * Type: Enrolled_Type
+}
+
+entity Sections {
+  * SectionId: Int
+  * Course: String
+  * Start: DateTime
+  * End: DateTime
+  Sunday: Boolean?
+  Monday: Boolean?
+  Tuesday: Boolean?
+  Wednesday: Boolean?
+  Thursday: Boolean?
+  Friday: Boolean?
+  Saturday: Boolean?
+  Capacity: Int?
+  WaitlistCapacity: Int?
+  * Professor: String
+  Room: String?
+  Format: Sections_Format?
+  Modality: Sections_Modality?
+  * CatalogYear: String
+  * Courses: Courses
+  * Waitlists: Waitlist[]
+  * ShoppingCarts: ShoppingCart[]
+  * Enrolleds: Enrolled[]
+}
+
+entity Flowcharts {
+  * FlowchartId: String
+  * CatalogYear: String
+  * MajorId: String
+  * ConcentrationId: String
+  * Catalog: Catalogs
+  * Major: Majors
+  * Concentration: Concentrations
+  * GraduationRequirements: GraduationRequirements[]
+}
+
+entity Catalogs {
+  * CatalogYear: String
+  * Flowcharts: Flowcharts[]
+}
+
+entity Concentrations {
+  * Id: String
+  Name: String?
+  * MajorId: String
+  * Major: Majors
+  * Flowcharts: Flowcharts[]
+}
+
+entity GraduationRequirements {
+  * FlowchartId: String
+  * Code: String
+  * Flowchart: Flowcharts
+}
+
+entity Majors {
+  * Id: String
+  * Name: String
+  * Flowcharts: Flowcharts[]
+  * Concentrations: Concentrations[]
+}
+
+Courses "1" *-- "0..*" Sections
+Sections "1" *-- "0..*" Enrolled
+Enrolled "1" *-- "1" Enrolled_Type
+Sections "1" *-- "1" Sections_Format
+Sections "1" *-- "1" Sections_Modality
+Flowcharts "0..*" o-- "1" Catalogs
+Flowcharts "0..*" o-- "1" Concentrations
+Flowcharts "0..*" o-- "1" Majors
+Flowcharts "1" *-- "0..*" GraduationRequirements
+GraduationRequirements "1"  o-- "1" Courses
+
+@enduml
