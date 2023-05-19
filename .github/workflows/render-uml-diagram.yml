@@ -1,4 +1,4 @@
-name: Update DB UML Diagram
+name: Render UML Diagram with PlantUML
 
 on:
   push:
@@ -11,16 +11,21 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ghcr.io/plantuml/plantuml
+    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    
+    - name: Set up Docker
+      uses: docker/setup-docker@v1
+    
+    - name: Run PlantUML Docker container
+      run: |
+        docker run --rm -v $(pwd):/data ghcr.io/plantuml/plantuml -tsvg uml.pu
+        docker run --rm -v $(pwd):/data ghcr.io/plantuml/plantuml -tpng uml.pu
 
-      - name: Run plantuml
-        run: plantuml -tsvg client/prisma/uml.pu
-
-      - uses: EndBug/add-and-commit@v9
-        with:
-          add: client/prisma/uml.svg
-          default_author: github_actions
-          message: Update DB UML Diagram
+    - uses: EndBug/add-and-commit@v9
+      with:
+        add: client/prisma/uml.svg
+        default_author: github_actions
+        message: Update DB UML Diagram
