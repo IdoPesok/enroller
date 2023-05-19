@@ -57,6 +57,7 @@ model Sections {
   CatalogYear      String             @db.VarChar(16)
   Courses          Courses            @relation(fields: [CatalogYear, Course], references: [CatalogYear, Code])
   Enrolleds        Enrolled[]
+  
   @@unique([Course, Start, Professor])
   @@index([Course], map: "Course")
   @@index([CatalogYear, Course])
