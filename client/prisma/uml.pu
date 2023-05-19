@@ -35,6 +35,7 @@ entity Courses {
   * Sections: Sections[]
 }
 
+' Unifed here but not in schema yet
 entity Enrolled {
   * User: String
   * SectionId: Int
