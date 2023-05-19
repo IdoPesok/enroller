@@ -1,7 +1,10 @@
 import { prisma } from "@/server/prisma"
 import { z } from "zod"
 import { studentProcedure, router } from "../trpc"
+import { clerkClient } from "@clerk/nextjs"
+import { PUBLIC_METADATA_KEYS } from "@/interfaces/PublicMetadata"
 import { Prisma } from "@prisma/client"
+import { internalServerError } from "@/lib/trpc"
 
 export const courseRouter = router({
   course: studentProcedure
@@ -40,13 +43,42 @@ export const courseRouter = router({
         cursor: z.string().nullish(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const PER_PAGE = 20
       const limit = input.limit ?? PER_PAGE
       const { search, cursor, filters } = input
 
+      let flowchartId: string | null = null
+      try {
+        const user = await clerkClient.users.getUser(ctx.auth.userId)
+
+        if (
+          !user.publicMetadata[PUBLIC_METADATA_KEYS.flowchartId] ||
+          typeof user.publicMetadata[PUBLIC_METADATA_KEYS.flowchartId] !==
+            "string"
+        ) {
+          throw new Error()
+        }
+
+        flowchartId = user.publicMetadata[
+          PUBLIC_METADATA_KEYS.flowchartId
+        ] as string
+      } catch (e) {
+        throw internalServerError(
+          "User does not have a flowchart ID assigned.",
+          e
+        )
+      }
+
+      const flowchart = await prisma.flowcharts.findUnique({
+        where: {
+          FlowchartId: flowchartId,
+        },
+      })
+
       const courses = await prisma.courses.findMany({
         where: {
+          CatalogYear: flowchart!.CatalogYear,
           Code: {
             search,
           },
@@ -70,7 +102,14 @@ export const courseRouter = router({
           },
         },
         take: limit + 1,
-        cursor: cursor ? { Code: cursor } : undefined,
+        cursor: cursor
+          ? {
+              CatalogYear_Code: {
+                CatalogYear: flowchart!.CatalogYear,
+                Code: cursor,
+              },
+            }
+          : undefined,
       })
       let nextCursor: string | undefined = undefined
       if (courses.length > limit) {
