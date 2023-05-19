@@ -10,44 +10,27 @@ datasource db {
 }
 
 model Courses {
-  Code               String              @id @db.VarChar(10)
-  Prefix             String              @db.VarChar(6)
-  Number             Int
-  MinUnits           Int
-  MaxUnits           Int
-  Name               String              @db.VarChar(128)
-  Description        String?             @db.Text
-  Prereqs            Json?
-  Sections           Sections[]
-  CourseCodeMappings CourseCodeMapping[]
+  CatalogYear String     @db.VarChar(16)
+  Code        String     @db.VarChar(10)
+  Prefix      String     @db.VarChar(6)
+  Number      Int
+  MinUnits    Int?
+  MaxUnits    Int?
+  Name        String     @db.VarChar(128)
+  Description String?    @db.Text
+  Prereqs     Json?
+  Sections    Sections[]
 
-  @@fulltext([Code, Name, Description], map: "SearchIndex")
-  @@fulltext([Code, Name], map: "ShortSearchIndex")
+  @@id([CatalogYear, Code])
+  @@fulltext([Code, Name], map: "CourseSearchIndex")
 }
 
 model Enrolled {
   User      String    @db.VarChar(35)
   SectionId Int
   Section   Sections  @relation(fields: [SectionId], references: [SectionId])
-
-  @@id([User, SectionId])
-  @@index([SectionId])
-}
-
-model ShoppingCart {
-  User      String    @db.VarChar(35)
-  SectionId Int
-  Section   Sections  @relation(fields: [SectionId], references: [SectionId]) 
-
-  @@id([User, SectionId])
-  @@index([SectionId])              
-}
-
-model Waitlist {
-  SectionId Int   
-  User      String      @db.VarChar(35)
-  Position  Int
-  Section   Sections    @relation(fields: [SectionId], references: [SectionId])
+  Seat      Int?
+  Type      Enrolled_Type
 
   @@id([User, SectionId])
   @@index([SectionId])
@@ -71,13 +54,12 @@ model Sections {
   Room             String?            @db.VarChar(10)
   Format           Sections_Format?
   Modality         Sections_Modality?
-  Courses          Courses            @relation(fields: [Course], references: [Code])
-  Waitlists        Waitlist[]
-  ShoppingCarts    ShoppingCart[]
+  CatalogYear      String             @db.VarChar(16)
+  Courses          Courses            @relation(fields: [CatalogYear, Course], references: [CatalogYear, Code])
   Enrolleds        Enrolled[]
-
-
+  @@unique([Course, Start, Professor])
   @@index([Course], map: "Course")
+  @@index([CatalogYear, Course])
 }
 
 model Flowcharts {
@@ -108,18 +90,14 @@ model Concentrations {
   Flowcharts Flowcharts[]
 
   @@id([Id, MajorId])
-  @@index([MajorId])
 }
 
 model GraduationRequirements {
-  FlowchartId       String            @db.VarChar(255)
-  Code              String            @db.VarChar(10)
-  Flowchart         Flowcharts        @relation(fields: [FlowchartId], references: [FlowchartId])
-  CourseCodeMapping CourseCodeMapping @relation(fields: [Code], references: [OldCode])
+  FlowchartId String     @db.VarChar(255)
+  Code        String     @db.VarChar(10)
+  Flowchart   Flowcharts @relation(fields: [FlowchartId], references: [FlowchartId])
 
   @@id([FlowchartId, Code])
-  @@index([FlowchartId])
-  @@index([Code])
 }
 
 model Majors {
@@ -130,12 +108,8 @@ model Majors {
 }
 
 model CourseCodeMapping {
-  OldCode                String                   @id @db.VarChar(20)
-  NewCode                String?                  @db.VarChar(20)
-  Course                 Courses?                 @relation(fields: [NewCode], references: [Code])
-  GraduationRequirements GraduationRequirements[]
-
-  @@index([NewCode])
+  OldCode String  @id @db.VarChar(20)
+  NewCode String? @db.VarChar(20)
 }
 
 enum Sections_Format {
@@ -148,4 +122,10 @@ enum Sections_Modality {
   Online
   InPerson
   TBD
+}
+
+enum Enrolled_Type {
+  Enrolled
+  Waitlist
+  ShoppingCart
 }

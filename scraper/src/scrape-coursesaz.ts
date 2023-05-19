@@ -1,54 +1,89 @@
 require("dotenv").config();
-import mysql from "mysql2/promise";
 import { exit } from "process";
-import { JSDOM } from "jsdom";
+// import { JSDOM } from "jsdom";
+import * as cheerio from "cheerio";
+import { PrismaClient } from "@prisma/client";
+import { MultiBar, Presets, SingleBar } from "cli-progress";
+
+const fetch = require("fetch-retry")(global.fetch);
+
+const CATALOG_URL = "https://catalog.calpoly.edu/";
+const PREV_CATALOGS_URL = "https://previouscatalogs.calpoly.edu/";
 
 async function main() {
   if (!process.env.DATABASE_URL) {
     console.error("missing database url");
     exit(1);
   }
-  const connection = await mysql.createConnection({
-    uri: process.env.DATABASE_URL,
-    debug: false,
-  });
+
+  const prisma = new PrismaClient();
+
   console.log("Connected to Database!");
-  console.log("Creating table...");
-  await connection.query(
-    "CREATE TABLE IF NOT EXISTS `Courses` (\
-	    `Code` varchar(10) NOT NULL,\
-	    `Prefix` varchar(6) NOT NULL,\
-	    `Number` int NOT NULL,\
-	    `MinUnits` int NOT NULL,\
-	    `MaxUnits` int NOT NULL,\
-	    `Name` varchar(128) NOT NULL,\
-	    `Description` text,\
-	    `Prereqs` json,\
-	    PRIMARY KEY (`Code`),\
-	    FULLTEXT KEY `SearchIndex` (`Code`, `Name`, `Description`),\
-	    FULLTEXT KEY `ShortSearchIndex` (`Code`, `Name`)\
-    ) ENGINE InnoDB"
-  );
   console.log("Deleting old data...");
-  await connection.query("DELETE FROM Courses");
+  // await prisma.courses.deleteMany();
+
+  console.log("Fetching previous catalogs...");
+  const response = await fetch(PREV_CATALOGS_URL);
+  const $ = cheerio.load(await response.text());
+  const prevCatalogs = $("[id^=Catalog]")
+    .parent()
+    .map((_, el) => $(el).find($("a:contains('Online catalog')")).attr("href"))
+    .get();
+  const catalogs = prevCatalogs.concat(CATALOG_URL).map((url) => new URL(url));
 
   console.log("Scraping courses...");
-  const url = "https://catalog.calpoly.edu/coursesaz/";
-  const response = await fetch(url);
+  const multibar = new MultiBar(
+    {
+      clearOnComplete: false,
+      hideCursor: true,
+      format: " {bar} | {years} | {value}/{total}",
+    },
+    Presets.shades_grey
+  );
+  await Promise.all(
+    catalogs.map((catalog) => {
+      const catalogYear = getCatalogYear(catalog);
+      const bar = multibar.create(1, 0, { years: catalogYear });
+      return fetchCatalog(prisma, catalog, catalogYear, bar);
+    })
+  );
+  multibar.stop();
+
+  await prisma.$disconnect();
+}
+
+async function fetchCatalog(
+  prisma: PrismaClient,
+  catalog: URL,
+  catalogYear: string,
+  bar: SingleBar
+) {
+  const response = await fetch(`${catalog.href}coursesaz`);
+  // console.log(response.url);
   const body = await response.text();
-  const dom = new JSDOM(body);
-  const urls = dom.window.document.getElementsByClassName("sitemaplink");
-  const promises = [];
-  for (const urlEl of urls) {
-    const path = urlEl.getAttribute("href");
-    if (path === null) {
-      throw "invalid path";
-    }
-    const url = new URL(path, "https://catalog.calpoly.edu/");
-    promises.push(fetchCourses(connection, url));
+  const $ = cheerio.load(body);
+  const urls = $(".sitemaplink")
+    .map((_, el) => new URL(el.attribs.href, catalog))
+    .get();
+  bar.setTotal(urls.length);
+  await Promise.all(
+    urls.map((url) =>
+      fetchCourses(prisma, url, catalogYear).then(() => bar.increment())
+    )
+  );
+}
+
+function getCatalogYear(catalog: URL): string {
+  let years = catalog.href
+    .split("/")
+    .filter((s) => s !== "")
+    .pop();
+  if (!years) {
+    return "unknown";
   }
-  await Promise.all(promises);
-  await connection.end();
+  // normalize
+  years = years.replace(/^([0-9]{2})([0-9]{2})-([0-9]{2})$/, "$1$2-$1$3");
+  return /^[0-9]{4}-[0-9]{4}$/.test(years) ? years : "2022-2026";
 }
 
 function isCourseCode(code: string): boolean {
@@ -173,9 +208,9 @@ function extractPrereqs(source: string, course: string): Prereq[] {
     if (!type) {
       if (prefix.includes("or")) {
       } else {
-        console.error(
-          `${course}\n\tunknown prefix type ${prefix} in\n\t${source}`
-        );
+        // console.error(
+        //   `${course}\n\tunknown prefix type ${prefix} in\n\t${source}`
+        // );
       }
       continue;
     }
@@ -191,6 +226,7 @@ function extractPrereqs(source: string, course: string): Prereq[] {
 
 // function for inserting a prereq into an adjacency table (unfinished)
 // kept in case we ever change schema
+/*
 async function insertPrereq(
   connection: mysql.Connection,
   courseCode: string,
@@ -223,28 +259,25 @@ async function insertPrereq(
     throw `Invalid prereq ${prereq}`;
   }
 }
+*/
 
-async function fetchCourses(connection: mysql.Connection, url: URL) {
+async function fetchCourses(
+  prisma: PrismaClient,
+  url: URL,
+  catalogYear: string
+) {
   const response = await fetch(url);
-  if (response.status != 200) {
-    console.error("failed to fetch courses");
-    exit(1);
-  }
-
   const queries = [];
   const body = await response.text();
-  const dom = new JSDOM(body);
-  const courses = dom.window.document.getElementsByClassName("courseblock");
+  const $ = cheerio.load(body);
+  const courses = $(".courseblock");
   for (const course of courses) {
-    const titleNode =
-      course.getElementsByClassName("courseblocktitle")[0]?.firstChild;
-    const title = titleNode?.firstChild?.textContent;
-    const units = titleNode?.lastChild?.textContent;
-    const description = course
-      .getElementsByClassName("courseblockdesc")[0]
-      .textContent?.trim();
-    if (!title || !units || !description) {
-      console.error("Missing property.");
+    const titleNode = $(course).find($(".courseblocktitle")).first();
+    const [title, units] = titleNode.text().split("\n");
+
+    const description = $(course).find($(".courseblockdesc")).text().trim();
+    if (!title || !description) {
+      console.error("Invalid Course.");
       continue;
     }
     const [codeRaw, ...fullnameParts] = title.split(".");
@@ -255,33 +288,55 @@ async function fetchCourses(connection: mysql.Connection, url: URL) {
     const [prefix, numberStr] = code.split(/\s/);
     const number = parseInt(numberStr);
     const unitsRange = units.split(/\s/)[0];
-    const [minUnits, ...maybeMaxUnits] = unitsRange.split("-");
+    const [minUnits, ...maybeMaxUnits] = unitsRange
+      .split("-")
+      .map(parseInt)
+      .map((n) => (isNaN(n) ? null : n));
     const maxUnits = maybeMaxUnits.length > 0 ? maybeMaxUnits[0] : minUnits;
     const prereqsRaw =
-      course.getElementsByClassName("courseextendedwrap")[0].lastChild
-        ?.textContent ?? "";
-
-    // console.log(`Course ${code}`);
-    // console.log(prereqsRaw);
+      $(course)
+        .find($(".courseextendedwrap"))
+        .first()
+        .children()
+        .last()
+        .text() ?? "";
     const prereqs = startsWithPrereqType(prereqsRaw)
       ? extractPrereqs(prereqsRaw, code)
       : null;
-    // console.log(JSON.stringify(prereqs, null, "  "));
+
+    // console.log(`Course ${code}`);
+    // console.log(prereqsRaw);
     queries.push(
-      connection.query(
-        "INSERT INTO `Courses` VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [
-          code,
-          prefix,
-          number,
-          minUnits,
-          maxUnits,
-          fullname,
-          description,
-          JSON.stringify(prereqs?.length !== 0 ? prereqs : null),
-        ]
-      )
+      prisma.courses.create({
+        data: {
+          CatalogYear: catalogYear,
+          Code: code,
+          Prefix: prefix,
+          Number: number,
+          MinUnits: minUnits,
+          MaxUnits: maxUnits,
+          Name: fullname,
+          Description: description,
+          Prereqs: JSON.stringify(prereqs?.length !== 0 ? prereqs : null),
+        },
+      })
     );
+    // console.log(JSON.stringify(prereqs, null, "  "));
+    // queries.push(
+    //   connection.query(
+    //     "INSERT INTO `Courses` VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    //     [
+    //       code,
+    //       prefix,
+    //       number,
+    //       minUnits,
+    //       maxUnits,
+    //       fullname,
+    //       description,
+    //       JSON.stringify(prereqs?.length !== 0 ? prereqs : null),
+    //     ]
+    //   )
+    // );
   }
   // scrictly speaking not needed since connection.end will catch these but
   // good practice
