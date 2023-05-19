@@ -1,11 +1,11 @@
 # Shamelessly stolen (with permission) from @probably-neb
 name: Update DB UML Diagram
 
-on:
-  push:
-    paths:
-      - client/prisma/schema.prisma
-      - client/prisma/README.md
+# on:
+#   push:
+#     paths:
+#       - client/prisma/schema.prisma
+#       - client/prisma/README.md
 
 permissions:
   contents: write
