@@ -16,9 +16,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
     
-    - name: Set up Docker
-      uses: docker/setup-docker@v1
-    
     - name: Run PlantUML Docker container
       run: |
         docker run --rm -v $(pwd):/data ghcr.io/plantuml/plantuml -tsvg uml.pu
