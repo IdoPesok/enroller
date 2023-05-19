@@ -18,8 +18,8 @@ jobs:
     
     - name: Run PlantUML Docker container
       run: |
-        docker run --rm -v $(pwd):/data ghcr.io/plantuml/plantuml -tsvg uml.pu
-        docker run --rm -v $(pwd):/data ghcr.io/plantuml/plantuml -tpng uml.pu
+        docker run -v $(pwd):/data ghcr.io/plantuml/plantuml -tsvg client/prisma/uml.pu
+        docker run -v $(pwd):/data ghcr.io/plantuml/plantuml -tpng client/prisma/uml.pu
 
     - uses: EndBug/add-and-commit@v9
       with:
