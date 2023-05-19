@@ -2,4 +2,4 @@
 
 ## UML
 
-![enroller uml diaghram](prisma/uml.svg?raw=true)
+![enroller uml diaghram](uml.svg?raw=true)
