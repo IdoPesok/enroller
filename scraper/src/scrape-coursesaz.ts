@@ -2,10 +2,12 @@ require("dotenv").config();
 import { exit } from "process";
 // import { JSDOM } from "jsdom";
 import * as cheerio from "cheerio";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { MultiBar, Presets, SingleBar } from "cli-progress";
 
-const fetch = require("fetch-retry")(global.fetch);
+const fetch = require("fetch-retry")(global.fetch, {
+  retries: 1000,
+});
 
 const CATALOG_URL = "https://catalog.calpoly.edu/";
 const PREV_CATALOGS_URL = "https://previouscatalogs.calpoly.edu/";
@@ -19,7 +21,7 @@ async function main() {
   const prisma = new PrismaClient();
 
   console.log("Connected to Database!");
-  console.log("Deleting old data...");
+  // console.log("Deleting old data...");
   // await prisma.courses.deleteMany();
 
   console.log("Fetching previous catalogs...");
@@ -41,10 +43,10 @@ async function main() {
     Presets.shades_grey
   );
   await Promise.all(
-    catalogs.map((catalog) => {
+    catalogs.map(async (catalog) => {
       const catalogYear = getCatalogYear(catalog);
       const bar = multibar.create(1, 0, { years: catalogYear });
-      return fetchCatalog(prisma, catalog, catalogYear, bar);
+      await fetchCatalog(prisma, catalog, catalogYear, bar);
     })
   );
   multibar.stop();
@@ -59,7 +61,6 @@ async function fetchCatalog(
   bar: SingleBar
 ) {
   const response = await fetch(`${catalog.href}coursesaz`);
-  // console.log(response.url);
   const body = await response.text();
   const $ = cheerio.load(body);
   const urls = $(".sitemaplink")
@@ -302,13 +303,20 @@ async function fetchCourses(
         .text() ?? "";
     const prereqs = startsWithPrereqType(prereqsRaw)
       ? extractPrereqs(prereqsRaw, code)
-      : null;
+      : undefined;
 
     // console.log(`Course ${code}`);
     // console.log(prereqsRaw);
     queries.push(
-      prisma.courses.create({
-        data: {
+      await prisma.courses.upsert({
+        where: {
+          CatalogYear_Code: {
+            CatalogYear: catalogYear,
+            Code: code,
+          },
+        },
+        update: {},
+        create: {
           CatalogYear: catalogYear,
           Code: code,
           Prefix: prefix,
@@ -317,7 +325,8 @@ async function fetchCourses(
           MaxUnits: maxUnits,
           Name: fullname,
           Description: description,
-          Prereqs: JSON.stringify(prereqs?.length !== 0 ? prereqs : null),
+          Prereqs:
+            prereqs?.length !== 0 ? (prereqs as Prisma.JsonArray) : undefined,
         },
       })
     );
