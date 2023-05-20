@@ -308,7 +308,7 @@ async function fetchCourses(
     // console.log(`Course ${code}`);
     // console.log(prereqsRaw);
     queries.push(
-      await prisma.courses.upsert({
+      prisma.courses.upsert({
         where: {
           CatalogYear_Code: {
             CatalogYear: catalogYear,
