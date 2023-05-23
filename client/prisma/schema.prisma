@@ -26,28 +26,11 @@ model Courses {
 }
 
 model Enrolled {
-  User      String   @db.VarChar(35)
+  User      String        @db.VarChar(35)
   SectionId Int
-  Section   Sections @relation(fields: [SectionId], references: [SectionId])
-
-  @@id([User, SectionId])
-  @@index([SectionId])
-}
-
-model ShoppingCart {
-  User      String   @db.VarChar(35)
-  SectionId Int
-  Section   Sections @relation(fields: [SectionId], references: [SectionId])
-
-  @@id([User, SectionId])
-  @@index([SectionId])
-}
-
-model Waitlist {
-  SectionId Int
-  User      String   @db.VarChar(35)
-  Position  Int
-  Section   Sections @relation(fields: [SectionId], references: [SectionId])
+  Section   Sections      @relation(fields: [SectionId], references: [SectionId])
+  Seat      Int?
+  Type      Enrolled_Type
 
   @@id([User, SectionId])
   @@index([SectionId])
@@ -73,11 +56,11 @@ model Sections {
   Modality         Sections_Modality?
   CatalogYear      String             @db.VarChar(16)
   Courses          Courses            @relation(fields: [CatalogYear, Course], references: [CatalogYear, Code])
-  Waitlists        Waitlist[]
-  ShoppingCarts    ShoppingCart[]
   Enrolleds        Enrolled[]
 
+  @@unique([Course, Start, Professor])
   @@index([Course], map: "Course")
+  @@index([CatalogYear, Course])
 }
 
 model Flowcharts {
@@ -89,6 +72,10 @@ model Flowcharts {
   Major                  Majors                   @relation(fields: [MajorId], references: [Id])
   Concentration          Concentrations           @relation(fields: [ConcentrationId, MajorId], references: [Id, MajorId])
   GraduationRequirements GraduationRequirements[]
+
+  @@index([CatalogYear])
+  @@index([MajorId])
+  @@index([ConcentrationId, MajorId])
 }
 
 model Catalogs {
@@ -104,6 +91,7 @@ model Concentrations {
   Flowcharts Flowcharts[]
 
   @@id([Id, MajorId])
+  @@index([MajorId])
 }
 
 model GraduationRequirements {
@@ -112,6 +100,7 @@ model GraduationRequirements {
   Flowchart   Flowcharts @relation(fields: [FlowchartId], references: [FlowchartId])
 
   @@id([FlowchartId, Code])
+  @@index([FlowchartId])
 }
 
 model Majors {
@@ -136,4 +125,10 @@ enum Sections_Modality {
   Online
   InPerson
   TBD
+}
+
+enum Enrolled_Type {
+  Enrolled
+  Waitlist
+  ShoppingCart
 }
