@@ -25,6 +25,5 @@ export function prereqsString(prereqs: Prereq[] | null) {
   if (!prereqs) {
     return null
   }
-  console.log(prereqs)
   return prereqs.map(prereqString).join(" ")
 }

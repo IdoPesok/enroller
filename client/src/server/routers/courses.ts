@@ -1,28 +1,35 @@
 import { prisma } from "@/server/prisma"
 import { z } from "zod"
 import { studentProcedure, router } from "../trpc"
-import { clerkClient } from "@clerk/nextjs"
-import { PUBLIC_METADATA_KEYS } from "@/interfaces/PublicMetadata"
-import { Prisma } from "@prisma/client"
-import { internalServerError } from "@/lib/trpc"
+import { fetchCatalogYear } from "@/lib/catalog-year"
 
 export const courseRouter = router({
   course: studentProcedure
     .input(z.object({ code: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      const catalogYear = await fetchCatalogYear(ctx.auth.userId)
+
       const course = await prisma.courses.findUnique({
         where: {
-          Code: input.code,
+          CatalogYear_Code: {
+            CatalogYear: catalogYear,
+            Code: input.code,
+          },
         },
       })
       return course
     }),
   withSections: studentProcedure
     .input(z.object({ code: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      const catalogYear = await fetchCatalogYear(ctx.auth.userId)
+
       const course = await prisma.courses.findUnique({
         where: {
-          Code: input.code,
+          CatalogYear_Code: {
+            CatalogYear: catalogYear,
+            Code: input.code,
+          },
         },
         include: {
           Sections: true,
@@ -48,37 +55,11 @@ export const courseRouter = router({
       const limit = input.limit ?? PER_PAGE
       const { search, cursor, filters } = input
 
-      let flowchartId: string | null = null
-      try {
-        const user = await clerkClient.users.getUser(ctx.auth.userId)
-
-        if (
-          !user.publicMetadata[PUBLIC_METADATA_KEYS.flowchartId] ||
-          typeof user.publicMetadata[PUBLIC_METADATA_KEYS.flowchartId] !==
-            "string"
-        ) {
-          throw new Error()
-        }
-
-        flowchartId = user.publicMetadata[
-          PUBLIC_METADATA_KEYS.flowchartId
-        ] as string
-      } catch (e) {
-        throw internalServerError(
-          "User does not have a flowchart ID assigned.",
-          e
-        )
-      }
-
-      const flowchart = await prisma.flowcharts.findUnique({
-        where: {
-          FlowchartId: flowchartId,
-        },
-      })
+      const catalogYear = await fetchCatalogYear(ctx.auth.userId)
 
       const courses = await prisma.courses.findMany({
         where: {
-          CatalogYear: flowchart!.CatalogYear,
+          CatalogYear: catalogYear,
           Code: {
             search,
           },
@@ -105,7 +86,7 @@ export const courseRouter = router({
         cursor: cursor
           ? {
               CatalogYear_Code: {
-                CatalogYear: flowchart!.CatalogYear,
+                CatalogYear: catalogYear,
                 Code: cursor,
               },
             }

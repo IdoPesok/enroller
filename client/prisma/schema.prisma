@@ -26,9 +26,9 @@ model Courses {
 }
 
 model Enrolled {
-  User      String    @db.VarChar(35)
+  User      String        @db.VarChar(35)
   SectionId Int
-  Section   Sections  @relation(fields: [SectionId], references: [SectionId])
+  Section   Sections      @relation(fields: [SectionId], references: [SectionId])
   Seat      Int?
   Type      Enrolled_Type
 
@@ -57,7 +57,7 @@ model Sections {
   CatalogYear      String             @db.VarChar(16)
   Courses          Courses            @relation(fields: [CatalogYear, Course], references: [CatalogYear, Code])
   Enrolleds        Enrolled[]
-  
+
   @@unique([Course, Start, Professor])
   @@index([Course], map: "Course")
   @@index([CatalogYear, Course])
@@ -91,6 +91,7 @@ model Concentrations {
   Flowcharts Flowcharts[]
 
   @@id([Id, MajorId])
+  @@index([MajorId])
 }
 
 model GraduationRequirements {
@@ -99,6 +100,7 @@ model GraduationRequirements {
   Flowchart   Flowcharts @relation(fields: [FlowchartId], references: [FlowchartId])
 
   @@id([FlowchartId, Code])
+  @@index([FlowchartId])
 }
 
 model Majors {
