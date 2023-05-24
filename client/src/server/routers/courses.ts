@@ -1,25 +1,35 @@
 import { prisma } from "@/server/prisma"
 import { z } from "zod"
 import { studentProcedure, router } from "../trpc"
-import { Prisma } from "@prisma/client"
+import { fetchCatalogYear } from "@/lib/catalog-year"
 
 export const courseRouter = router({
   course: studentProcedure
     .input(z.object({ code: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      const catalogYear = await fetchCatalogYear(ctx.auth.userId)
+
       const course = await prisma.courses.findUnique({
         where: {
-          Code: input.code,
+          CatalogYear_Code: {
+            CatalogYear: catalogYear,
+            Code: input.code,
+          },
         },
       })
       return course
     }),
   withSections: studentProcedure
     .input(z.object({ code: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      const catalogYear = await fetchCatalogYear(ctx.auth.userId)
+
       const course = await prisma.courses.findUnique({
         where: {
-          Code: input.code,
+          CatalogYear_Code: {
+            CatalogYear: catalogYear,
+            Code: input.code,
+          },
         },
         include: {
           Sections: true,
@@ -40,13 +50,16 @@ export const courseRouter = router({
         cursor: z.string().nullish(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const PER_PAGE = 20
       const limit = input.limit ?? PER_PAGE
       const { search, cursor, filters } = input
 
+      const catalogYear = await fetchCatalogYear(ctx.auth.userId)
+
       const courses = await prisma.courses.findMany({
         where: {
+          CatalogYear: catalogYear,
           Code: {
             search,
           },
@@ -70,7 +83,14 @@ export const courseRouter = router({
           },
         },
         take: limit + 1,
-        cursor: cursor ? { Code: cursor } : undefined,
+        cursor: cursor
+          ? {
+              CatalogYear_Code: {
+                CatalogYear: catalogYear,
+                Code: cursor,
+              },
+            }
+          : undefined,
       })
       let nextCursor: string | undefined = undefined
       if (courses.length > limit) {

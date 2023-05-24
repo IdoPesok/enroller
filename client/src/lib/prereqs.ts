@@ -1,6 +1,14 @@
-import { Prereq, PrereqLeaf, PrereqOp, PrereqOpType } from "@/interfaces/PrereqTypes";
+import {
+  Prereq,
+  PrereqLeaf,
+  PrereqOp,
+  PrereqOpType,
+} from "@/interfaces/PrereqTypes"
 
-export function prereqString(prereq: Prereq, depth: number = 0): string | undefined {
+export function prereqString(
+  prereq: Prereq,
+  depth: number = 0
+): string | undefined {
   if (Object.values(PrereqOpType).includes(prereq.type as PrereqOpType)) {
     const prereqOp = prereq as PrereqOp
     const format = prereqOp.children
@@ -14,7 +22,7 @@ export function prereqString(prereq: Prereq, depth: number = 0): string | undefi
 }
 
 export function prereqsString(prereqs: Prereq[] | null) {
-  if (prereqs === null) {
+  if (!prereqs) {
     return null
   }
   return prereqs.map(prereqString).join(" ")

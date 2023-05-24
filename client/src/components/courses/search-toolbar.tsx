@@ -23,7 +23,7 @@ export function SearchToolbar({
         className="flex-1 max-w-xl h-10"
         placeholder="Search for classes..."
         value={search}
-        onChange={(e) => setSearch(e.target.value.trim())}
+        onChange={(e) => setSearch(e.target.value)}
       />
       <SearchFilterCombobox
         options={prefixOptions}

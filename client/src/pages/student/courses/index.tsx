@@ -33,7 +33,10 @@ export default function Courses({
   const debouncedSearch = useDebounce(search, 500)
 
   const courses = trpc.courses.list.useInfiniteQuery(
-    { search: addSearchModifiers(debouncedSearch), filters: { prefixes } },
+    {
+      search: addSearchModifiers(debouncedSearch.trim()),
+      filters: { prefixes },
+    },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       enabled: Boolean(debouncedSearch),
