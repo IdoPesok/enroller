@@ -34,6 +34,8 @@ const courses = [
       href: '#',
       professor: 'John Fox',
       quantity: 1,
+      startTime: '12:00',
+      endTime: '2:00pm', //add am/pm
       imageSrc: 'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-01.jpg',
       imageAlt: 'Salmon orange fabric pouch with match zipper, gray zipper pull, and adjustable hip belt.',
     },
@@ -41,8 +43,9 @@ const courses = [
       id: 2,
       name: 'ISLA 340: Intro to Screenwriting',
       href: '#',
-      color: 'Blue',
-      price: '$32.00',
+      professor: 'Prof Blue',
+      startTime: '3:00',
+      endTime: '5:00pm',
       quantity: 1,
       imageSrc: 'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-02.jpg',
       imageAlt:
@@ -177,9 +180,9 @@ export default function ShoppingCart() {
     //     </div>
     //   </Dialog>
     // </Transition.Root>
-        <div className="fixed overflow-auto">
-          <div className="absolute overflow-auto">
-            <div className="pointer-events-none fixed left-0 flex max-w-full pl-10">
+        <div className="flex overflow-auto">
+          <div className="overflow-auto">
+            <div className=" flex max-w-full pl-10">
                   <div className="flex h-full flex-col overflow-y-auto bg-white shadow-xl">
                     <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
                       <div className="flex items-start justify-between">
@@ -191,28 +194,28 @@ export default function ShoppingCart() {
                       <div className="mt-8">
                         <div className="flow-root">
                           <ul role="list" className="-my-6 divide-y divide-gray-200">
-                            {products.map((product) => (
-                              <li key={product.id} className="flex py-6">
-                                <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                            {courses.map((course) => (
+                              <li key={course.id} className="flex py-6">
+                                {/* <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                                   <img
                                     src={product.imageSrc}
                                     alt={product.imageAlt}
                                     className="h-full w-full object-cover object-center"
                                   />
-                                </div>
+                                </div> */}
 
-                                <div className="ml-4 flex flex-1 flex-col">
+                                <div className=" flex flex-1 flex-col">
                                   <div>
                                     <div className="flex justify-between text-base font-medium text-gray-900">
                                       <h3>
-                                        <a href={product.href}>{product.name}</a>
+                                        <a href={course.href}>{course.name}</a>
                                       </h3>
-                                      <p className="ml-4">{product.price}</p>
+                                      {/* <p className="ml-4">{course.price}</p> */}
                                     </div>
-                                    <p className="mt-1 text-sm text-gray-500">{product.color}</p>
+                                    <p className="mt-1 text-sm text-gray-500">{course.professor}</p>
                                   </div>
                                   <div className="flex flex-1 items-end justify-between text-sm">
-                                    <p className="text-gray-500">Qty {product.quantity}</p>
+                                    <p className='text-gray-500'>MWF {course.startTime} - {course.endTime}</p>
 
                                     <div className="flex">
                                       <button
@@ -221,6 +224,7 @@ export default function ShoppingCart() {
                                       >
                                         Waitlist If Full
                                       </button>
+                                      <input type="checkbox" className="ml-2"/>
                                     </div>
                                   </div>
                                 </div>
@@ -232,11 +236,11 @@ export default function ShoppingCart() {
                     </div>
 
                     <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
-                      <div className="flex justify-between text-base font-medium text-gray-900">
+                      {/* <div className="flex justify-between text-base font-medium text-gray-900">
                         <p>Subtotal</p>
                         <p>$262.00</p>
                       </div>
-                      <p className="mt-0.5 text-sm text-gray-500">Shipping and taxes calculated at checkout.</p>
+                      <p className="mt-0.5 text-sm text-gray-500">Shipping and taxes calculated at checkout.</p> */}
                       <div className="mt-6">
                         <a
                           href="#"
