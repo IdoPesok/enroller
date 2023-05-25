@@ -49,3 +49,24 @@ export const STOPWORDS = new Set([
   "the",
   "www",
 ])
+
+export function addSearchModifiers(search: string): string {
+  return search
+    .split(/\s+/)
+    .filter((w) => w && !STOPWORDS.has(w.toLowerCase()))
+    .map((w) => `+${w}*`)
+    .join(" ")
+}
+
+export function getDateTimeFromString(str: string): Date {
+  const startDateTime = new Date()
+  const startTime = str.split(":")
+  if (startTime[1].includes("PM")) {
+    startDateTime.setHours(parseInt(startTime[0]) + 12)
+  } else {
+    startDateTime.setHours(parseInt(startTime[0]))
+  }
+  startDateTime.setMinutes(parseInt(startTime[1]))
+
+  return startDateTime;
+}

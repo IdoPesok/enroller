@@ -127,7 +127,7 @@ export const trpc = createTRPCNext<AppRouter, SSRContext>({
 export type RouterInput = inferRouterInputs<AppRouter>;
 export type RouterOutput = inferRouterOutputs<AppRouter>;
 
-export const internalServerError = (message: string, e: unknown) => {
+export const internalServerError = (message: string, e?: unknown) => {
   return new TRPCError({
     code: "INTERNAL_SERVER_ERROR",
     message: message,

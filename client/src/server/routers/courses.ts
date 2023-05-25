@@ -1,6 +1,6 @@
 import { prisma } from "@/server/prisma"
 import { z } from "zod"
-import { studentProcedure, router } from "../trpc"
+import { studentProcedure, router, protectedProcedure } from "../trpc"
 import { fetchCatalogYear } from "@/lib/catalog-year"
 
 export const courseRouter = router({
@@ -18,6 +18,37 @@ export const courseRouter = router({
         },
       })
       return course
+    }),
+  courseCodeSearch: protectedProcedure
+    .input(z.object({ search: z.string().nullish() }))
+    .query(async ({ input }) => {
+      const { search } = input
+
+      if (!search || search.length < 2) return [];
+
+      return (await prisma.courses.findMany({
+        select: {
+          Code: true,
+        },
+        where: {
+          Code: {
+            search,
+          },
+          Name: {
+            search
+          }
+        },
+      })).map((course) => course.Code)
+    }),
+  coursePrefixes: protectedProcedure
+    .query(async () => {
+      const prefixes = await prisma.courses.findMany({
+        select: {
+          Prefix: true,
+        },
+        distinct: ["Prefix"],
+      })
+      return prefixes.map((prefix) => prefix.Prefix)
     }),
   withSections: studentProcedure
     .input(z.object({ code: z.string() }))
@@ -37,7 +68,7 @@ export const courseRouter = router({
       })
       return course
     }),
-  list: studentProcedure
+  list: protectedProcedure
     .input(
       z.object({
         search: z.string(),
@@ -66,9 +97,6 @@ export const courseRouter = router({
           Name: {
             search,
           },
-          // Description: {
-          //   search,
-          // },
           Prefix: filters?.prefixes
             ? {
                 in: filters.prefixes,

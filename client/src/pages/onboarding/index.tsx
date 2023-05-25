@@ -19,6 +19,7 @@ import { useRouter } from "next/router";
 import { generateStudentRoute } from "@/lib/routes";
 import { useClerk } from "@clerk/nextjs";
 import { AcademicCapIcon } from "@heroicons/react/24/solid";
+import ErrorMessage from "@/components/ui/error-message";
 
 export default function Onboarding() {
   const [stage, setStage] = useState(1)
@@ -27,7 +28,6 @@ export default function Onboarding() {
   const [selectedMajor, setSelectedMajor] = useState("")
   const [selectedConcentration, setSelectedConcentration] = useState("")
   const router = useRouter()
-  const { signOut } = useClerk()
 
   const catalogs = trpc.onboard.catalogs.useQuery();
   const majors = trpc.onboard.majors.useQuery({
@@ -143,22 +143,30 @@ export default function Onboarding() {
         We will begin with your catalog year.
         This will<br/> help us determine which courses you need to take.
       </p>
-      <div className="grid grid-cols-3 gap-4">
-        {
-          catalogs.data?.map((catalog) => (
-            <Button
-              key={catalog.CatalogYear}
-              className={cn(
-                "hover:bg-slate-300 bg-slate-100 text-black",
-                selectedCatalog === catalog.CatalogYear && "bg-emerald-500 text-white hover:bg-emerald-500"
-              )}
-              onClick={() => setSelectedCatalog(catalog.CatalogYear)}
-            >
-              {catalog.CatalogYear}
-            </Button>
-          ))
-        }
-      </div>
+      {
+        catalogs.error ? (
+          <ErrorMessage message={catalogs.error.message + JSON.stringify(catalogs.error.data)} />
+        ) : catalogs.isLoading ? (
+          <Spinner />
+        ) : (
+          <div className="grid grid-cols-3 gap-4">
+            {
+              catalogs.data?.map((catalog) => (
+                <Button
+                  key={catalog.CatalogYear}
+                  className={cn(
+                    "hover:bg-slate-300 bg-slate-100 text-black",
+                    selectedCatalog === catalog.CatalogYear && "bg-emerald-500 text-white hover:bg-emerald-500"
+                  )}
+                  onClick={() => setSelectedCatalog(catalog.CatalogYear)}
+                >
+                  {catalog.CatalogYear}
+                </Button>
+              ))
+            }
+          </div>
+        )
+      }
       <Button
         className={cn(
           "bg-emerald-500 hover:bg-emerald-600 text-white",

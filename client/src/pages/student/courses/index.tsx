@@ -1,29 +1,17 @@
-import { useState } from "react"
-
 import CourseCard from "@/components/courses/course-card"
 import { Button } from "@/components/ui/button"
 import ScrollToTopButton from "@/components/ui/scroll-to-top"
-import { Search } from "@/components/ui/search"
 import { Spinner } from "@/components/ui/spinner"
 import useDebounce from "@/lib/debounce"
 import { trpc } from "@/lib/trpc"
-import { STOPWORDS } from "@/lib/utils"
+import { STOPWORDS, addSearchModifiers } from "@/lib/utils"
 import {
   Option,
-  SearchFilterCombobox,
 } from "@/components/courses/search-filter"
 import { prisma } from "@/server/prisma"
 import { GetStaticProps, InferGetStaticPropsType } from "next"
 import { SearchToolbar } from "@/components/courses/search-toolbar"
 import { useRouterQueryState } from "@/lib/use-router-query-state"
-
-function addSearchModifiers(search: string): string {
-  return search
-    .split(/\s+/)
-    .filter((w) => w && !STOPWORDS.has(w.toLowerCase()))
-    .map((w) => `+${w}*`)
-    .join(" ")
-}
 
 export default function Courses({
   prefixOptions,
