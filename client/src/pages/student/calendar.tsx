@@ -1,20 +1,12 @@
 import { useEffect, useState } from "react";
-import { Courses } from "@prisma/client"
+import { Sections } from "@prisma/client"
 import WeekCalendar from "../../components/WeekCalendar/WeekCalendar"
 
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
-import { Checkbox } from "@radix-ui/react-checkbox"
-
 interface props {
-  currentQuater: String,
+  currentQuarter: string,
   height: number,
-  courses: Courses[]
+  width: string,
+  courses?: Sections[]
 }
 
 
@@ -42,7 +34,6 @@ export default function Calendar(props:props){
 
         <WeekCalendar currentQuarter={CURRENT_QUARTER} height={calendarHeight} width="" courses={[]}></WeekCalendar>
       </>
-
   );
 }
 
