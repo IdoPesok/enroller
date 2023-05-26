@@ -4,7 +4,6 @@ import { clerkClient } from "@clerk/nextjs"
 import { PUBLIC_METADATA_KEYS } from "@/interfaces/PublicMetadata"
 import { internalServerError } from "@/lib/trpc"
 import { Courses } from "@prisma/client"
-import { fetchCatalogYear } from "@/lib/catalog-year"
 
 export const degreeProgressRouter = router({
   graduationRequirementCourses: studentProcedure.query(async ({ ctx }) => {
@@ -47,13 +46,6 @@ export const degreeProgressRouter = router({
           where: {
             FlowchartId: flowchartId,
           },
-          // include: {
-          //   CourseCodeMapping: {
-          //     include: {
-          //       Course: true
-          //     }
-          //   }
-          // }
         })
       ).map(({ Code }) => {
         // TODO: find a way to do this that is less query intensive

@@ -49,7 +49,7 @@ const isOnboardAuth = t.middleware(async ({ next, ctx }) => {
 
 // check if the user is signed in as a student, otherwise through a UNAUTHORIZED CODE
 const isAdminAuth = t.middleware(async ({ next, ctx }) => {
-  if (!ctx.auth.userId || !ctx.auth.user || !isUserAdmin(ctx.auth.user.publicMetadata)) {
+  if (!ctx.auth.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" })
   }
 

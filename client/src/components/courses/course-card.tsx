@@ -5,13 +5,15 @@ import { Prereq } from "@/interfaces/PrereqTypes"
 import { Button } from "../ui/button"
 import Link from "next/link"
 import { generateStudentRoute } from "@/lib/routes"
+import { ReactNode } from "react"
 
 interface Props {
   course: Courses
   showLink?: boolean
+  linkButton?: ReactNode
 }
 
-export default function CourseCard({ course, showLink = true }: Props) {
+export default function CourseCard({ course, showLink = true, linkButton }: Props) {
   const { Code, Name, Description, MinUnits, MaxUnits, Prereqs } = course
   const prereqs = Prereqs as unknown as Prereq[] | null
 
@@ -37,9 +39,13 @@ export default function CourseCard({ course, showLink = true }: Props) {
         {
           showLink && (
             <div className="flex justify-end">
-              <Button className="mt-5">
-                <Link href={generateStudentRoute(`/courses/${Code}`)}>View Course</Link>
-              </Button>
+              {
+                linkButton ? linkButton : (
+                  <Button className="mt-5">
+                    <Link href={generateStudentRoute(`/courses/${Code}`)}>View Course</Link>
+                  </Button>
+                )
+              }
             </div>
           )
         }

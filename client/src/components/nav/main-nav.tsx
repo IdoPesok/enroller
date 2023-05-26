@@ -9,7 +9,7 @@ import { doesUserNeedOnboarding, isUserAdmin } from "@/lib/auth"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { Button } from "../ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
-import { LogOut, RotateCcw } from "lucide-react"
+import { ArrowDown, LogOut, RotateCcw } from "lucide-react"
 import { trpc } from "@/lib/trpc"
 
 interface NavigationItem {
@@ -83,6 +83,15 @@ export const MainNav = () => {
     await resetMutation.mutate();
   }
 
+  const demoteUserRoleMutation = trpc.auth.demoteUserRole.useMutation({
+    onSuccess: () => {
+      router.reload()
+    }
+  });
+  const demoteUserRole = async () => {
+    await demoteUserRoleMutation.mutate();
+  }
+
   const navLinks = navItems.map((item) => (
     <Link
       key={item.name}
@@ -141,6 +150,19 @@ export const MainNav = () => {
                         <DropdownMenuItem onClick={() => resetOnboarding()}>
                           <RotateCcw className="mr-2 h-4 w-4" />
                           <span>Reset Onboarding</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                      <DropdownMenuSeparator />
+                    </>
+                  )
+                }
+                {
+                  isUserAdmin(user.user?.publicMetadata) && (
+                    <>
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem onClick={() => demoteUserRole()}>
+                          <ArrowDown className="mr-2 h-4 w-4" />
+                          <span>Demote User Role</span>
                         </DropdownMenuItem>
                       </DropdownMenuGroup>
                       <DropdownMenuSeparator />
