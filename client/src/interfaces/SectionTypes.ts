@@ -1,4 +1,4 @@
-import { Sections_Format, Sections_Modality } from "@prisma/client";
+import { Courses, Sections, Sections_Format, Sections_Modality } from "@prisma/client";
 import { z } from "zod";
 
 export const ZodSectionObject = z.object({
@@ -96,3 +96,7 @@ export const sectionFormSchema = z.object({
   format: z.nativeEnum(Sections_Format),
   modality: z.nativeEnum(Sections_Modality),
 });
+
+export type SectionWithCourse = Sections & {
+  Courses: Courses
+}

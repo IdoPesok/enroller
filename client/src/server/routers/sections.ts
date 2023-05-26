@@ -28,7 +28,7 @@ export const sectionRouter = router({
           SectionId: input.SectionId
         },
         data: {
-          ...input
+          ...input.updateData
         }
       })
 

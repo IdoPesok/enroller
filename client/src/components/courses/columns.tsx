@@ -1,11 +1,12 @@
 "use client"
 
-import { Sections } from "@prisma/client"
+import { Courses, Sections } from "@prisma/client"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { ArrowUpDown } from "lucide-react"
 import { DataTableSortableColumnHeader } from "./data-table-sortable-column-header"
+import { SectionWithCourse } from "@/interfaces/SectionTypes"
 
 type SectionDays = { [key: string]: boolean | null | undefined }
 

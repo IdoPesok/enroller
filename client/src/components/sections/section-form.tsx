@@ -1,12 +1,12 @@
-import { DAYS, DaysOfTheWeek, SECTION_END_TIMES, SECTION_FORMAT_OPTIONS, SECTION_MODALITY_OPTIONS, SECTION_START_TIMES, sectionFormSchema } from "@/interfaces/SectionTypes";
+import { DAYS, DaysOfTheWeek, SECTION_END_TIMES, SECTION_FORMAT_OPTIONS, SECTION_MODALITY_OPTIONS, SECTION_START_TIMES, SectionWithCourse, sectionFormSchema } from "@/interfaces/SectionTypes";
 import useDebounce from "@/lib/debounce";
 import { trpc } from "@/lib/trpc";
 import { addSearchModifiers, cn, getDateTimeFromString } from "@/lib/utils";
 import { CheckBadgeIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Courses, Sections_Format, Sections_Modality } from "@prisma/client";
+import { Courses, Sections, Sections_Format, Sections_Modality } from "@prisma/client";
 import { ArrowLeftRight, ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import CourseCard from "../courses/course-card";
@@ -24,30 +24,29 @@ import { useToast } from "../ui/use-toast";
 
 type Props = {
   sheetTrigger: React.ReactNode
-  handleSuccess: () => void
+  handleCreateSuccess: () => void
+  handleUpdateSuccess: () => void
+  updatingSection?: SectionWithCourse
+  sheetOpen: boolean
+  setSheetOpen: (open: boolean) => void
 }
 
-export const CreateSection = ({ sheetTrigger, handleSuccess }: Props) => {
-  const [sheetOpen, setSheetOpen] = useState(false)
+export const SectionForm = ({ 
+  sheetTrigger, 
+  handleCreateSuccess, 
+  handleUpdateSuccess, 
+  updatingSection ,
+  sheetOpen,
+  setSheetOpen,
+}: Props) => {
   const form = useForm<z.infer<typeof sectionFormSchema>>({
     resolver: zodResolver(sectionFormSchema),
-    defaultValues: {
-      professorName: "",
-      activeDays: [],
-      startTime: undefined,
-      endTime: undefined,
-      waitlistCapacity: 99,
-      enrollmentCapacity: 30,
-      roomNumber: "",
-      format: Sections_Format.Lecture,
-      modality: Sections_Modality.InPerson,
-    },
   })
 
   const { toast } = useToast()
 
   // course search state
-  const [selectedCourse, setSelectedCourse] = useState<null | Courses>(null);
+  const [selectedCourse, setSelectedCourse] = useState<null | Courses>(updatingSection ? updatingSection?.Courses ?? null : null);
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 500)
   const courses = trpc.courses.list.useInfiniteQuery(
@@ -58,10 +57,70 @@ export const CreateSection = ({ sheetTrigger, handleSuccess }: Props) => {
     }
   )
 
-  const mutation = trpc.section.create.useMutation({
+  // restore to default values on open
+  useEffect(() => {
+    if (sheetOpen) {
+      const activeDays: DaysOfTheWeek[] = []
+      let startTime: string | undefined = undefined
+      let endTime: string | undefined = undefined
+
+      if (updatingSection) {
+        for (const d of [
+          [DaysOfTheWeek.Monday, updatingSection.Monday],
+          [DaysOfTheWeek.Tuesday, updatingSection.Tuesday],
+          [DaysOfTheWeek.Wednesday, updatingSection.Wednesday],
+          [DaysOfTheWeek.Thursday, updatingSection.Thursday],
+          [DaysOfTheWeek.Friday, updatingSection.Friday],
+          [DaysOfTheWeek.Saturday, updatingSection.Saturday],
+          [DaysOfTheWeek.Sunday, updatingSection.Sunday],
+        ] as [DaysOfTheWeek, boolean | null][]) {
+          if (d[1]) {
+            activeDays.push(d[0])
+          }
+        }
+
+        const startDate = new Date(updatingSection.Start)
+        const endDate = new Date(updatingSection.End)
+
+        // 15:10 18:00 needs to be converted to 03:10 PM and 06:00 PM
+        startTime = startDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        endTime = endDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+
+        // convert to 12 hour time
+        startTime = startTime.replace(/^(\d{1,2}):(\d{2})$/, (m, h, mm) => {
+          return (h % 12 || 12) + ":" + mm + " " + (h < 12 ? "AM" : "PM")
+        })
+
+        endTime = endTime.replace(/^(\d{1,2}):(\d{2})$/, (m, h, mm) => {
+          return (h % 12 || 12) + ":" + mm + " " + (h < 12 ? "AM" : "PM")
+        })
+      }
+
+      form.reset({
+        professorName: updatingSection?.Professor ?? "",
+        activeDays: activeDays,
+        startTime: startTime,
+        endTime: endTime,
+        waitlistCapacity: updatingSection?.WaitlistCapacity ?? 99,
+        enrollmentCapacity: updatingSection?.Capacity ?? 30,
+        roomNumber: updatingSection?.Room ?? "",
+        format: updatingSection?.Format ?? Sections_Format.Lecture,
+        modality: updatingSection?.Modality ?? Sections_Modality.InPerson,
+      })
+
+      if (updatingSection) {
+        setSelectedCourse(updatingSection.Courses)
+      } else {
+        setSelectedCourse(null)
+      }
+
+      setSearch("")
+    }
+  }, [updatingSection, sheetOpen])
+
+  const createMutation = trpc.section.create.useMutation({
     onSuccess: () => {
-      setSheetOpen(false)
-      handleSuccess()
+      handleCreateSuccess()
     },
     onError: (error) => {
       toast({
@@ -71,6 +130,21 @@ export const CreateSection = ({ sheetTrigger, handleSuccess }: Props) => {
       })
     }
   })
+
+  const updateMutation = trpc.section.update.useMutation({
+    onSuccess: () => {
+      handleUpdateSuccess()
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating section",
+        description: error.message,
+        variant: "destructive"
+      })
+    }
+  })
+
+  const mutation = updatingSection ? updateMutation : createMutation;
 
   function validateStartAndEndTimes(start: Date, end: Date) {
     if (start >= end) {
@@ -98,7 +172,7 @@ export const CreateSection = ({ sheetTrigger, handleSuccess }: Props) => {
       return
     }
 
-    mutation.mutate({
+    const sectionData = {
       Course: selectedCourse.Code,
       CatalogYear: selectedCourse.CatalogYear,
       Professor: values.professorName,
@@ -116,7 +190,16 @@ export const CreateSection = ({ sheetTrigger, handleSuccess }: Props) => {
       Room: values.roomNumber,
       Format: values.format ?? Sections_Format.Lecture,
       Modality: values.modality ?? Sections_Modality.InPerson,
-    })
+    }
+
+    if (updatingSection) {
+      updateMutation.mutate({
+        SectionId: updatingSection.SectionId,
+        updateData: sectionData
+      })
+    } else {
+      createMutation.mutate(sectionData);
+    }
   }
 
   const cards = courses.data?.pages
@@ -221,7 +304,7 @@ export const CreateSection = ({ sheetTrigger, handleSuccess }: Props) => {
                 <FormItem className="flex-1">
                   <FormLabel>Enrolled Capacity</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enrolled Capacity" {...field} />
+                    <Input placeholder="Enrolled Capacity" {...field} type="number" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -234,7 +317,7 @@ export const CreateSection = ({ sheetTrigger, handleSuccess }: Props) => {
                 <FormItem className="flex-1">
                   <FormLabel>Waitlist Capacity</FormLabel>
                   <FormControl>
-                    <Input placeholder="Waitlist Capacity" {...field} />
+                    <Input placeholder="Waitlist Capacity" {...field} type="number" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -390,10 +473,14 @@ export const CreateSection = ({ sheetTrigger, handleSuccess }: Props) => {
                 mutation.isLoading ? (
                   <>
                     <ButtonSpinner className="mr-2" />
-                    Creating section...
+                    <>
+                      { updatingSection ? 'Updating' : 'Creating' } section...
+                    </>
                   </>
                 ) : (
-                  "Create section"
+                  <>
+                    { updatingSection ? 'Update' : 'Create' } section
+                  </>
                 )
               }
             </Button>
@@ -410,9 +497,21 @@ export const CreateSection = ({ sheetTrigger, handleSuccess }: Props) => {
       </SheetTrigger>
       <SheetContent position="right" size="lg" className="flex flex-col overflow-y-auto">
         <SheetHeader className="flex-none">
-          <SheetTitle>Create section</SheetTitle>
+          <SheetTitle>
+            { updatingSection ? 'Update' : 'Create' } section
+          </SheetTitle>
           <SheetDescription>
-            Add a new section for students to join.
+            {
+              updatingSection ? (
+                <>
+                  Update the section for students.
+                </>
+              ) : (
+                <>
+                  Add a new section for students to join.
+                </>
+              )
+            }
           </SheetDescription>
         </SheetHeader>
         {
