@@ -74,7 +74,7 @@ export default function Onboarding() {
 
     await anime({
       targets: element,
-      translateX: stage > newStage ? -100 : 100,
+      translateX: stage > newStage ? 100 : -100,
       opacity: 0,
       easing: 'easeInOutQuad',
       duration: 500,
@@ -82,7 +82,7 @@ export default function Onboarding() {
 
     anime({
       targets: element,
-      translateX: stage > newStage ? 100 : -100,
+      translateX: stage > newStage ? -100 : 100,
       opacity: 0,
       easing: 'easeInOutQuad',
       duration: 0,
