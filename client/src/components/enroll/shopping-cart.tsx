@@ -34,7 +34,7 @@ const courses = [
       href: '#',
       professor: 'John Fox',
       quantity: 1,
-      startTime: '12:00',
+      startTime: '12:10',
       endTime: '2:00pm', //add am/pm
       imageSrc: 'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-01.jpg',
       imageAlt: 'Salmon orange fabric pouch with match zipper, gray zipper pull, and adjustable hip belt.',
@@ -44,7 +44,7 @@ const courses = [
       name: 'ISLA 340: Intro to Screenwriting',
       href: '#',
       professor: 'Prof Blue',
-      startTime: '3:00',
+      startTime: '3:10',
       endTime: '5:00pm',
       quantity: 1,
       imageSrc: 'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-02.jpg',
@@ -250,11 +250,10 @@ export default function ShoppingCart() {
                         </a>
                       </div>
                       <div className="mt-6 flex justify-center text-center text-sm text-gray-500">
-                        <p>
-                          or 
+                        <p> 
                           <button
                             type="button"
-                            className="font-medium text-indigo-600 hover:text-indigo-500"
+                            className="font-medium text-emerald-600 hover:text-emerald-500"
                             onClick={() => setOpen(false)}
                           >
                             Edit Shopping Cart
