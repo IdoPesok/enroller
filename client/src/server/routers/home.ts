@@ -8,7 +8,7 @@ import { Enrolled_Type } from "@prisma/client"
 export const homeRouter = router({
 
     userSections: studentProcedure
-        .input(z.object({ user: z.string(), types: z.array(z.nativeEnum(Enrolled_Type)) }))
+        .input(z.object({ types: z.array(z.nativeEnum(Enrolled_Type)) }))
         .query(async ({ input, ctx }) => {
             const sections = await prisma.enrolled.findMany({
             where: {
