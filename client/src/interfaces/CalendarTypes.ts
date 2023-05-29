@@ -1,14 +1,14 @@
+import Calendar from "@/pages/student/calendar"
+
 // start/end format: YYYY-MM-DDTHH:MM:SS 
 export interface CalendarEvent {
     start: string,
     end: string, 
-    title: string
+    title: string,
+    color: string
 }
   
   // red background behind conflicting events
-export interface CalendarConflictEvent{
-    start: string,
-    end: string, 
-    display: string, 
-    color: string, 
+export interface CalendarConflictEvent extends CalendarEvent {
+    display: string
 }

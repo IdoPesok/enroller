@@ -9,7 +9,6 @@ interface props {
   currentQuarter: string,
   height: number,
   width: string,
-  courses?: Sections[]
 }
 
 

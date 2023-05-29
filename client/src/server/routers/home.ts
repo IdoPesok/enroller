@@ -19,7 +19,7 @@ export const homeRouter = router({
                 Section: true
             }
             });
-            return sections.map(enrollment => enrollment.Section);
+            return sections.map(enrollment => [enrollment.Section, enrollment.Type]);
         })
 })
 
