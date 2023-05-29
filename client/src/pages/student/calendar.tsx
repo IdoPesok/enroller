@@ -17,52 +17,19 @@ const CURRENT_QUARTER = 'Spring 2023' // hard coded for now as placeholder
 const calendarHeight = 600 // TODO: find best way of sizing height 
 
 export default function Calendar(props:props){
-  const [showEnrolled, setShowEnrolled] = useState(true)
-  const [showWaitlist, setShowWaitlist] = useState(false)
-  const [showShoppingCart, setShowShoppingCart] = useState(false)
   const [showingSections, setShowingSections] = useState<Enrolled_Type[]>([Enrolled_Type.Enrolled])
 
   const sections = trpc.home.userSections.useQuery({ types: showingSections }).data 
   console.log("sections: " + sections)
 
-  const handleShowEnrolled = () => { 
-    setShowEnrolled(prevShowEnrolled => !prevShowEnrolled)
+  const updateShowingSections = (type : Enrolled_Type) => {
+    if (showingSections.includes(type)) {
+      setShowingSections(showingSections.filter((t) => t !== type))
+    } else {  
+      setShowingSections([...showingSections, type])
+    }
+    return
   }
-
-  const handleShowWaitlist = () => { 
-    setShowWaitlist(prevShowWaitlist => !prevShowWaitlist)
-  }
-
-  const handleShowShoppingCart = () => { 
-    setShowShoppingCart(prevShowShoppingCart => !prevShowShoppingCart)
-  }
-
-  const updateShowEnrolled = () => {
-    showEnrolled ? setShowingSections([...showingSections, Enrolled_Type.Enrolled]) 
-                 : setShowingSections(showingSections.filter((type) => type !== Enrolled_Type.Enrolled))
-  }
-
-  const updateShowWaitlist = () => {
-    showWaitlist ? setShowingSections([...showingSections, Enrolled_Type.Waitlist]) 
-                 : setShowingSections(showingSections.filter((type) => type !== Enrolled_Type.Waitlist))
-  }
-
-  const updateShowShoppingCart = () => {
-    showShoppingCart ? setShowingSections([...showingSections, Enrolled_Type.ShoppingCart]) 
-                 : setShowingSections(showingSections.filter((type) => type !== Enrolled_Type.ShoppingCart))
-  }
-
-  useEffect(() => {
-    updateShowEnrolled()
-  }, [showEnrolled])
-
-  useEffect(() => {
-    updateShowWaitlist()
-  }, [showWaitlist])
-
-  useEffect(() => {
-    updateShowShoppingCart()
-  }, [showShoppingCart])
 
   return (
       <>
@@ -70,19 +37,19 @@ export default function Calendar(props:props){
           <div>
             <label>
               Show Enrolled Classes
-              <input type="checkbox" className="ml-2" checked={showEnrolled} onChange={handleShowEnrolled}/>
+              <input type="checkbox" className="ml-2" defaultChecked={true} onChange={() => updateShowingSections(Enrolled_Type.Enrolled)}/>
             </label>
           </div>
           <div>
             <label>
               Show Waitlisted Classes
-              <input type="checkbox" className="ml-2" checked={showWaitlist} onChange={handleShowWaitlist}/>
+              <input type="checkbox" className="ml-2" onChange={() => updateShowingSections(Enrolled_Type.Waitlist)}/>
             </label>
           </div>
           <div>
             <label>
               Show Shopping Cart Classes
-              <input type="checkbox" className="ml-2" checked={showShoppingCart} onChange={handleShowShoppingCart}/>
+              <input type="checkbox" className="ml-2" onChange={() => updateShowingSections(Enrolled_Type.ShoppingCart)}/>
             </label>
           </div>
         </div>
