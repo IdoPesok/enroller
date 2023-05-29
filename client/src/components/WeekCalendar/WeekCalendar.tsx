@@ -41,43 +41,45 @@ export default function WeekCalendar(props: props){
   for(const section of sections){
     console.log("title: " + section.Course + "start: " + section.Start + "end: " + section.End)
   }
+
   events = sections.flatMap((section) => {
+    const newEvents: CalendarEvent[] = []
     if(section.Monday){
-      events.push({
+      newEvents.push({
         title: section.Course,
         start: MONDAY_DATE + transformTime(section.Start),
         end: MONDAY_DATE + transformTime(section.End),
       })
     }
     if(section.Tuesday){
-      events.push({
+      newEvents.push({
         title: section.Course,
         start: TUESDAY_DATE + transformTime(section.Start),
         end: TUESDAY_DATE + transformTime(section.End),
       })
     }
     if(section.Wednesday){
-      events.push({
+      newEvents.push({
         title: section.Course,
         start: WEDNESDAY_DATE + transformTime(section.Start),
         end: WEDNESDAY_DATE + transformTime(section.End),
       })
     }
     if(section.Thursday){
-      events.push({
+      newEvents.push({
         title: section.Course,
         start: THURSDAY_DATE + transformTime(section.Start),
         end: THURSDAY_DATE + transformTime(section.End),
       })
     }
     if(section.Friday){
-      events.push({
+      newEvents.push({
         title: section.Course,
         start: FRIDAY_DATE + transformTime(section.Start),
         end: FRIDAY_DATE + transformTime(section.End),
       })
     }
-    return events
+    return newEvents
   })
     
   return (
