@@ -103,7 +103,30 @@ async function main() {
     },
   })
 
-  console.log({ csc307Section1, csc307Section2, csc307Section3 })
+  const tjcolliSection1 = await prisma.enrolled.upsert({
+    where: {
+      User_SectionId: { User: "user_2QDp9b95iUuYTE2TVxBS6cRJK4F", SectionId: 1 },
+    },
+    update: {},
+    create: {
+      User: "user_2QDp9b95iUuYTE2TVxBS6cRJK4F",
+      SectionId: 1,
+      Type: "ShoppingCart",
+    },
+  })
+
+  const tjcolliSection2 = await prisma.enrolled.upsert({
+    where: {
+      User_SectionId: { User: "user_2QDp9b95iUuYTE2TVxBS6cRJK4F", SectionId: 2 },
+    },
+    update: {},
+    create: {
+      User: "user_2QDp9b95iUuYTE2TVxBS6cRJK4F",
+      SectionId: 2,
+      Type: "Waitlist",
+    },
+  })
+  console.log({ csc307Section1, csc307Section2, csc307Section3, tjcolliSection1, tjcolliSection2 })
 }
 
 main()
