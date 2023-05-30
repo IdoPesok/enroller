@@ -22,9 +22,9 @@ const FRIDAY_DATE = "2023-05-11"
 
 const defaultClass = "px-1 "
 const EVENT_CLASSNAMES_MAP: Record<Enrolled_Type, string> = {
-  Enrolled: defaultClass + "bg-green-200 hover:bg-green-300 hover:text-green-800 text-green-800 border border-green-500",
-  Waitlist: defaultClass + "bg-amber-200 hover:bg-amber-300 hover:text-amber-800 text-amber-800 border border-amber-500",
-  ShoppingCart: defaultClass + "bg-sky-200 hover:bg-sky-300 hover:text-sky-800 text-sky-800 border border-sky-500"
+  Enrolled: defaultClass + "bg-green-200 hover:bg-green-300 hover:text-green-800 text-green-800 !border !border-green-500",
+  Waitlist: defaultClass + "bg-amber-200 hover:bg-amber-300 hover:text-amber-800 text-amber-800 !border !border-amber-500",
+  ShoppingCart: defaultClass + "bg-sky-200 hover:bg-sky-300 hover:text-sky-800 text-sky-800 !border !border-sky-500"
 }
 
 const DateValueArr = [
@@ -57,7 +57,7 @@ export default function WeekCalendar({
     return {
       start: v[1] + transformTime(start),
       end: v[1] + transformTime(end),
-      classNames: "!bg-red-300 !opacity-100",
+      classNames: "!bg-white !opacity-100 rounded !left-[-4px] border-red-500 border-4",
       display: "background",
       title: "",
     };
