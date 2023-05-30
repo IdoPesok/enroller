@@ -4,6 +4,9 @@ import WeekCalendar from "../../components/WeekCalendar/WeekCalendar"
 import { trpc } from "@/lib/trpc";
 import { CalendarEvent } from "@/interfaces/CalendarTypes";
 import { SourceTextModule } from "vm";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Toggle } from "@/components/ui/toggle";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 
 interface props {
   currentQuarter: string,
@@ -32,29 +35,28 @@ export default function Calendar(props:props){
 
   return (
       <>
-        <div className="columns-3 text-center gap-x-2 pb-4">
-          <div>
-            <label>
-              Show Enrolled Classes
-              <input type="checkbox" className="ml-2" defaultChecked={true} onChange={() => updateShowingSections(Enrolled_Type.Enrolled)}/>
-            </label>
-          </div>
-          <div>
-            <label>
-              Show Waitlisted Classes
-              <input type="checkbox" className="ml-2" onChange={() => updateShowingSections(Enrolled_Type.Waitlist)}/>
-            </label>
-          </div>
-          <div>
-            <label>
-              Show Shopping Cart Classes
-              <input type="checkbox" className="ml-2" onChange={() => updateShowingSections(Enrolled_Type.ShoppingCart)}/>
-            </label>
+        <div>
+          <h1 className="font-bold ml-4 pb-2">{CURRENT_QUARTER}</h1>
+          <div> 
+            {[
+              ["Enrolled", "bg-green-400", Enrolled_Type.Enrolled],
+              ["Waitlisted", "bg-teal-500", Enrolled_Type.Waitlist],
+              ["In Shopping Cart", "bg-yellow-300", Enrolled_Type.ShoppingCart],
+            ].map((entry) => (
+                <Toggle
+                  key={entry[0]}
+                  className={`flex-1 ${entry[1]} ${showingSections.includes(entry[2] as Enrolled_Type) ? 'bg-opacity-50' : 'bg-opacity-100'} border-2 px-4 border-slategrey-500 rounded-md`}
+                  onPressedChange={() => updateShowingSections(entry[2] as Enrolled_Type)}
+                  defaultPressed={entry[2] === Enrolled_Type.Enrolled ? false : true}
+                >
+                  {entry[0]}
+                </Toggle>
+            ))}
           </div>
         </div>
-
+      
         <div>
-          <WeekCalendar currentQuarter={CURRENT_QUARTER} height={calendarHeight} width="" sections={sections ? sections : []}/>
+          <WeekCalendar height={calendarHeight} width="" sections={sections ? sections : []}/>
         </div>
       </>
   );

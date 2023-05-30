@@ -7,7 +7,6 @@ import ja from "date-fns/esm/locale/ja/index.js"
 
 
 interface props {
-    currentQuarter: string,
     height: number,
     width: string,
     sections: (Enrolled_Type | Sections)[][]
@@ -33,7 +32,7 @@ EVENT_COLOR_MAP.set(Enrolled_Type.ShoppingCart, SHOPPING_CART_COLOR)
 
 
 export default function WeekCalendar(props: props){
-  const { currentQuarter, height, width, sections } = props
+  const { height, width, sections } = props
   let events: CalendarEvent[] = []
 
   const transformTime = (time: Date) => {
@@ -166,7 +165,7 @@ export default function WeekCalendar(props: props){
       if(sectionType === type){
         if(section.Monday){
           newEvents.push({
-            title: section.Course,
+            title: section.Course + "-" + section.SectionId,
             start: MONDAY_DATE + transformTime(section.Start),
             end: MONDAY_DATE + transformTime(section.End),
             color: EVENT_COLOR_MAP.get(type)!
@@ -174,7 +173,7 @@ export default function WeekCalendar(props: props){
         }
         if(section.Tuesday){
           newEvents.push({
-            title: section.Course,
+            title: section.Course + "-" + section.SectionId,
             start: TUESDAY_DATE + transformTime(section.Start),
             end: TUESDAY_DATE + transformTime(section.End),
             color: EVENT_COLOR_MAP.get(type)!
@@ -182,7 +181,7 @@ export default function WeekCalendar(props: props){
         }
         if(section.Wednesday){
           newEvents.push({
-            title: section.Course,
+            title: section.Course + "-" + section.SectionId,
             start: WEDNESDAY_DATE + transformTime(section.Start),
             end: WEDNESDAY_DATE + transformTime(section.End),
             color: EVENT_COLOR_MAP.get(type)!
@@ -190,7 +189,7 @@ export default function WeekCalendar(props: props){
         }
         if(section.Thursday){
           newEvents.push({
-            title: section.Course,
+            title: section.Course + "-" + section.SectionId,
             start: THURSDAY_DATE + transformTime(section.Start),
             end: THURSDAY_DATE + transformTime(section.End),
             color: EVENT_COLOR_MAP.get(type)!
@@ -198,7 +197,7 @@ export default function WeekCalendar(props: props){
         }
         if(section.Friday){
           newEvents.push({
-            title: section.Course,
+            title: section.Course + "-" + section.SectionId,
             start: FRIDAY_DATE + transformTime(section.Start),
             end: FRIDAY_DATE + transformTime(section.End),
             color: EVENT_COLOR_MAP.get(type)!
@@ -215,8 +214,6 @@ export default function WeekCalendar(props: props){
     
   return (
     <>
-      <h1 className="font-bold">{currentQuarter}</h1>
-
       <div className={width}>
         <FullCalendar 
           plugins={[timeGridPlugin]}
