@@ -67,7 +67,7 @@ export default function Calendar() {
             ))}
           </div>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 mt-2">
           <WeekCalendar height={calendarHeight} sections={sections ? sections : []}/>
         </div>
       </div>
