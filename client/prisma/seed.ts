@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client"
+import { Enrolled_Type, PrismaClient } from "@prisma/client"
 import { set } from "date-fns"
 
 const prisma = new PrismaClient()
@@ -55,7 +55,7 @@ async function main() {
     create: {
       CatalogYear: "2021-2022",
       Course: "CSC 307",
-      Start: zero(set(new Date(), { hours: 12, minutes: 10 })),
+      Start: zero(set(new Date(), { hours: 10, minutes: 10 })),
       End: zero(set(new Date(), { hours: 14, minutes: 0 })),
       Sunday: false,
       Monday: false,
@@ -103,30 +103,48 @@ async function main() {
     },
   })
 
-  const tjcolliSection1 = await prisma.enrolled.upsert({
-    where: {
-      User_SectionId: { User: "user_2QDp9b95iUuYTE2TVxBS6cRJK4F", SectionId: 1 },
-    },
-    update: {},
-    create: {
-      User: "user_2QDp9b95iUuYTE2TVxBS6cRJK4F",
-      SectionId: 1,
-      Type: "ShoppingCart",
-    },
-  })
+  const userIds = [
+    "user_2QDp9b95iUuYTE2TVxBS6cRJK4F", // tjcolli
+    "user_2PdDb5cYehvCi1oq7vHzoGvyPdx", // ido
+  ]
 
-  const tjcolliSection2 = await prisma.enrolled.upsert({
-    where: {
-      User_SectionId: { User: "user_2QDp9b95iUuYTE2TVxBS6cRJK4F", SectionId: 2 },
-    },
-    update: {},
-    create: {
-      User: "user_2QDp9b95iUuYTE2TVxBS6cRJK4F",
-      SectionId: 2,
-      Type: "Waitlist",
-    },
-  })
-  console.log({ csc307Section1, csc307Section2, csc307Section3, tjcolliSection1, tjcolliSection2 })
+  for (const uid of userIds) {
+    await prisma.enrolled.upsert({
+      where: {
+        User_SectionId: { User: uid, SectionId: 1 },
+      },
+      update: {},
+      create: {
+        User: uid,
+        SectionId: 1,
+        Type: Enrolled_Type.ShoppingCart,
+      },
+    })
+
+    await prisma.enrolled.upsert({
+      where: {
+        User_SectionId: { User: uid, SectionId: 2 },
+      },
+      update: {},
+      create: {
+        User: uid,
+        SectionId: 2,
+        Type: Enrolled_Type.Waitlist,
+      },
+    })
+
+    await prisma.enrolled.upsert({
+      where: {
+        User_SectionId: { User: uid, SectionId: 3 },
+      },
+      update: {},
+      create: {
+        User: uid,
+        SectionId: 3,
+        Type: Enrolled_Type.Enrolled,
+      },
+    })
+  }
 }
 
 main()

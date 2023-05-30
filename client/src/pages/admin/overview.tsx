@@ -93,7 +93,11 @@ export default function Overview() {
         ) : (sections.error) ? (
           <ErrorMessage message={JSON.stringify(sections.error)} />
         ) : (
-          <DataTable columns={adminSectionsColumns} data={sections.data?.pages.flatMap((s) => s.sections) ?? []} />
+          <DataTable
+            columns={adminSectionsColumns}
+            data={sections.data?.pages.flatMap((s) => s.sections) ?? []}
+            isLoading={sections.isLoading}
+          />
         )
       }
     </div>

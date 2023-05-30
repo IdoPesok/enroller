@@ -1,15 +1,14 @@
 
-import { Sections } from "@prisma/client"
+import { Enrolled_Type, Sections } from "@prisma/client"
 import FullCalendar from '@fullcalendar/react'
 import timeGridPlugin from '@fullcalendar/timegrid'
-import { CalendarEvent } from "@/interfaces/CalendarTypes"
+import { CalendarEvent, CalendarConflictEvent } from "@/interfaces/CalendarTypes"
+import { EnrolledWithSection } from "@/interfaces/EnrolledTypes"
 
-
-interface props {
-    currentQuarter: string,
-    height: number,
-    width: string,
-    sections: Sections[]
+interface Props {
+  height: number,
+  width?: string,
+  sections: EnrolledWithSection[]
 }
 
 // currently hard coded to show the same exact week since events need 
@@ -21,10 +20,26 @@ const WEDNESDAY_DATE = "2023-05-09"
 const THURSDAY_DATE = "2023-05-10"
 const FRIDAY_DATE = "2023-05-11"
 
+const defaultClass = "px-1 "
+const EVENT_CLASSNAMES_MAP: Record<Enrolled_Type, string> = {
+  Enrolled: defaultClass + "bg-green-200 hover:bg-green-300 hover:text-green-800 text-green-800 !border !border-green-500",
+  Waitlist: defaultClass + "bg-amber-200 hover:bg-amber-300 hover:text-amber-800 text-amber-800 !border !border-amber-500",
+  ShoppingCart: defaultClass + "bg-sky-200 hover:bg-sky-300 hover:text-sky-800 text-sky-800 !border !border-sky-500"
+}
 
-export default function WeekCalendar(props: props){
-  const { currentQuarter, height, width, sections } = props
-  let events: CalendarEvent[] = []
+const DateValueArr = [
+  ["Monday", MONDAY_DATE],
+  ["Tuesday", TUESDAY_DATE],
+  ["Wednesday", WEDNESDAY_DATE],
+  ["Thursday", THURSDAY_DATE],
+  ["Friday", FRIDAY_DATE]
+] as [keyof Sections, string][]
+
+export default function WeekCalendar({
+  height,
+  width,
+  sections
+}: Props) {
 
   const transformTime = (time: Date) => {
     let hours = time.getHours().toString()
@@ -38,54 +53,89 @@ export default function WeekCalendar(props: props){
     return "T" + hours + ":" + minutes + ":00"
   }
 
-  for(const section of sections){
-    console.log("title: " + section.Course + "start: " + section.Start + "end: " + section.End)
+  const createConflictEvent = (v: typeof DateValueArr[number], start: Date, end: Date) => {
+    return {
+      start: v[1] + transformTime(start),
+      end: v[1] + transformTime(end),
+      classNames: "!bg-white !opacity-100 rounded !left-[-4px] border-red-500 border-4",
+      display: "background",
+      title: "",
+    };
+  };
+  
+  const checkAndPushConflict = (
+    sectionOneStart: Date, 
+    sectionOneEnd: Date, 
+    sectionTwoStart: Date, 
+    sectionTwoEnd: Date, 
+    v: typeof DateValueArr[number], 
+    conflictEvents: CalendarConflictEvent[]
+  ) => {
+    if (sectionOneStart < sectionTwoEnd && sectionOneEnd > sectionTwoStart) {
+      conflictEvents.push(createConflictEvent(v, sectionOneStart, sectionOneEnd));
+    } else if ((sectionOneStart > sectionTwoStart && sectionOneStart < sectionTwoEnd) || (sectionOneStart < sectionTwoStart && sectionOneEnd > sectionTwoEnd)) {
+      conflictEvents.push(createConflictEvent(v, sectionTwoStart, sectionOneEnd));
+    } else if (sectionTwoStart < sectionOneStart && sectionTwoEnd > sectionTwoEnd) {
+      conflictEvents.push(createConflictEvent(v, sectionTwoStart, sectionTwoEnd));
+    }
+  };
+  
+  const createConflictEvents = (sections: EnrolledWithSection[]) => {
+    const conflictEvents: CalendarConflictEvent[] = [];
+  
+    for (let i = 0; i < sections.length; i++) {
+      for (let j = i + 1; j < sections.length; j++) {
+        let sectionOne = sections[i].Section;
+        let sectionTwo = sections[j].Section;
+  
+        let sectionOneStart = new Date(sectionOne.Start);
+        sectionOneStart.setMinutes(sectionOneStart.getMinutes() - 10);
+  
+        let sectionOneEnd = new Date(sectionOne.End);
+        sectionOneEnd.setMinutes(sectionOneEnd.getMinutes() + 10);
+  
+        let sectionTwoStart = new Date(sectionTwo.Start);
+        sectionTwoStart.setMinutes(sectionTwoStart.getMinutes() - 10);
+  
+        let sectionTwoEnd = new Date(sectionTwo.End);
+        sectionTwoEnd.setMinutes(sectionTwoEnd.getMinutes() + 10);
+  
+        for (const v of DateValueArr) {
+          if (sectionOne[v[0]] && sectionTwo[v[0]]) {
+            checkAndPushConflict(sectionOneStart, sectionOneEnd, sectionTwoStart, sectionTwoEnd, v, conflictEvents);
+          }
+        }
+      }
+    }
+    return conflictEvents;
+  };
+
+  const createEvents = (sections: EnrolledWithSection[]): CalendarEvent[] => {
+    return sections.flatMap((entry) => {
+      const newEvents = []
+      const section = entry.Section
+      const sectionType = entry.Type
+
+      for (const v of DateValueArr) {
+        if (section[v[0]]) {
+          newEvents.push({
+            title: section.Course + "-" + section.SectionId,
+            start: v[1] + transformTime(section.Start),
+            end: v[1] + transformTime(section.End),
+            classNames: EVENT_CLASSNAMES_MAP[sectionType]
+          })
+        }
+      }
+
+      return newEvents
+    })
   }
 
-  events = sections.flatMap((section) => {
-    const newEvents: CalendarEvent[] = []
-    if(section.Monday){
-      newEvents.push({
-        title: section.Course,
-        start: MONDAY_DATE + transformTime(section.Start),
-        end: MONDAY_DATE + transformTime(section.End),
-      })
-    }
-    if(section.Tuesday){
-      newEvents.push({
-        title: section.Course,
-        start: TUESDAY_DATE + transformTime(section.Start),
-        end: TUESDAY_DATE + transformTime(section.End),
-      })
-    }
-    if(section.Wednesday){
-      newEvents.push({
-        title: section.Course,
-        start: WEDNESDAY_DATE + transformTime(section.Start),
-        end: WEDNESDAY_DATE + transformTime(section.End),
-      })
-    }
-    if(section.Thursday){
-      newEvents.push({
-        title: section.Course,
-        start: THURSDAY_DATE + transformTime(section.Start),
-        end: THURSDAY_DATE + transformTime(section.End),
-      })
-    }
-    if(section.Friday){
-      newEvents.push({
-        title: section.Course,
-        start: FRIDAY_DATE + transformTime(section.Start),
-        end: FRIDAY_DATE + transformTime(section.End),
-      })
-    }
-    return newEvents
-  })
+  const conflicts = createConflictEvents(sections) 
+  const events = [...createEvents(sections), ...conflicts]
     
   return (
     <>
-      <h1 className="font-bold">{currentQuarter}</h1>
-
       <div className={width}>
         <FullCalendar 
           plugins={[timeGridPlugin]}
@@ -115,8 +165,7 @@ export default function WeekCalendar(props: props){
           }}
 
           events={events}
-          eventBackgroundColor="rgb(16 185 129)"
-          slotEventOverlap={false}
+          slotEventOverlap={true}
         />
       </div>
     </>
