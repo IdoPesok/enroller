@@ -3,13 +3,12 @@ import { Enrolled_Type, Sections } from "@prisma/client"
 import FullCalendar from '@fullcalendar/react'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import { CalendarEvent, CalendarConflictEvent } from "@/interfaces/CalendarTypes"
-import ja from "date-fns/esm/locale/ja/index.js"
+import { EnrolledWithSection } from "@/interfaces/EnrolledTypes"
 
-
-interface props {
-    height: number,
-    width: string,
-    sections: (Enrolled_Type | Sections)[][]
+interface Props {
+  height: number,
+  width?: string,
+  sections: EnrolledWithSection[]
 }
 
 // currently hard coded to show the same exact week since events need 
@@ -21,19 +20,26 @@ const WEDNESDAY_DATE = "2023-05-09"
 const THURSDAY_DATE = "2023-05-10"
 const FRIDAY_DATE = "2023-05-11"
 
-const ENROLLED_COLOR = "rgb(74 222 128)"
-const WAITLIST_COLOR = "rgb(20 184 166)"
-const SHOPPING_CART_COLOR = "rgb(253 224 71)"
+const defaultClass = "px-1 "
+const EVENT_CLASSNAMES_MAP: Record<Enrolled_Type, string> = {
+  Enrolled: defaultClass + "bg-green-200 hover:bg-green-300 hover:text-green-800 text-green-800 !border !border-green-500",
+  Waitlist: defaultClass + "bg-amber-200 hover:bg-amber-300 hover:text-amber-800 text-amber-800 !border !border-amber-500",
+  ShoppingCart: defaultClass + "bg-sky-200 hover:bg-sky-300 hover:text-sky-800 text-sky-800 !border !border-sky-500"
+}
 
-const EVENT_COLOR_MAP: Map<Enrolled_Type, string> = new Map()
-EVENT_COLOR_MAP.set(Enrolled_Type.Enrolled, ENROLLED_COLOR)
-EVENT_COLOR_MAP.set(Enrolled_Type.Waitlist, WAITLIST_COLOR)
-EVENT_COLOR_MAP.set(Enrolled_Type.ShoppingCart, SHOPPING_CART_COLOR)
+const DateValueArr = [
+  ["Monday", MONDAY_DATE],
+  ["Tuesday", TUESDAY_DATE],
+  ["Wednesday", WEDNESDAY_DATE],
+  ["Thursday", THURSDAY_DATE],
+  ["Friday", FRIDAY_DATE]
+] as [keyof Sections, string][]
 
-
-export default function WeekCalendar(props: props){
-  const { height, width, sections } = props
-  let events: CalendarEvent[] = []
+export default function WeekCalendar({
+  height,
+  width,
+  sections
+}: Props) {
 
   const transformTime = (time: Date) => {
     let hours = time.getHours().toString()
@@ -47,170 +53,86 @@ export default function WeekCalendar(props: props){
     return "T" + hours + ":" + minutes + ":00"
   }
 
-  const createConflictEvents = (sections:  (Enrolled_Type | Sections)[][]) => {
-    const conflictEvents: CalendarConflictEvent[] = []
-    let i = 0 
-    while(i < sections.length){
-      let j = i + 1
-      let sectionOne = sections[i][0] as Sections
-
-      while(j < sections.length){
-        let sectionTwo = sections[j][0] as Sections
-        const sectionOneStart = new Date(sectionOne.Start)
-        sectionOneStart.setMinutes(sectionOneStart.getMinutes() - 10)
-        const sectionOneEnd = new Date(sectionOne.End)
-        sectionOneEnd.setMinutes(sectionOneEnd.getMinutes() + 10)
-        const sectionTwoStart = new Date(sectionTwo.Start)
-        sectionTwoStart.setMinutes(sectionTwoStart.getMinutes() - 10)
-        const sectionTwoEnd = new Date(sectionTwo.End)
-        sectionTwoEnd.setMinutes(sectionTwoEnd.getMinutes() + 10)
-
-        if(sectionOne.Monday && sectionTwo.Monday){
-          if(sectionOneStart < sectionTwoEnd && sectionOneEnd > sectionTwoStart){
-            conflictEvents.push({ start: MONDAY_DATE + transformTime(sectionOneStart), end: MONDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart > sectionTwoStart && sectionOneStart < sectionTwoEnd){
-            conflictEvents.push({ start: MONDAY_DATE + transformTime(sectionTwoStart), end: MONDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart > sectionTwoStart && sectionOneStart < sectionTwoEnd){
-            conflictEvents.push({ start: MONDAY_DATE + transformTime(sectionTwoStart), end: MONDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart < sectionTwoStart && sectionOneEnd > sectionTwoEnd){
-            conflictEvents.push({ start: MONDAY_DATE + transformTime(sectionOneStart), end: MONDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionTwoStart < sectionOneStart && sectionTwoEnd > sectionTwoEnd){
-            conflictEvents.push({ start: MONDAY_DATE + transformTime(sectionTwoStart), end: MONDAY_DATE + transformTime(sectionTwoEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-        }
-        if(sectionOne.Tuesday && sectionTwo.Tuesday){
-          if(sectionOneStart < sectionTwoEnd && sectionOneEnd > sectionTwoStart){
-            conflictEvents.push({ start: TUESDAY_DATE + transformTime(sectionOneStart), end: TUESDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart > sectionTwoStart && sectionOneStart < sectionTwoEnd){
-            conflictEvents.push({ start: TUESDAY_DATE + transformTime(sectionTwoStart), end: TUESDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart > sectionTwoStart && sectionOneStart < sectionTwoEnd){
-            conflictEvents.push({ start: TUESDAY_DATE + transformTime(sectionTwoStart), end: TUESDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart < sectionTwoStart && sectionOneEnd > sectionTwoEnd){
-            conflictEvents.push({ start: TUESDAY_DATE + transformTime(sectionOneStart), end: TUESDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionTwoStart < sectionOneStart && sectionTwoEnd > sectionTwoEnd){
-            conflictEvents.push({ start: TUESDAY_DATE + transformTime(sectionTwoStart), end: TUESDAY_DATE + transformTime(sectionTwoEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-        }
-        if(sectionOne.Wednesday && sectionTwo.Wednesday){
-          if(sectionOneStart < sectionTwoEnd && sectionOneEnd > sectionTwoStart){
-            conflictEvents.push({ start: WEDNESDAY_DATE + transformTime(sectionOneStart), end: WEDNESDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart > sectionTwoStart && sectionOneStart < sectionTwoEnd){
-            conflictEvents.push({ start: WEDNESDAY_DATE + transformTime(sectionTwoStart), end: WEDNESDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart > sectionTwoStart && sectionOneStart < sectionTwoEnd){
-            conflictEvents.push({ start: WEDNESDAY_DATE + transformTime(sectionTwoStart), end: WEDNESDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart < sectionTwoStart && sectionOneEnd > sectionTwoEnd){
-            conflictEvents.push({ start: WEDNESDAY_DATE + transformTime(sectionOneStart), end: WEDNESDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionTwoStart < sectionOneStart && sectionTwoEnd > sectionTwoEnd){
-            conflictEvents.push({ start: WEDNESDAY_DATE + transformTime(sectionTwoStart), end: WEDNESDAY_DATE + transformTime(sectionTwoEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-        }
-        if(sectionOne.Thursday && sectionTwo.Thursday){
-          if(sectionOneStart < sectionTwoEnd && sectionOneEnd > sectionTwoStart){
-            conflictEvents.push({ start: THURSDAY_DATE + transformTime(sectionOneStart), end: THURSDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart > sectionTwoStart && sectionOneStart < sectionTwoEnd){
-            conflictEvents.push({ start: THURSDAY_DATE + transformTime(sectionTwoStart), end: THURSDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart > sectionTwoStart && sectionOneStart < sectionTwoEnd){
-            conflictEvents.push({ start: THURSDAY_DATE + transformTime(sectionTwoStart), end: THURSDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart < sectionTwoStart && sectionOneEnd > sectionTwoEnd){
-            conflictEvents.push({ start: THURSDAY_DATE + transformTime(sectionOneStart), end: THURSDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionTwoStart < sectionOneStart && sectionTwoEnd > sectionTwoEnd){
-            conflictEvents.push({ start: THURSDAY_DATE + transformTime(sectionTwoStart), end: THURSDAY_DATE + transformTime(sectionTwoEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-        }
-        if(sectionOne.Friday && sectionTwo.Friday){
-          if(sectionOneStart < sectionTwoEnd && sectionOneEnd > sectionTwoStart){
-            conflictEvents.push({ start: FRIDAY_DATE + transformTime(sectionOneStart), end: FRIDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart > sectionTwoStart && sectionOneStart < sectionTwoEnd){
-            conflictEvents.push({ start: FRIDAY_DATE + transformTime(sectionTwoStart), end: FRIDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart > sectionTwoStart && sectionOneStart < sectionTwoEnd){
-            conflictEvents.push({ start: FRIDAY_DATE + transformTime(sectionTwoStart), end: FRIDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionOneStart < sectionTwoStart && sectionOneEnd > sectionTwoEnd){
-            conflictEvents.push({ start: FRIDAY_DATE + transformTime(sectionOneStart), end: FRIDAY_DATE + transformTime(sectionOneEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-          else if (sectionTwoStart < sectionOneStart && sectionTwoEnd > sectionTwoEnd){
-            conflictEvents.push({ start: FRIDAY_DATE + transformTime(sectionTwoStart), end: FRIDAY_DATE + transformTime(sectionTwoEnd), color: "#b91c1c", display: "background", title: "TIME CONFLICT" })
-          }
-        }
-        j++
-      }
-      i++
+  const createConflictEvent = (v: typeof DateValueArr[number], start: Date, end: Date) => {
+    return {
+      start: v[1] + transformTime(start),
+      end: v[1] + transformTime(end),
+      classNames: "!bg-white !opacity-100 rounded !left-[-4px] border-red-500 border-4",
+      display: "background",
+      title: "",
+    };
+  };
+  
+  const checkAndPushConflict = (
+    sectionOneStart: Date, 
+    sectionOneEnd: Date, 
+    sectionTwoStart: Date, 
+    sectionTwoEnd: Date, 
+    v: typeof DateValueArr[number], 
+    conflictEvents: CalendarConflictEvent[]
+  ) => {
+    if (sectionOneStart < sectionTwoEnd && sectionOneEnd > sectionTwoStart) {
+      conflictEvents.push(createConflictEvent(v, sectionOneStart, sectionOneEnd));
+    } else if ((sectionOneStart > sectionTwoStart && sectionOneStart < sectionTwoEnd) || (sectionOneStart < sectionTwoStart && sectionOneEnd > sectionTwoEnd)) {
+      conflictEvents.push(createConflictEvent(v, sectionTwoStart, sectionOneEnd));
+    } else if (sectionTwoStart < sectionOneStart && sectionTwoEnd > sectionTwoEnd) {
+      conflictEvents.push(createConflictEvent(v, sectionTwoStart, sectionTwoEnd));
     }
-    return conflictEvents
-  }
+  };
+  
+  const createConflictEvents = (sections: EnrolledWithSection[]) => {
+    const conflictEvents: CalendarConflictEvent[] = [];
+  
+    for (let i = 0; i < sections.length; i++) {
+      for (let j = i + 1; j < sections.length; j++) {
+        let sectionOne = sections[i].Section;
+        let sectionTwo = sections[j].Section;
+  
+        let sectionOneStart = new Date(sectionOne.Start);
+        sectionOneStart.setMinutes(sectionOneStart.getMinutes() - 10);
+  
+        let sectionOneEnd = new Date(sectionOne.End);
+        sectionOneEnd.setMinutes(sectionOneEnd.getMinutes() + 10);
+  
+        let sectionTwoStart = new Date(sectionTwo.Start);
+        sectionTwoStart.setMinutes(sectionTwoStart.getMinutes() - 10);
+  
+        let sectionTwoEnd = new Date(sectionTwo.End);
+        sectionTwoEnd.setMinutes(sectionTwoEnd.getMinutes() + 10);
+  
+        for (const v of DateValueArr) {
+          if (sectionOne[v[0]] && sectionTwo[v[0]]) {
+            checkAndPushConflict(sectionOneStart, sectionOneEnd, sectionTwoStart, sectionTwoEnd, v, conflictEvents);
+          }
+        }
+      }
+    }
+    return conflictEvents;
+  };
 
-  const createEvents = (type: Enrolled_Type, sections: (Enrolled_Type | Sections)[][]) => {
-    const events: CalendarEvent[] = sections.flatMap((entry) => {
+  const createEvents = (sections: EnrolledWithSection[]): CalendarEvent[] => {
+    return sections.flatMap((entry) => {
       const newEvents = []
-      const section = entry[0] as Sections
-      const sectionType = entry[1] as Enrolled_Type
-      if(sectionType === type){
-        if(section.Monday){
+      const section = entry.Section
+      const sectionType = entry.Type
+
+      for (const v of DateValueArr) {
+        if (section[v[0]]) {
           newEvents.push({
             title: section.Course + "-" + section.SectionId,
-            start: MONDAY_DATE + transformTime(section.Start),
-            end: MONDAY_DATE + transformTime(section.End),
-            color: EVENT_COLOR_MAP.get(type)!
-          })
-        }
-        if(section.Tuesday){
-          newEvents.push({
-            title: section.Course + "-" + section.SectionId,
-            start: TUESDAY_DATE + transformTime(section.Start),
-            end: TUESDAY_DATE + transformTime(section.End),
-            color: EVENT_COLOR_MAP.get(type)!
-          })
-        }
-        if(section.Wednesday){
-          newEvents.push({
-            title: section.Course + "-" + section.SectionId,
-            start: WEDNESDAY_DATE + transformTime(section.Start),
-            end: WEDNESDAY_DATE + transformTime(section.End),
-            color: EVENT_COLOR_MAP.get(type)!
-          })
-        }
-        if(section.Thursday){
-          newEvents.push({
-            title: section.Course + "-" + section.SectionId,
-            start: THURSDAY_DATE + transformTime(section.Start),
-            end: THURSDAY_DATE + transformTime(section.End),
-            color: EVENT_COLOR_MAP.get(type)!
-          })
-        }
-        if(section.Friday){
-          newEvents.push({
-            title: section.Course + "-" + section.SectionId,
-            start: FRIDAY_DATE + transformTime(section.Start),
-            end: FRIDAY_DATE + transformTime(section.End),
-            color: EVENT_COLOR_MAP.get(type)!
+            start: v[1] + transformTime(section.Start),
+            end: v[1] + transformTime(section.End),
+            classNames: EVENT_CLASSNAMES_MAP[sectionType]
           })
         }
       }
+
       return newEvents
     })
-    return events
   }
 
   const conflicts = createConflictEvents(sections) 
-  events = [...createEvents(Enrolled_Type.Enrolled, sections), ...createEvents(Enrolled_Type.Waitlist, sections), ...createEvents(Enrolled_Type.ShoppingCart, sections), ...conflicts as CalendarEvent[]]
+  const events = [...createEvents(sections), ...conflicts]
     
   return (
     <>
@@ -243,7 +165,6 @@ export default function WeekCalendar(props: props){
           }}
 
           events={events}
-          eventBackgroundColor="rgb(16 185 129)"
           slotEventOverlap={true}
         />
       </div>

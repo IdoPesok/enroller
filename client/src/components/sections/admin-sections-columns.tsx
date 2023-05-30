@@ -1,6 +1,5 @@
 "use client"
 
-import { Sections } from "@prisma/client"
 import { ColumnDef } from "@tanstack/react-table"
 import { columns } from "../courses/columns"
 import { AdminSectionRowActionHandlers, AdminSectionsRowActions } from "./admin-sections-row-actions"

@@ -1,28 +1,27 @@
-import { useEffect, useState } from "react";
-import { Enrolled_Type, Sections } from "@prisma/client"
-import WeekCalendar from "../../components/WeekCalendar/WeekCalendar"
+import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
-import { CalendarEvent } from "@/interfaces/CalendarTypes";
-import { SourceTextModule } from "vm";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Toggle } from "@/components/ui/toggle";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-
-interface props {
-  currentQuarter: string,
-  height: number,
-  width: string,
-}
-
+import { cn } from "@/lib/utils";
+import { Enrolled_Type } from "@prisma/client";
+import { useEffect, useState } from "react";
+import WeekCalendar from "../../components/WeekCalendar/WeekCalendar";
 
 const CURRENT_QUARTER = 'Spring 2023' // hard coded for now as placeholder
-const calendarHeight = 600 // TODO: find best way of sizing height 
+const HEIGHT_OFFSET = 200
 
-export default function Calendar(props:props){
+export default function Calendar() {
   const [showingSections, setShowingSections] = useState<Enrolled_Type[]>([Enrolled_Type.Enrolled])
+  const [calendarHeight, setCalendarHeight] = useState<number>(window.innerHeight - HEIGHT_OFFSET)
+
+  // watch for resize events and update calendar height
+  useEffect(() => {
+    const handleResize = () => {
+      setCalendarHeight(window.innerHeight - HEIGHT_OFFSET)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const sections = trpc.home.userSections.useQuery({ types: showingSections }).data 
-  console.log("sections: " + sections)
 
   const updateShowingSections = (type : Enrolled_Type) => {
     if (showingSections.includes(type)) {
@@ -33,32 +32,45 @@ export default function Calendar(props:props){
     return
   }
 
+  const toggleButtons: [string, Enrolled_Type][] = [
+    ["Enrolled", Enrolled_Type.Enrolled],
+    ["Waitlisted", Enrolled_Type.Waitlist],
+    ["In Shopping Cart", Enrolled_Type.ShoppingCart],
+  ]
+
   return (
-      <>
-        <div>
-          <h1 className="font-bold ml-4 pb-2">{CURRENT_QUARTER}</h1>
-          <div> 
-            {[
-              ["Enrolled", "bg-green-400", Enrolled_Type.Enrolled],
-              ["Waitlisted", "bg-teal-500", Enrolled_Type.Waitlist],
-              ["In Shopping Cart", "bg-yellow-300", Enrolled_Type.ShoppingCart],
-            ].map((entry) => (
-                <Toggle
+      <div className="flex flex-col h-full">
+        <div className="flex justify-between items-center">
+          <h1 className="font-bold">{CURRENT_QUARTER}</h1>
+          <div className="flex gap-2"> 
+            { toggleButtons.map((entry) => (
+                <Button
                   key={entry[0]}
-                  className={`flex-1 ${entry[1]} ${showingSections.includes(entry[2] as Enrolled_Type) ? 'bg-opacity-50' : 'bg-opacity-100'} border-2 px-4 border-slategrey-500 rounded-md`}
-                  onPressedChange={() => updateShowingSections(entry[2] as Enrolled_Type)}
-                  defaultPressed={entry[2] === Enrolled_Type.Enrolled ? false : true}
+                  onClick={() => updateShowingSections(entry[1] as Enrolled_Type)}
+                  className={
+                    cn(
+                      "px-4 w-44 whitespace-nowrap",
+                      showingSections.includes(entry[1]) ? 
+                        (
+                          entry[1] === Enrolled_Type.Enrolled ? 
+                            `bg-green-200 hover:bg-green-300 hover:text-green-800 text-green-800 border border-green-500` :
+                          entry[1] === Enrolled_Type.Waitlist ?
+                            `bg-amber-200 hover:bg-amber-300 hover:text-amber-800 text-amber-800 border border-amber-500` :
+                          `bg-sky-200 hover:bg-sky-300 hover:text-sky-800 text-sky-800 border border-sky-500`
+                        ) :
+                        "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
+                    )
+                  }
                 >
-                  {entry[0]}
-                </Toggle>
+                  {entry[0]} { showingSections.includes(entry[1]) ? "✓" : ""}
+                </Button>
             ))}
           </div>
         </div>
-      
-        <div>
-          <WeekCalendar height={calendarHeight} width="" sections={sections ? sections : []}/>
+        <div className="flex-1 mt-2">
+          <WeekCalendar height={calendarHeight} sections={sections ? sections : []}/>
         </div>
-      </>
+      </div>
   );
 }
 
