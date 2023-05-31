@@ -49,13 +49,25 @@ import {
   MoreHorizontal,
   ShoppingCart,
 } from "lucide-react"
+import { useRouterQueryState } from "@/lib/use-router-query-state"
 
 const HEIGHT_OFFSET = 210
 
+enum ViewType {
+  List = "list",
+  Calendar = "calendar",
+}
+
 export default function Home() {
-  const [showingSections, setShowingSections] = useState<Enrolled_Type[]>([
+  const [showingSections, setShowingSections] = useRouterQueryState<Enrolled_Type[]>("type", [
     Enrolled_Type.Enrolled,
-  ])
+    Enrolled_Type.ShoppingCart,
+    Enrolled_Type.Waitlist,
+  ], {
+    serializer: (value) => value.join(","),
+    deserializer: (value) => value.split(","),
+  })
+
   const [calendarHeight, setCalendarHeight] = useState<number>(
     window.innerHeight - HEIGHT_OFFSET
   )
@@ -82,7 +94,7 @@ export default function Home() {
     Sections | null | undefined
   >(null)
   const [quarter, setQuarter] = useState("Spring 2023")
-  const [showList, setShowList] = useState(true)
+  const [viewType, setViewType] = useRouterQueryState<ViewType>("view", ViewType.List)
   const [modifyCourse, setModifyCourse] = useState("")
 
   const handleDropClick = (courseCode: string) => {
@@ -304,12 +316,12 @@ export default function Home() {
               <SelectItem value="Spring 2023">Spring 2023</SelectItem>
             </SelectContent>
           </Select>
-          <Tabs dir="ltr" defaultValue="list" className="ml-4">
+          <Tabs dir="ltr" value={viewType} className="ml-4" defaultValue={ViewType.List}>
             <TabsList>
-              <TabsTrigger value="list" onClick={() => setShowList(true)}>
+              <TabsTrigger value={ViewType.List} onClick={() => setViewType(ViewType.List)}>
                 List
               </TabsTrigger>
-              <TabsTrigger value="calendar" onClick={() => setShowList(false)}>
+              <TabsTrigger value={ViewType.Calendar} onClick={() => setViewType(ViewType.Calendar)}>
                 Calendar
               </TabsTrigger>
             </TabsList>
@@ -323,7 +335,7 @@ export default function Home() {
                 onClick={() => updateShowingSections(entry[1] as Enrolled_Type)}
                 className={cn(
                   "px-4 w-44 whitespace-nowrap",
-                  showingSections.includes(entry[1])
+                  showingSections && showingSections.includes(entry[1])
                     ? entry[1] === Enrolled_Type.Enrolled
                       ? `bg-green-200 hover:bg-green-300 hover:text-green-800 text-green-800 border border-green-500`
                       : entry[1] === Enrolled_Type.Waitlist
@@ -332,13 +344,13 @@ export default function Home() {
                     : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                 )}
               >
-                {entry[0]} {showingSections.includes(entry[1]) ? "✓" : ""}
+                {entry[0]} {showingSections && showingSections.includes(entry[1]) ? "✓" : ""}
               </Button>
             ))}
           </div>
         </span>
       </div>
-      {showList ? (
+      {viewType !== ViewType.Calendar ? (
         homeTable
       ) : (
         <div className="flex-1 mt-2">
@@ -347,7 +359,7 @@ export default function Home() {
             sections={sections.data ? sections.data : []}
             isLoading={sections.isLoading}
             warningMessage={
-              showingSections.length === 0
+              !showingSections || showingSections.length === 0
                 ? "Please select a section type to view"
                 : undefined
             }

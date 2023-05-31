@@ -32,9 +32,9 @@ export const Layout = ({ children }: Props) => {
 
   return (
     <>
-      <div className="bg-white min-h-screen max-w-screen overflow-x-hidden">
+      <div className="bg-white min-h-screen max-w-screen">
         <MainNav />
-        <div className="px-12">{children}</div>
+        <div className="px-12 overflow-x-hidden">{children}</div>
       </div>
     </>
   )
