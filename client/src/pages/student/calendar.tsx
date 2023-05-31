@@ -21,7 +21,7 @@ export default function Calendar() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const sections = trpc.home.userSections.useQuery({ types: showingSections }).data 
+  const sections = trpc.home.userSections.useQuery({ types: showingSections })
 
   const updateShowingSections = (type : Enrolled_Type) => {
     if (showingSections.includes(type)) {
@@ -68,7 +68,12 @@ export default function Calendar() {
           </div>
         </div>
         <div className="flex-1 mt-2">
-          <WeekCalendar height={calendarHeight} sections={sections ? sections : []}/>
+          <WeekCalendar 
+            height={calendarHeight} 
+            sections={sections.data ? sections.data : []}
+            isLoading={sections.isLoading}
+            warningMessage={showingSections.length === 0 ? "Please select a section type to view" : undefined}
+          />
         </div>
       </div>
   );
