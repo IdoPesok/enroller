@@ -68,5 +68,5 @@ export function getDateTimeFromString(str: string): Date {
   }
   startDateTime.setMinutes(parseInt(startTime[1]))
 
-  return startDateTime;
+  return startDateTime
 }

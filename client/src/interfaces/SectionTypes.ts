@@ -1,5 +1,10 @@
-import { Courses, Sections, Sections_Format, Sections_Modality } from "@prisma/client";
-import { z } from "zod";
+import {
+  Courses,
+  Sections,
+  Sections_Format,
+  Sections_Modality,
+} from "@prisma/client"
+import { z } from "zod"
 
 export const ZodSectionObject = z.object({
   Course: z.string(),
@@ -19,7 +24,7 @@ export const ZodSectionObject = z.object({
   Format: z.nativeEnum(Sections_Format),
   Modality: z.nativeEnum(Sections_Modality),
   CatalogYear: z.string(),
-});
+})
 
 export enum DaysOfTheWeek {
   Monday = "Mo",
@@ -58,7 +63,7 @@ export const SECTION_START_TIMES = [
   "07:10 PM",
   "08:10 PM",
   "09:10 PM",
-  "10:10 PM"
+  "10:10 PM",
 ]
 
 export const SECTION_END_TIMES = [
@@ -78,12 +83,13 @@ export const SECTION_END_TIMES = [
   "08:00 PM",
   "09:00 PM",
   "10:00 PM",
-  "11:00 PM"
+  "11:00 PM",
 ]
 
 export const SECTION_FORMAT_OPTIONS: string[] = Object.values(Sections_Format)
 
-export const SECTION_MODALITY_OPTIONS: string[] = Object.values(Sections_Modality)
+export const SECTION_MODALITY_OPTIONS: string[] =
+  Object.values(Sections_Modality)
 
 export const sectionFormSchema = z.object({
   professorName: z.string().min(2).max(50),
@@ -95,7 +101,7 @@ export const sectionFormSchema = z.object({
   roomNumber: z.string().min(2).max(10),
   format: z.nativeEnum(Sections_Format),
   modality: z.nativeEnum(Sections_Modality),
-});
+})
 
 export type SectionWithCourse = Sections & {
   Courses: Courses

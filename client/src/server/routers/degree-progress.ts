@@ -59,10 +59,40 @@ export const degreeProgressRouter = router({
         })
       })
 
-      // filter for not null courses
-      return (await Promise.all(courses)).filter(
+      // Wait until all the promises for each course have been resolved
+      const resolvedCourses = await Promise.all(courses)
+
+      // Take out any null courses
+      const filteredCourses = resolvedCourses.filter(
         (course) => course
       ) as Courses[]
+
+      // Sort the courses with GEs first, then major courses
+      const sortedCourses = filteredCourses.sort((courseA, courseB) => {
+        // Determine whether the courses are GEs or not
+        const isGeneralEducationA =
+          courseA.Description?.includes("Fulfills GE Area")
+        const isGeneralEducationB =
+          courseB.Description?.includes("Fulfills GE Area")
+
+        if (isGeneralEducationA && !isGeneralEducationB) {
+          // courseA is a GE, courseB is a major course, so courseA comes first
+          return -1
+        } else if (!isGeneralEducationA && isGeneralEducationB) {
+          // courseA is a major course, courseB is a GE, so courseB comes first
+          return 1
+        } else if (!isGeneralEducationA && !isGeneralEducationB) {
+          // If both are major courses, sort by the number in the Code attribute
+          const codeA = courseA.Code.split(" ")[1]
+          const codeB = courseB.Code.split(" ")[1]
+          return Number(codeA) - Number(codeB)
+        } else {
+          // If both courses are GEs, maintain order
+          return 0
+        }
+      })
+
+      return sortedCourses
     } catch (e) {
       throw internalServerError("Error fetching graduation requirements", e)
     }

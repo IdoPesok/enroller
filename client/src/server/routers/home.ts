@@ -10,20 +10,20 @@ export const homeRouter = router({
     .input(z.object({ types: z.array(z.nativeEnum(Enrolled_Type)) }))
     .query(async ({ input, ctx }) => {
       const sections = await prisma.enrolled.findMany({
-      where: {
-        User: ctx.auth.userId,
-        Type: { in: input.types }
-      },
-      include: {
-        Section: {
-          include: {
-            Courses: true,
+        where: {
+          User: ctx.auth.userId,
+          Type: { in: input.types },
+        },
+        include: {
+          Section: {
+            include: {
+              Courses: true,
+            },
           },
         },
-      }
-      });
-      return sections;
-    })
+      })
+      return sections
+    }),
 })
 
 export type AppRouter = typeof homeRouter

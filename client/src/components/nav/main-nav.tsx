@@ -100,10 +100,10 @@ export const MainNav = () => {
   const demoteUserRoleMutation = trpc.auth.demoteUserRole.useMutation({
     onSuccess: () => {
       router.reload()
-    }
-  });
+    },
+  })
   const demoteUserRole = async () => {
-    await demoteUserRoleMutation.mutate();
+    await demoteUserRoleMutation.mutate()
   }
 
   const navLinks = navItems.map((item) => (
@@ -153,32 +153,29 @@ export const MainNav = () => {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-                {
-                  (!isUserAdmin(user.user?.publicMetadata) && !doesUserNeedOnboarding(user.user?.publicMetadata)) && (
-                    <>
-                      <DropdownMenuGroup>
-                        <DropdownMenuItem onClick={() => resetOnboarding()}>
-                          <RotateCcw className="mr-2 h-4 w-4" />
-                          <span>Reset Onboarding</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuGroup>
-                      <DropdownMenuSeparator />
-                    </>
-                  )
-                }
-                {
-                  isUserAdmin(user.user?.publicMetadata) && (
-                    <>
-                      <DropdownMenuGroup>
-                        <DropdownMenuItem onClick={() => demoteUserRole()}>
-                          <ArrowDown className="mr-2 h-4 w-4" />
-                          <span>Demote User Role</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuGroup>
-                      <DropdownMenuSeparator />
-                    </>
-                  )
-                }
+              {!isUserAdmin(user.user?.publicMetadata) &&
+                !doesUserNeedOnboarding(user.user?.publicMetadata) && (
+                  <>
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem onClick={() => resetOnboarding()}>
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        <span>Reset Onboarding</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+              {isUserAdmin(user.user?.publicMetadata) && (
+                <>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => demoteUserRole()}>
+                      <ArrowDown className="mr-2 h-4 w-4" />
+                      <span>Demote User Role</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuItem onClick={() => signOut()}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>

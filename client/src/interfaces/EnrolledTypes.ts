@@ -1,9 +1,9 @@
-import { Enrolled, Sections } from "@prisma/client";
+import { Enrolled, Sections } from "@prisma/client"
 import { z } from "zod"
 
-export type EnrolledWithSection = (Enrolled & {
-  Section: Sections;
-})
+export type EnrolledWithSection = Enrolled & {
+  Section: Sections
+}
 
 export type SectionsWithEnrolled = Sections & { Enrolleds: Enrolled[] }
 

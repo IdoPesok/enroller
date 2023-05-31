@@ -1,21 +1,19 @@
-import { prisma } from "@/server/prisma";
-import { z } from "zod";
-import { adminProcedure, studentProcedure, router } from "../trpc";
-import { ZodSectionObject } from "@/interfaces/SectionTypes";
+import { prisma } from "@/server/prisma"
+import { z } from "zod"
+import { adminProcedure, studentProcedure, router } from "../trpc"
+import { ZodSectionObject } from "@/interfaces/SectionTypes"
 import { fetchCatalogYear } from "@/lib/catalog-year"
 
 export const sectionsRouter = router({
-  create: adminProcedure
-    .input(ZodSectionObject)
-    .mutation(async ({ input }) => {
-      const section = await prisma.sections.create({
-        data: {
-          ...input
-        }
-      })
+  create: adminProcedure.input(ZodSectionObject).mutation(async ({ input }) => {
+    const section = await prisma.sections.create({
+      data: {
+        ...input,
+      },
+    })
 
-      return section
-    }),
+    return section
+  }),
   update: adminProcedure
     .input(
       z.object({
@@ -26,14 +24,14 @@ export const sectionsRouter = router({
     .mutation(async ({ input }) => {
       const section = await prisma.sections.update({
         where: {
-          SectionId: input.SectionId
+          SectionId: input.SectionId,
         },
         data: {
-          ...input.updateData
-        }
+          ...input.updateData,
+        },
       })
 
-      return section;
+      return section
     }),
   delete: adminProcedure
     .input(
@@ -44,11 +42,11 @@ export const sectionsRouter = router({
     .mutation(async ({ input }) => {
       const deletedSection = await prisma.sections.delete({
         where: {
-          SectionId: input.SectionId
-        }
+          SectionId: input.SectionId,
+        },
       })
 
-      return deletedSection;
+      return deletedSection
     }),
   retrieve: adminProcedure
     .input(
@@ -80,26 +78,32 @@ export const sectionsRouter = router({
               }
             : undefined,
           Courses: {
-            Code: search ? {
-              search,
-            } : undefined,
-            Name: search ? {
-              search,
-            } : undefined,
+            Code: search
+              ? {
+                  search,
+                }
+              : undefined,
+            Name: search
+              ? {
+                  search,
+                }
+              : undefined,
             Prefix: filters?.prefixes
               ? {
                   in: filters.prefixes,
                 }
               : undefined,
-          }
+          },
         },
         take: limit + 1,
-        cursor: cursor ? {
-          SectionId: cursor
-        } : undefined
+        cursor: cursor
+          ? {
+              SectionId: cursor,
+            }
+          : undefined,
       })
 
-      let nextCursor: typeof cursor | null = null;
+      let nextCursor: typeof cursor | null = null
       if (sections.length > limit) {
         const nextSections = sections.pop()
         nextCursor = nextSections!.SectionId

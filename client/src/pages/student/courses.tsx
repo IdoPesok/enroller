@@ -5,9 +5,7 @@ import { Spinner } from "@/components/ui/spinner"
 import useDebounce from "@/lib/debounce"
 import { trpc } from "@/lib/trpc"
 import { STOPWORDS, addSearchModifiers } from "@/lib/utils"
-import {
-  Option,
-} from "@/components/courses/search-filter"
+import { Option } from "@/components/courses/search-filter"
 import { prisma } from "@/server/prisma"
 import { GetStaticProps, InferGetStaticPropsType } from "next"
 import { SearchToolbar } from "@/components/courses/search-toolbar"
