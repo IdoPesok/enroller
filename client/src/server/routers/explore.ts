@@ -47,7 +47,7 @@ export const exploreRouter = router({
         filterDatabase: z.boolean(),
       })
     )
-    .query(async ({ input }) => {
+    .mutation(async ({ input }) => {
       const { prompt, filterDatabase } = input
 
       if (!client || !pineconeIndex) {

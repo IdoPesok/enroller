@@ -9,12 +9,14 @@ export async function fetchCatalogYear(userId: string): Promise<string> {
 
   if (isUserAdmin(user.publicMetadata)) {
     // get the latest catalog year
-    return (await prisma.catalogs.findMany({
-      orderBy: {
-        CatalogYear: "desc",
-      },
-      take: 1,
-    }))[0].CatalogYear
+    return (
+      await prisma.catalogs.findMany({
+        orderBy: {
+          CatalogYear: "desc",
+        },
+        take: 1,
+      })
+    )[0].CatalogYear
   }
 
   if (

@@ -24,32 +24,33 @@ export const courseRouter = router({
     .query(async ({ input }) => {
       const { search } = input
 
-      if (!search || search.length < 2) return [];
+      if (!search || search.length < 2) return []
 
-      return (await prisma.courses.findMany({
-        select: {
-          Code: true,
-        },
-        where: {
-          Code: {
-            search,
+      return (
+        await prisma.courses.findMany({
+          select: {
+            Code: true,
           },
-          Name: {
-            search
-          }
-        },
-      })).map((course) => course.Code)
+          where: {
+            Code: {
+              search,
+            },
+            Name: {
+              search,
+            },
+          },
+        })
+      ).map((course) => course.Code)
     }),
-  coursePrefixes: protectedProcedure
-    .query(async () => {
-      const prefixes = await prisma.courses.findMany({
-        select: {
-          Prefix: true,
-        },
-        distinct: ["Prefix"],
-      })
-      return prefixes.map((prefix) => prefix.Prefix)
-    }),
+  coursePrefixes: protectedProcedure.query(async () => {
+    const prefixes = await prisma.courses.findMany({
+      select: {
+        Prefix: true,
+      },
+      distinct: ["Prefix"],
+    })
+    return prefixes.map((prefix) => prefix.Prefix)
+  }),
   withSections: studentProcedure
     .input(z.object({ code: z.string() }))
     .query(async ({ ctx, input }) => {
