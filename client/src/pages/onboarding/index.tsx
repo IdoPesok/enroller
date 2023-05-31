@@ -1,12 +1,22 @@
-import Image from "next/image";
-import Graduation from './graduation.svg';
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import anime from 'animejs';
-import { trpc } from "@/lib/trpc";
-import { cn } from "@/lib/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronLeft, ChevronsUpDown, LogOut, RotateCcw } from "lucide-react"
+import Image from "next/image"
+import Graduation from "./graduation.svg"
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import anime from "animejs"
+import { trpc } from "@/lib/trpc"
+import { cn } from "@/lib/utils"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Check,
+  ChevronLeft,
+  ChevronsUpDown,
+  LogOut,
+  RotateCcw,
+} from "lucide-react"
 import {
   Command,
   CommandEmpty,
@@ -23,20 +33,22 @@ import ErrorMessage from "@/components/ui/error-message";
 
 export default function Onboarding() {
   const [stage, setStage] = useState(1)
-  const [selectedCatalog, setSelectedCatalog] = useState<undefined | string>(undefined)
+  const [selectedCatalog, setSelectedCatalog] = useState<undefined | string>(
+    undefined
+  )
   const [open, setOpen] = useState(false)
   const [selectedMajor, setSelectedMajor] = useState("")
   const [selectedConcentration, setSelectedConcentration] = useState("")
   const router = useRouter()
 
-  const catalogs = trpc.onboard.catalogs.useQuery();
+  const catalogs = trpc.onboard.catalogs.useQuery()
   const majors = trpc.onboard.majors.useQuery({
-    catalogYear: selectedCatalog
-  });
+    catalogYear: selectedCatalog,
+  })
   const concentrations = trpc.onboard.concentrations.useQuery({
     catalogYear: selectedCatalog,
-    majorId: selectedMajor
-  });
+    majorId: selectedMajor,
+  })
 
   const handleMutationSuccess = async () => {
     await animateStage(5)
@@ -48,7 +60,7 @@ export default function Onboarding() {
     await anime({
       targets: element,
       rotate: 360 * 3,
-      easing: 'easeInOutQuad',
+      easing: "easeInOutQuad",
       duration: 1000,
     }).finished
 
@@ -58,7 +70,7 @@ export default function Onboarding() {
   }
 
   const mutation = trpc.onboard.saveUserFlowchart.useMutation({
-    onSuccess: handleMutationSuccess
+    onSuccess: handleMutationSuccess,
   })
 
   const handleRestart = () => {
@@ -76,7 +88,7 @@ export default function Onboarding() {
       targets: element,
       translateX: stage > newStage ? 100 : -100,
       opacity: 0,
-      easing: 'easeInOutQuad',
+      easing: "easeInOutQuad",
       duration: 500,
     }).finished
 
@@ -84,7 +96,7 @@ export default function Onboarding() {
       targets: element,
       translateX: stage > newStage ? -100 : 100,
       opacity: 0,
-      easing: 'easeInOutQuad',
+      easing: "easeInOutQuad",
       duration: 0,
     }).finished
 
@@ -94,7 +106,7 @@ export default function Onboarding() {
       targets: element,
       translateX: 0,
       opacity: 1,
-      easing: 'easeInOutQuad',
+      easing: "easeInOutQuad",
       duration: 500,
     }).finished
   }
@@ -103,7 +115,7 @@ export default function Onboarding() {
     await mutation.mutateAsync({
       catalogYear: selectedCatalog,
       majorId: selectedMajor,
-      concentrationId: selectedConcentration
+      concentrationId: selectedConcentration,
     })
   }
 
@@ -120,9 +132,8 @@ export default function Onboarding() {
         className="mr-2 rounded-sm"
       />
       <p className="my-0">
-        We&apos;re excited to have you here! 
-        Before you can start using 
-        <br/>
+        We&apos;re excited to have you here! Before you can start using
+        <br />
         the platform, we need to know a bit more about you.
       </p>
       <Button
@@ -140,8 +151,8 @@ export default function Onboarding() {
         Select your catalog year
       </h1>
       <p className="my-0">
-        We will begin with your catalog year.
-        This will<br/> help us determine which courses you need to take.
+        We will begin with your catalog year. This will
+        <br /> help us determine which courses you need to take.
       </p>
       {
         catalogs.error ? (
@@ -186,8 +197,8 @@ export default function Onboarding() {
         Select your major
       </h1>
       <p className="my-0">
-        Great! Now we are diving deeper.
-        This will<br/> help us determine which courses you need to take.
+        Great! Now we are diving deeper. This will
+        <br /> help us determine which courses you need to take.
       </p>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -248,8 +259,8 @@ export default function Onboarding() {
         Last step! Select your concentration
       </h1>
       <p className="my-0">
-        Awesome! We are almost there!
-        This will be the final <br/> step to help us determine which courses you need to take.
+        Awesome! We are almost there! This will be the final <br /> step to help
+        us determine which courses you need to take.
       </p>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -260,7 +271,9 @@ export default function Onboarding() {
             className="w-[400px] justify-between"
           >
             {selectedConcentration && concentrations.data
-              ? concentrations.data.find((conc) => conc.Id === selectedConcentration)?.Name ?? "General (No concentration)"
+              ? concentrations.data.find(
+                  (conc) => conc.Id === selectedConcentration
+                )?.Name ?? "General (No concentration)"
               : "Select concentration..."}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -274,14 +287,18 @@ export default function Onboarding() {
                 <CommandItem
                   key={conc.Id + ix.toString()}
                   onSelect={() => {
-                    setSelectedConcentration(conc.Id === selectedConcentration ? "" : conc.Id)
+                    setSelectedConcentration(
+                      conc.Id === selectedConcentration ? "" : conc.Id
+                    )
                     setOpen(false)
                   }}
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      selectedConcentration === conc.Id ? "opacity-100" : "opacity-0"
+                      selectedConcentration === conc.Id
+                        ? "opacity-100"
+                        : "opacity-0"
                     )}
                   />
                   {conc.Name ?? "General (No concentration)"}
@@ -291,29 +308,24 @@ export default function Onboarding() {
           </Command>
         </PopoverContent>
       </Popover>
-      {
-        mutation.error && (
-          <p className="text-red-500">
-            {mutation.error.message}
-          </p>
-        )
-      }
-      {
-        mutation.isLoading ? (
-          <Spinner />
-        ) : (
-          <Button
-            className={cn(
-              "bg-emerald-500 hover:bg-emerald-600 text-white",
-              (!selectedConcentration || mutation.isLoading) && "opacity-50 cursor-not-allowed"
-            )}
-            onClick={saveOnboarding}
-            disabled={!selectedConcentration || mutation.isLoading}
-          >
-            Finish
-          </Button>
-        )
-      }
+      {mutation.error && (
+        <p className="text-red-500">{mutation.error.message}</p>
+      )}
+      {mutation.isLoading ? (
+        <Spinner />
+      ) : (
+        <Button
+          className={cn(
+            "bg-emerald-500 hover:bg-emerald-600 text-white",
+            (!selectedConcentration || mutation.isLoading) &&
+              "opacity-50 cursor-not-allowed"
+          )}
+          onClick={saveOnboarding}
+          disabled={!selectedConcentration || mutation.isLoading}
+        >
+          Finish
+        </Button>
+      )}
     </>
   )
 
@@ -323,15 +335,16 @@ export default function Onboarding() {
       <h1 className="text-3xl font-bold flex items-center text-center justify-center">
         You&apos;re all set!
       </h1>
-      <p className="my-0">
-        You can now start using Enroller!
-      </p>
+      <p className="my-0">You can now start using Enroller!</p>
     </>
   )
 
   return (
     <>
-      <div className="mx-auto max-w-2xl py-10 text-center flex flex-col gap-10 items-center justify-center mb-20" id={'stage-' + stage}>
+      <div
+        className="mx-auto max-w-2xl py-10 text-center flex flex-col gap-10 items-center justify-center mb-20"
+        id={"stage-" + stage}
+      >
         {{
           1: stageOne,
           2: stageTwo,
@@ -340,34 +353,30 @@ export default function Onboarding() {
           5: stageFive,
         }[stage] || <></>}
       </div>
-      {
-        stage < 5 && (
-          <>
-            {
-              stage > 1 && (
-                <div className="flex justify-center absolute bottom-10 gap-10 left-1/2 transform -translate-x-1/2">
-                  <>
-                    <Button
-                      className="bg-slate-0 hover:bg-slate-200 text-black"
-                      onClick={() => animateStage(stage - 1)}
-                    >
-                      <ChevronLeft className="mr-2" />
-                      Back
-                    </Button>
-                    <Button
-                      className="bg-slate-0 hover:bg-slate-200 text-black"
-                      onClick={() => handleRestart()}
-                    >
-                      <RotateCcw className="mr-2" height={18} />
-                      Reset
-                    </Button>
-                  </>
-                </div>
-              )
-            }
-          </>
-        )
-      }
+      {stage < 5 && (
+        <>
+          {stage > 1 && (
+            <div className="flex justify-center absolute bottom-10 gap-10 left-1/2 transform -translate-x-1/2">
+              <>
+                <Button
+                  className="bg-slate-0 hover:bg-slate-200 text-black"
+                  onClick={() => animateStage(stage - 1)}
+                >
+                  <ChevronLeft className="mr-2" />
+                  Back
+                </Button>
+                <Button
+                  className="bg-slate-0 hover:bg-slate-200 text-black"
+                  onClick={() => handleRestart()}
+                >
+                  <RotateCcw className="mr-2" height={18} />
+                  Reset
+                </Button>
+              </>
+            </div>
+          )}
+        </>
+      )}
     </>
   )
 }

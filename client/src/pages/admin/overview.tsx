@@ -16,17 +16,23 @@ import { useState } from "react"
 
 export default function Overview() {
   const { toast } = useToast()
-  const [updatingSection, setUpdatingSection] = useState<SectionWithCourse | undefined>(undefined)
+  const [updatingSection, setUpdatingSection] = useState<
+    SectionWithCourse | undefined
+  >(undefined)
 
   const [search, setSearch] = useRouterQueryState("q", "")
-  const [prefixes, setPrefixes] = useRouterQueryState<string[] | undefined>("pre")
-  const [professors, setProfessors] = useRouterQueryState<string[] | undefined>("prof")
+  const [prefixes, setPrefixes] = useRouterQueryState<string[] | undefined>(
+    "pre"
+  )
+  const [professors, setProfessors] = useRouterQueryState<string[] | undefined>(
+    "prof"
+  )
 
   const debouncedSearch = useDebounce(search, 500)
 
   const [sheetOpen, setSheetOpen] = useState(false)
 
-  const sections = trpc.section.retrieve.useInfiniteQuery(
+  const sections = trpc.sections.retrieve.useInfiniteQuery(
     { search: debouncedSearch, filters: { prefixes, professors } },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -55,8 +61,8 @@ export default function Overview() {
         <div>
           <h1 className="text-3xl font-bold">Overview</h1>
           <p className="mt-3">
-            Welcome to the admin dashboard! Here you can manage courses, users, and
-            more.
+            Welcome to the admin dashboard! Here you can manage courses, users,
+            and more.
           </p>
         </div>
         <SectionForm
@@ -70,7 +76,7 @@ export default function Overview() {
           }
           handleCreateSuccess={async () => {
             await sections.refetch()
-            handleUpdateSheetOpen(false);
+            handleUpdateSheetOpen(false)
             toast({
               title: "Section created!",
               description: "The section was successfully created.",
@@ -78,7 +84,7 @@ export default function Overview() {
           }}
           handleUpdateSuccess={async () => {
             await sections.refetch()
-            handleUpdateSheetOpen(false);
+            handleUpdateSheetOpen(false)
             toast({
               title: "Section updated!",
               description: "The section was successfully updated.",
@@ -87,19 +93,17 @@ export default function Overview() {
           updatingSection={updatingSection}
         />
       </div>
-      {
-        (sections.isLoading && search) ? (
-          <Spinner className="mt-10" />
-        ) : (sections.error) ? (
-          <ErrorMessage message={JSON.stringify(sections.error)} />
-        ) : (
-          <DataTable
-            columns={adminSectionsColumns}
-            data={sections.data?.pages.flatMap((s) => s.sections) ?? []}
-            isLoading={sections.isLoading}
-          />
-        )
-      }
+      {sections.isLoading && search ? (
+        <Spinner className="mt-10" />
+      ) : sections.error ? (
+        <ErrorMessage message={JSON.stringify(sections.error)} />
+      ) : (
+        <DataTable
+          columns={adminSectionsColumns}
+          data={sections.data?.pages.flatMap((s) => s.sections) ?? []}
+          isLoading={sections.isLoading}
+        />
+      )}
     </div>
   )
 }

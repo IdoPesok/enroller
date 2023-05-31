@@ -12,18 +12,24 @@ import { prisma } from "@/server/prisma"
 import { GetStaticProps, InferGetStaticPropsType } from "next"
 import { SearchToolbar } from "@/components/courses/search-toolbar"
 import { useRouterQueryState } from "@/lib/use-router-query-state"
+import CourseSearch from "@/components/courses/course-search"
+import { ShoppingCart, Trash2 } from "lucide-react"
+import { Enrolled_Type } from "@prisma/client"
+import CourseEnrollCard from "@/components/courses/course-enroll-card"
 
 export default function Courses({
   prefixOptions,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const [search, setSearch] = useRouterQueryState("q", "")
   const [prefixes, setPrefixes] = useRouterQueryState<string[] | undefined>("p")
-  const debouncedSearch = useDebounce(search, 500)
 
+  const debouncedSearch = useDebounce(search, 500)
   const courses = trpc.courses.list.useInfiniteQuery(
     {
       search: addSearchModifiers(debouncedSearch.trim()),
-      filters: { prefixes },
+      filters: {
+        prefixes,
+      },
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -33,7 +39,7 @@ export default function Courses({
 
   const cards = courses.data?.pages
     .flatMap(({ courses }) => courses)
-    .map((course) => <CourseCard key={course.Code} course={course} />)
+    .map((course) => <CourseEnrollCard key={course.Code} course={course} />)
 
   return (
     <div className="mx-auto max-w-4xl pt-10">
@@ -41,9 +47,7 @@ export default function Courses({
       <SearchToolbar
         search={search}
         setSearch={setSearch}
-        prefixOptions={prefixOptions}
-        prefixes={prefixes}
-        setPrefixes={setPrefixes}
+        filters={{ prefixOptions, prefixes, setPrefixes }}
       />
       {cards ? (
         <>

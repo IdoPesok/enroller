@@ -9,10 +9,13 @@ export default function Courses() {
   const [promptInput, setPromptInput] = useState("")
   const [prompt, setSearch] = useState("")
   const [filterDatabase, setFilterDatabase] = useState(true)
-  const explore = trpc.explore.prompt.useQuery({ prompt, filterDatabase }, {
-    refetchOnWindowFocus: false,
-    retry: false,
-  })
+  const explore = trpc.explore.prompt.useQuery(
+    { prompt, filterDatabase },
+    {
+      refetchOnWindowFocus: false,
+      retry: false,
+    }
+  )
 
   const interestQuestions = [
     "I want a course that integrates physics and computer science.",
@@ -21,16 +24,16 @@ export default function Courses() {
   ]
 
   const interestCards = interestQuestions.map((question) => (
-    <div 
+    <div
       className="mb-3 bg-slate-100 rounded py-3 px-3 border flex gap-3 hover:border hover:border-emerald-500 cursor-pointer"
       key={question}
       onClick={() => {
-        setSearch(question); 
+        setSearch(question)
         setPromptInput(question)
       }}
     >
       <Stars className="text-emerald-500" />
-      { question }
+      {question}
     </div>
   ))
 
@@ -56,7 +59,7 @@ export default function Courses() {
       {!Boolean(prompt) ? (
         <>
           <h3 className="mb-5">You might be interested in:</h3>
-          { interestCards }
+          {interestCards}
         </>
       ) : explore.data ? (
         <ReactMarkdown>{explore.data}</ReactMarkdown>

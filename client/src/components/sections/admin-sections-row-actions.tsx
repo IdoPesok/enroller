@@ -22,18 +22,19 @@ export interface AdminSectionRowActionHandlers {
   handleEdit: (row: Row<SectionWithCourse>) => void
 }
 
-interface DataTableRowActionsProps<TData> extends AdminSectionRowActionHandlers {
+interface DataTableRowActionsProps<TData>
+  extends AdminSectionRowActionHandlers {
   row: Row<SectionWithCourse>
 }
 
 export function AdminSectionsRowActions<TData>({
   row,
   handleRefresh,
-  handleEdit
+  handleEdit,
 }: DataTableRowActionsProps<TData>) {
   const { toast } = useToast()
 
-  const deleteMutation = trpc.section.delete.useMutation({
+  const deleteMutation = trpc.sections.delete.useMutation({
     onSuccess: () => {
       toast({
         title: "Section deleted!",
@@ -45,16 +46,16 @@ export function AdminSectionsRowActions<TData>({
       toast({
         title: "Error deleting section",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
-    }
+    },
   })
 
   const handleDelete = () => {
-    if (deleteMutation.isLoading) return;
+    if (deleteMutation.isLoading) return
 
     deleteMutation.mutate({
-      SectionId: row.original.SectionId
+      SectionId: row.original.SectionId,
     })
   }
 
@@ -65,13 +66,11 @@ export function AdminSectionsRowActions<TData>({
           variant="ghost"
           className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
         >
-          {
-            deleteMutation.isLoading ? (
-              <ButtonSpinner />
-            ) : (
-              <MoreHorizontal className="h-4 w-4" />
-            )
-          }
+          {deleteMutation.isLoading ? (
+            <ButtonSpinner />
+          ) : (
+            <MoreHorizontal className="h-4 w-4" />
+          )}
           <span className="sr-only">Open menu</span>
         </Button>
       </DropdownMenuTrigger>
@@ -84,13 +83,7 @@ export function AdminSectionsRowActions<TData>({
           <Trash className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
           Delete
           <DropdownMenuShortcut>
-            {
-              !deleteMutation.isLoading ? (
-                <>⌘⌫</>
-              ) : (
-                <ButtonSpinner />
-              )
-            }
+            {!deleteMutation.isLoading ? <>⌘⌫</> : <ButtonSpinner />}
           </DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>

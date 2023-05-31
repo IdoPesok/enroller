@@ -17,16 +17,16 @@ export const Layout = ({ children }: Props) => {
 
   useEffect(() => {
     const rt = getRouteType(router.pathname)
-    setRouteType(rt);
+    setRouteType(rt)
   }, [router, router.pathname])
 
   if (!userId) {
-    return (
-      (routeType === RouteType.PUBLIC) ? (<>
+    return routeType === RouteType.PUBLIC ? (
+      <>
         <LandingNav>{children}</LandingNav>
-      </>) : (
-        <LoadingPage />
-      )
+      </>
+    ) : (
+      <LoadingPage />
     )
   }
 

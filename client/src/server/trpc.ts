@@ -1,6 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server"
 import { type Context } from "./context"
-import { clerkClient } from '@clerk/nextjs'
+import { clerkClient } from "@clerk/nextjs"
 import { transformer } from "@/lib/transformer"
 import { doesUserNeedOnboarding, isUserAdmin } from "@/lib/auth"
 
@@ -17,9 +17,16 @@ const isStudentAuth = t.middleware(async ({ next, ctx }) => {
     throw new TRPCError({ code: "UNAUTHORIZED" })
   }
 
-  const user = await clerkClient.users.getUser(ctx.auth.userId);
-  if (!user || isUserAdmin(user.publicMetadata) || doesUserNeedOnboarding(user.publicMetadata)) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: "You do not have the required student role." })
+  const user = await clerkClient.users.getUser(ctx.auth.userId)
+  if (
+    !user ||
+    isUserAdmin(user.publicMetadata) ||
+    doesUserNeedOnboarding(user.publicMetadata)
+  ) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You do not have the required student role.",
+    })
   }
 
   return next({
@@ -35,9 +42,12 @@ const isOnboardAuth = t.middleware(async ({ next, ctx }) => {
     throw new TRPCError({ code: "UNAUTHORIZED" })
   }
 
-  const user = await clerkClient.users.getUser(ctx.auth.userId);
+  const user = await clerkClient.users.getUser(ctx.auth.userId)
   if (!user || !doesUserNeedOnboarding(user.publicMetadata)) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: "You cannot make any onboarding requests." })
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You cannot make any onboarding requests.",
+    })
   }
 
   return next({
@@ -53,9 +63,12 @@ const isAdminAuth = t.middleware(async ({ next, ctx }) => {
     throw new TRPCError({ code: "UNAUTHORIZED" })
   }
 
-  const user = await clerkClient.users.getUser(ctx.auth.userId);
+  const user = await clerkClient.users.getUser(ctx.auth.userId)
   if (!user || !isUserAdmin(user.publicMetadata)) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: "You do not have the required admin role." })
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You do not have the required admin role.",
+    })
   }
 
   return next({

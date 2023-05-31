@@ -1,12 +1,9 @@
-
-import { Enrolled_Type, Sections } from "@prisma/client"
-import FullCalendar from '@fullcalendar/react'
-import timeGridPlugin from '@fullcalendar/timegrid'
-import { CalendarEvent, CalendarConflictEvent } from "@/interfaces/CalendarTypes"
 import { EnrolledWithSection } from "@/interfaces/EnrolledTypes"
 import { createConflictEvents, createEvents } from "@/lib/calendar"
-import { Spinner } from "../ui/spinner"
+import FullCalendar from '@fullcalendar/react'
+import timeGridPlugin from '@fullcalendar/timegrid'
 import { InfoIcon } from "lucide-react"
+import { Spinner } from "../ui/spinner"
 
 interface Props {
   height: number,

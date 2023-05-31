@@ -2,20 +2,22 @@ import { STOPWORDS } from "@/lib/utils"
 import { Search } from "../ui/search"
 import { Option, SearchFilterCombobox } from "./search-filter"
 
+export interface Filters {
+  prefixOptions: Option[]
+  prefixes?: string[]
+  setPrefixes: (prefixes: string[] | undefined) => void
+}
+
 interface SearchToolbarProps {
   search: string
   setSearch: (search: string) => void
-  prefixOptions: Option[]
-  prefixes: string[] | undefined
-  setPrefixes: (prefixes: string[] | undefined) => void
+  filters?: Filters
 }
 
 export function SearchToolbar({
   search,
   setSearch,
-  prefixOptions,
-  prefixes,
-  setPrefixes,
+  filters,
 }: SearchToolbarProps) {
   return (
     <div className="flex gap-1">
@@ -25,11 +27,13 @@ export function SearchToolbar({
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <SearchFilterCombobox
-        options={prefixOptions}
-        values={prefixes}
-        setValues={setPrefixes}
-      />
+      {filters && (
+        <SearchFilterCombobox
+          options={filters.prefixOptions}
+          values={filters.prefixes}
+          setValues={filters.setPrefixes}
+        />
+      )}
     </div>
   )
 }

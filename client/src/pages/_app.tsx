@@ -14,7 +14,7 @@ const progress = new ProgressBar({
   color: "#10b981",
   className: "bar-of-progress",
   delay: 100,
-});
+})
 
 const MyApp: AppType = ({ Component, pageProps }: AppProps) => {
   const router = useRouter()
@@ -28,18 +28,18 @@ const MyApp: AppType = ({ Component, pageProps }: AppProps) => {
       progress.finish()
     }
 
-    router.events.on('routeChangeStart', handleStart)
-    router.events.on('routeChangeComplete', handleStop)
-    router.events.on('routeChangeError', handleStop)
+    router.events.on("routeChangeStart", handleStart)
+    router.events.on("routeChangeComplete", handleStop)
+    router.events.on("routeChangeError", handleStop)
 
     return () => {
-      router.events.off('routeChangeStart', handleStart)
-      router.events.off('routeChangeComplete', handleStop)
-      router.events.off('routeChangeError', handleStop)
+      router.events.off("routeChangeStart", handleStart)
+      router.events.off("routeChangeComplete", handleStop)
+      router.events.off("routeChangeError", handleStop)
     }
   }, [router])
 
-  const clerk_pub_key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const clerk_pub_key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
   return (
     <ClerkProvider publishableKey={clerk_pub_key}>

@@ -1,30 +1,37 @@
+import React, { useState } from "react"
 import { prereqsString } from "@/lib/prereqs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../ui/card"
 import { Courses } from "@prisma/client"
 import { Prereq } from "@/interfaces/PrereqTypes"
-import { Button } from "../ui/button"
-import Link from "next/link"
-import { generateStudentRoute } from "@/lib/routes"
-import { ReactNode } from "react"
 
 interface Props {
   course: Courses
-  showLink?: boolean
-  linkButton?: ReactNode
+  linkButton?: React.ReactNode
 }
 
-export default function CourseCard({ course, showLink = true, linkButton }: Props) {
+const CourseCard = React.forwardRef<
+  React.ComponentRef<typeof Card>,
+  React.ComponentPropsWithoutRef<typeof Card> & Props
+>(({ course, linkButton, ...props }, ref) => {
   const { Code, Name, Description, MinUnits, MaxUnits, Prereqs } = course
   const prereqs = Prereqs as unknown as Prereq[] | null
 
+  // let cardStyle = "my-2" : "border-none shadow-none")
+
   return (
-    <Card className={"my-2"} key={Code}>
+    <Card ref={ref} key={Code} {...props}>
       <CardHeader>
         <CardTitle>
           {Name}
           <span className="text-right font-normal text-base float-right">
-            {MinUnits == MaxUnits ? MinUnits : `${MinUnits}-${MaxUnits}`}{" "}
-            units
+            {MinUnits == MaxUnits ? MinUnits : `${MinUnits}-${MaxUnits}`} units
           </span>
         </CardTitle>
         <CardDescription>
@@ -36,20 +43,11 @@ export default function CourseCard({ course, showLink = true, linkButton }: Prop
       </CardHeader>
       <CardContent>
         <p>{Description}</p>
-        {
-          showLink && (
-            <div className="flex justify-end">
-              {
-                linkButton ? linkButton : (
-                  <Button className="mt-5">
-                    <Link href={generateStudentRoute(`/courses/${Code}`)}>View Course</Link>
-                  </Button>
-                )
-              }
-            </div>
-          )
-        }
       </CardContent>
+      <CardFooter>{linkButton}</CardFooter>
     </Card>
   )
-}
+})
+CourseCard.displayName = "CourseCard"
+
+export default CourseCard

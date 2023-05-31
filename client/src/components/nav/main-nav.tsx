@@ -4,24 +4,37 @@ import { AcademicCapIcon } from "@heroicons/react/24/solid"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
-import { generateAdminRoute, generateStudentRoute, isAdminRoute, isStudentRoute } from "@/lib/routes"
+import {
+  generateAdminRoute,
+  generateStudentRoute,
+  isAdminRoute,
+  isStudentRoute,
+} from "@/lib/routes"
 import { doesUserNeedOnboarding, isUserAdmin } from "@/lib/auth"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu"
 import { Button } from "../ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { ArrowDown, LogOut, RotateCcw } from "lucide-react"
 import { trpc } from "@/lib/trpc"
 
 interface NavigationItem {
-  name: string,
-  href: string,
+  name: string
+  href: string
 }
 
 const STUDENT_NAVIGATION: NavigationItem[] = [
+  { name: "Home", href: generateStudentRoute("/home") },
   { name: "Course Search", href: generateStudentRoute("/courses") },
   { name: "Degree Progress", href: generateStudentRoute("/degree-progress") },
   { name: "Explore", href: generateStudentRoute("/explore") },
-  { name: "Calendar", href: generateStudentRoute("/calendar") },
 ]
 
 const ADMIN_NAVIGATION: NavigationItem[] = [
@@ -29,14 +42,15 @@ const ADMIN_NAVIGATION: NavigationItem[] = [
 ]
 
 interface HighlightBarSize {
-  left: number,
-  width: number,
+  left: number
+  width: number
 }
 
 export const MainNav = () => {
   const router = useRouter()
   const [activeRoute, setActiveRoute] = useState(router.pathname)
-  const [highlightBarSize, setHighlightBarSize] = useState<HighlightBarSize | null>(null)
+  const [highlightBarSize, setHighlightBarSize] =
+    useState<HighlightBarSize | null>(null)
   const [navItems, setNavItems] = useState<NavigationItem[]>([])
   const user = useUser()
   const { signOut } = useClerk()
@@ -44,7 +58,7 @@ export const MainNav = () => {
   useEffect(() => {
     const getHighlightBarSize = (): HighlightBarSize | null => {
       const navItems = document.querySelectorAll("#main-nav-active")
-      if (navItems.length === 0) return null;
+      if (navItems.length === 0) return null
       const navItem = navItems[0] as HTMLElement
       return { left: navItem.offsetLeft - 4, width: navItem.offsetWidth + 8 }
     }
@@ -65,22 +79,22 @@ export const MainNav = () => {
       }, 50)
     }
 
-    router.events.on('routeChangeComplete', handleRouteChange)
+    router.events.on("routeChangeComplete", handleRouteChange)
 
     handleRouteChange()
 
     return () => {
-      router.events.off('routeChangeComplete', handleRouteChange)
+      router.events.off("routeChangeComplete", handleRouteChange)
     }
   }, [router])
 
   const resetMutation = trpc.onboard.resetOnboarding.useMutation({
     onSuccess: () => {
       router.reload()
-    }
-  });
+    },
+  })
   const resetOnboarding = async () => {
-    await resetMutation.mutate();
+    await resetMutation.mutate()
   }
 
   const demoteUserRoleMutation = trpc.auth.demoteUserRole.useMutation({
@@ -112,7 +126,7 @@ export const MainNav = () => {
         <div className="justify-between flex items-center">
           <div className="flex items-center">
             <AcademicCapIcon className="h-8 text-emerald-500 mr-5" />
-            { navLinks.length > 0 && navLinks }
+            {navLinks.length > 0 && navLinks}
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -126,20 +140,16 @@ export const MainNav = () => {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  {
-                    user.user?.firstName && (
-                      <p className="text-sm font-medium leading-none">
-                        { user.user?.firstName } { user.user?.lastName }
-                      </p>
-                    )
-                  }
-                  {
-                    user.user?.primaryEmailAddress && (
-                      <p className="text-xs leading-none text-muted-foreground">
-                        { user.user?.primaryEmailAddress.emailAddress }
-                      </p>
-                    )
-                  }
+                  {user.user?.firstName && (
+                    <p className="text-sm font-medium leading-none">
+                      {user.user?.firstName} {user.user?.lastName}
+                    </p>
+                  )}
+                  {user.user?.primaryEmailAddress && (
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.user?.primaryEmailAddress.emailAddress}
+                    </p>
+                  )}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -176,14 +186,12 @@ export const MainNav = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        {
-          highlightBarSize && (
-            <div
-              className="bottom-0 w-0 h-px bg-emerald-500 absolute z-10 left-20 transition-all duration-100 ease-in-out"
-              style={highlightBarSize}
-            />
-          )
-        }
+        {highlightBarSize && (
+          <div
+            className="bottom-0 w-0 h-px bg-emerald-500 absolute z-10 left-20 transition-all duration-100 ease-in-out"
+            style={highlightBarSize}
+          />
+        )}
       </div>
     </>
   )

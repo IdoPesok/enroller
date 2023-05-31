@@ -1,12 +1,12 @@
 import { ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
- 
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
 const waitFor = async (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+  new Promise((resolve) => setTimeout(resolve, ms))
 
 // see INFORMATION_SCHEMA.INNODB_FT_DEFAULT_STOPWORD
 // NOTE: future improvement could be query this in getStaticProps

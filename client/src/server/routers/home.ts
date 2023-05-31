@@ -15,7 +15,11 @@ export const homeRouter = router({
         Type: { in: input.types }
       },
       include: {
-        Section: true
+        Section: {
+          include: {
+            Courses: true,
+          },
+        },
       }
       });
       return sections;

@@ -7,9 +7,14 @@ export const isUserAdmin = (user: UserPublicMetadata | undefined) => {
   return user[PUBLIC_METADATA_KEYS.role] === "ADMIN"
 }
 
-export const doesUserNeedOnboarding = (user: UserPublicMetadata | undefined) => {
+export const doesUserNeedOnboarding = (
+  user: UserPublicMetadata | undefined
+) => {
   if (!user) {
     return false
   }
-  return user[PUBLIC_METADATA_KEYS.role] !== "ADMIN" && user[PUBLIC_METADATA_KEYS.onboarding] !== true
+  return (
+    user[PUBLIC_METADATA_KEYS.role] !== "ADMIN" &&
+    user[PUBLIC_METADATA_KEYS.onboarding] !== true
+  )
 }

@@ -1,9 +1,10 @@
 import { prisma } from "@/server/prisma";
 import { z } from "zod";
-import { adminProcedure, router } from "../trpc";
+import { adminProcedure, studentProcedure, router } from "../trpc";
 import { ZodSectionObject } from "@/interfaces/SectionTypes";
+import { fetchCatalogYear } from "@/lib/catalog-year"
 
-export const sectionRouter = router({
+export const sectionsRouter = router({
   create: adminProcedure
     .input(ZodSectionObject)
     .mutation(async ({ input }) => {
@@ -106,6 +107,39 @@ export const sectionRouter = router({
 
       return { sections, nextCursor }
     }),
+  list: studentProcedure
+    .input(z.object({ code: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const catalogYear = await fetchCatalogYear(ctx.auth.userId)
+
+      const sections = await prisma.sections.findMany({
+        where: {
+          Course: input.code,
+          CatalogYear: catalogYear,
+        },
+      })
+      return sections
+    }),
+  withEnrolleds: studentProcedure
+    .input(z.object({ code: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const catalogYear = await fetchCatalogYear(ctx.auth.userId)
+
+      const sections = await prisma.sections.findMany({
+        where: {
+          Course: input.code,
+          CatalogYear: catalogYear,
+        },
+        include: {
+          Enrolleds: {
+            where: {
+              User: ctx.auth.userId,
+            },
+          },
+        },
+      })
+      return sections
+    }),
 })
 
-export type AppRouter = typeof sectionRouter;
+export type AppRouter = typeof sectionsRouter

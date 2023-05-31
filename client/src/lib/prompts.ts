@@ -2,11 +2,12 @@ import { ScoredVector } from "@pinecone-database/pinecone"
 import { ChatCompletionRequestMessage } from "openai"
 
 export default class PromptBuilder {
-
   static courseFilter = (q: string): ChatCompletionRequestMessage[] => {
-    const messages: ChatCompletionRequestMessage[] = [];
+    const messages: ChatCompletionRequestMessage[] = []
 
-    messages.push({ role: "user", content: `
+    messages.push({
+      role: "user",
+      content: `
       My courses database index has the following metadata values:
 
       ["prefix", "number", "minUnits", "maxUnits", "name", "prereqs"],
@@ -74,21 +75,30 @@ export default class PromptBuilder {
       Can you please write a valid filter object for the following query.
 
       ${q}
-    `})
+    `,
+    })
 
-    return messages;
+    return messages
   }
 
-  static studentCourseQuestion = (q: string, matches: ScoredVector[]): ChatCompletionRequestMessage[] => {
-    const messages: ChatCompletionRequestMessage[] = [];
+  static studentCourseQuestion = (
+    q: string,
+    matches: ScoredVector[]
+  ): ChatCompletionRequestMessage[] => {
+    const messages: ChatCompletionRequestMessage[] = []
 
-    messages.push({ role: "system", content: `
+    messages.push({
+      role: "system",
+      content: `
       You are a helpful Cal Poly AI chatbot that uses course data to answer student question about courses.
 
       You will only answer questions about Cal Poly courses. If a question is asked that is not about a course, you should respond with "I don't know, I am a Cal Poly courses AI".
-    `})
+    `,
+    })
 
-    messages.push({ role: "user", content: `
+    messages.push({
+      role: "user",
+      content: `
       Given the following course data:
 
       ---
@@ -98,9 +108,9 @@ export default class PromptBuilder {
       <student_question>
       ${q}
       </student_question>
-    `})
+    `,
+    })
 
-    return messages;
+    return messages
   }
-
 }

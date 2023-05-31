@@ -1,26 +1,62 @@
-import { DAYS, DaysOfTheWeek, SECTION_END_TIMES, SECTION_FORMAT_OPTIONS, SECTION_MODALITY_OPTIONS, SECTION_START_TIMES, SectionWithCourse, sectionFormSchema } from "@/interfaces/SectionTypes";
-import useDebounce from "@/lib/debounce";
-import { trpc } from "@/lib/trpc";
-import { addSearchModifiers, cn, getDateTimeFromString } from "@/lib/utils";
-import { CheckBadgeIcon } from "@heroicons/react/24/outline";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Courses, Sections, Sections_Format, Sections_Modality } from "@prisma/client";
-import { ArrowLeftRight, ArrowRight } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import z from "zod";
-import CourseCard from "../courses/course-card";
-import { Button } from "../ui/button";
-import { ButtonSpinner } from "../ui/button-spinner";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
-import { Input } from "../ui/input";
-import { Search } from "../ui/search";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Separator } from "../ui/separator";
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
-import { Spinner } from "../ui/spinner";
-import { Toggle } from "../ui/toggle";
-import { useToast } from "../ui/use-toast";
+import {
+  DAYS,
+  DaysOfTheWeek,
+  SECTION_END_TIMES,
+  SECTION_FORMAT_OPTIONS,
+  SECTION_MODALITY_OPTIONS,
+  SECTION_START_TIMES,
+  SectionWithCourse,
+  sectionFormSchema,
+} from "@/interfaces/SectionTypes"
+import useDebounce from "@/lib/debounce"
+import { trpc } from "@/lib/trpc"
+import { addSearchModifiers, cn, getDateTimeFromString } from "@/lib/utils"
+import { CheckBadgeIcon } from "@heroicons/react/24/outline"
+import { zodResolver } from "@hookform/resolvers/zod"
+import {
+  Courses,
+  Sections,
+  Sections_Format,
+  Sections_Modality,
+} from "@prisma/client"
+import { ArrowLeftRight, ArrowRight } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
+import z from "zod"
+import CourseCard from "../courses/course-card"
+import { Button } from "../ui/button"
+import { ButtonSpinner } from "../ui/button-spinner"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form"
+import { Input } from "../ui/input"
+import { Search } from "../ui/search"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select"
+import { Separator } from "../ui/separator"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../ui/sheet"
+import { Spinner } from "../ui/spinner"
+import { Toggle } from "../ui/toggle"
+import { useToast } from "../ui/use-toast"
 
 type Props = {
   sheetTrigger: React.ReactNode
@@ -31,11 +67,11 @@ type Props = {
   setSheetOpen: (open: boolean) => void
 }
 
-export const SectionForm = ({ 
-  sheetTrigger, 
-  handleCreateSuccess, 
-  handleUpdateSuccess, 
-  updatingSection ,
+export const SectionForm = ({
+  sheetTrigger,
+  handleCreateSuccess,
+  handleUpdateSuccess,
+  updatingSection,
   sheetOpen,
   setSheetOpen,
 }: Props) => {
@@ -46,11 +82,13 @@ export const SectionForm = ({
   const { toast } = useToast()
 
   // course search state
-  const [selectedCourse, setSelectedCourse] = useState<null | Courses>(updatingSection ? updatingSection?.Courses ?? null : null);
+  const [selectedCourse, setSelectedCourse] = useState<null | Courses>(
+    updatingSection ? updatingSection?.Courses ?? null : null
+  )
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 500)
   const courses = trpc.courses.list.useInfiniteQuery(
-    { search: addSearchModifiers(debouncedSearch), filters: { } },
+    { search: addSearchModifiers(debouncedSearch), filters: {} },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       enabled: Boolean(debouncedSearch),
@@ -83,8 +121,14 @@ export const SectionForm = ({
         const endDate = new Date(updatingSection.End)
 
         // 15:10 18:00 needs to be converted to 03:10 PM and 06:00 PM
-        startTime = startDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        endTime = endDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        startTime = startDate.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+        endTime = endDate.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
 
         // convert to 12 hour time
         startTime = startTime.replace(/^(\d{1,2}):(\d{2})$/, (m, h, mm) => {
@@ -118,7 +162,7 @@ export const SectionForm = ({
     }
   }, [updatingSection, sheetOpen])
 
-  const createMutation = trpc.section.create.useMutation({
+  const createMutation = trpc.sections.create.useMutation({
     onSuccess: () => {
       handleCreateSuccess()
     },
@@ -126,12 +170,12 @@ export const SectionForm = ({
       toast({
         title: "Error creating section",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
-    }
+    },
   })
 
-  const updateMutation = trpc.section.update.useMutation({
+  const updateMutation = trpc.sections.update.useMutation({
     onSuccess: () => {
       handleUpdateSuccess()
     },
@@ -139,12 +183,12 @@ export const SectionForm = ({
       toast({
         title: "Error updating section",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
-    }
+    },
   })
 
-  const mutation = updatingSection ? updateMutation : createMutation;
+  const mutation = updatingSection ? updateMutation : createMutation
 
   function validateStartAndEndTimes(start: Date, end: Date) {
     if (start >= end) {
@@ -160,14 +204,14 @@ export const SectionForm = ({
     if (!selectedCourse) return
 
     // convert start and end from string to date time
-    const startDateTime = getDateTimeFromString(values.startTime);
-    const endDateTime = getDateTimeFromString(values.endTime);
+    const startDateTime = getDateTimeFromString(values.startTime)
+    const endDateTime = getDateTimeFromString(values.endTime)
 
     const dateErrors = validateStartAndEndTimes(startDateTime, endDateTime)
     if (dateErrors) {
       form.setError("startTime", {
         type: "manual",
-        message: dateErrors
+        message: dateErrors,
       })
       return
     }
@@ -195,21 +239,24 @@ export const SectionForm = ({
     if (updatingSection) {
       updateMutation.mutate({
         SectionId: updatingSection.SectionId,
-        updateData: sectionData
+        updateData: sectionData,
       })
     } else {
-      createMutation.mutate(sectionData);
+      createMutation.mutate(sectionData)
     }
   }
 
   const cards = courses.data?.pages
     .flatMap(({ courses }) => courses)
     .map((course) => (
-      <CourseCard 
-        key={course.Code} 
-        course={course} 
+      <CourseCard
+        key={course.Code}
+        course={course}
         linkButton={
-          <Button className="mt-5 bg-emerald-500 hover:bg-emerald-600" onClick={() => setSelectedCourse(course)}>
+          <Button
+            className="mt-5 bg-emerald-500 hover:bg-emerald-600"
+            onClick={() => setSelectedCourse(course)}
+          >
             <ArrowRight className="mr-2 h-4" />
             Next
           </Button>
@@ -226,19 +273,20 @@ export const SectionForm = ({
         onChange={(e) => setSearch(e.target.value)}
       />
       <div className="overflow-y-auto flex-1">
-        {
-          !search ? (
-            <div className="flex flex-col items-center justify-center h-24">
-              <p className="text-center text-gray-500">
-                Search for the class to make a section for.
-              </p>
-            </div>
-          ) : cards ? (
+        {!search ? (
+          <div className="flex flex-col items-center justify-center h-24">
+            <p className="text-center text-gray-500">
+              Search for the class to make a section for.
+            </p>
+          </div>
+        ) : cards ? (
           <>
             {cards.length > 0 ? (
               cards
             ) : (
-              <p className="text-center mt-3">No courses meet search criteria</p>
+              <p className="text-center mt-3">
+                No courses meet search criteria
+              </p>
             )}
             {courses.hasNextPage && (
               <Button
@@ -256,16 +304,19 @@ export const SectionForm = ({
     </div>
   )
 
-  const sectionForm = (
-    selectedCourse ? (<>
+  const sectionForm = selectedCourse ? (
+    <>
       <div className="bg-slate-100 flex justify-between p-3 rounded items-center flex-none transition-opacity">
         <div className="flex gap-2 items-center">
           <CheckBadgeIcon className="text-slate-500 h-6" />
           Class selected
         </div>
-        <Button className="bg-emerald-500 hover:bg-emerald-600 h-8" onClick={() => setSelectedCourse(null)}>
+        <Button
+          className="bg-emerald-500 hover:bg-emerald-600 h-8"
+          onClick={() => setSelectedCourse(null)}
+        >
           <ArrowLeftRight className="h-4 mr-2 w-4" />
-          { selectedCourse.Code }
+          {selectedCourse.Code}
         </Button>
       </div>
       <Form {...form}>
@@ -304,7 +355,11 @@ export const SectionForm = ({
                 <FormItem className="flex-1">
                   <FormLabel>Enrolled Capacity</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enrolled Capacity" {...field} type="number" />
+                    <Input
+                      placeholder="Enrolled Capacity"
+                      {...field}
+                      type="number"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -317,7 +372,11 @@ export const SectionForm = ({
                 <FormItem className="flex-1">
                   <FormLabel>Waitlist Capacity</FormLabel>
                   <FormControl>
-                    <Input placeholder="Waitlist Capacity" {...field} type="number" />
+                    <Input
+                      placeholder="Waitlist Capacity"
+                      {...field}
+                      type="number"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -339,11 +398,11 @@ export const SectionForm = ({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          {
-                            SECTION_FORMAT_OPTIONS.map((f) => (
-                              <SelectItem key={f} value={f}>{f}</SelectItem>
-                            ))
-                          }
+                          {SECTION_FORMAT_OPTIONS.map((f) => (
+                            <SelectItem key={f} value={f}>
+                              {f}
+                            </SelectItem>
+                          ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -365,11 +424,11 @@ export const SectionForm = ({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          {
-                            SECTION_MODALITY_OPTIONS.map((f) => (
-                              <SelectItem key={f} value={f}>{f}</SelectItem>
-                            ))
-                          }
+                          {SECTION_MODALITY_OPTIONS.map((f) => (
+                            <SelectItem key={f} value={f}>
+                              {f}
+                            </SelectItem>
+                          ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -393,11 +452,11 @@ export const SectionForm = ({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          {
-                            SECTION_START_TIMES.map((f) => (
-                              <SelectItem key={f} value={f}>{f}</SelectItem>
-                            ))
-                          }
+                          {SECTION_START_TIMES.map((f) => (
+                            <SelectItem key={f} value={f}>
+                              {f}
+                            </SelectItem>
+                          ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -419,11 +478,11 @@ export const SectionForm = ({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          {
-                            SECTION_END_TIMES.map((f) => (
-                              <SelectItem key={f} value={f}>{f}</SelectItem>
-                            ))
-                          }
+                          {SECTION_END_TIMES.map((f) => (
+                            <SelectItem key={f} value={f}>
+                              {f}
+                            </SelectItem>
+                          ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -440,19 +499,24 @@ export const SectionForm = ({
               <FormItem className="flex-1">
                 <FormLabel>Meeting Days</FormLabel>
                 <FormControl>
-                  <div className="col-span-3 flex gap-3 rounded p-2 border border-slate-200" >
-                    {
-                      DAYS.map((day) => (
-                        <Toggle
-                          key={day}
-                          className="flex-1"
-                          pressed={field.value.includes(day)}
-                          onPressedChange={(v) => form.setValue('activeDays', v ? [...field.value, day] : field.value.filter((d) => d !== day))}
-                        >
-                          {day}
-                        </Toggle>
-                      ))
-                    }
+                  <div className="col-span-3 flex gap-3 rounded p-2 border border-slate-200">
+                    {DAYS.map((day) => (
+                      <Toggle
+                        key={day}
+                        className="flex-1"
+                        pressed={field.value.includes(day)}
+                        onPressedChange={(v) =>
+                          form.setValue(
+                            "activeDays",
+                            v
+                              ? [...field.value, day]
+                              : field.value.filter((d) => d !== day)
+                          )
+                        }
+                      >
+                        {day}
+                      </Toggle>
+                    ))}
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -460,63 +524,49 @@ export const SectionForm = ({
             )}
           />
           <SheetFooter>
-            <Button 
+            <Button
               type="submit"
               disabled={mutation.isLoading}
-              className={
-                cn(
-                  mutation.isLoading ? "bg-slate-300 cursor-not-allowed" : ""
-                )
-              }
+              className={cn(
+                mutation.isLoading ? "bg-slate-300 cursor-not-allowed" : ""
+              )}
             >
-              {
-                mutation.isLoading ? (
-                  <>
-                    <ButtonSpinner className="mr-2" />
-                    <>
-                      { updatingSection ? 'Updating' : 'Creating' } section...
-                    </>
-                  </>
-                ) : (
-                  <>
-                    { updatingSection ? 'Update' : 'Create' } section
-                  </>
-                )
-              }
+              {mutation.isLoading ? (
+                <>
+                  <ButtonSpinner className="mr-2" />
+                  <>{updatingSection ? "Updating" : "Creating"} section...</>
+                </>
+              ) : (
+                <>{updatingSection ? "Update" : "Create"} section</>
+              )}
             </Button>
           </SheetFooter>
         </form>
       </Form>
-    </>) : null
-  )
+    </>
+  ) : null
 
   return (
     <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-      <SheetTrigger asChild>
-        { sheetTrigger }
-      </SheetTrigger>
-      <SheetContent position="right" size="lg" className="flex flex-col overflow-y-auto">
+      <SheetTrigger asChild>{sheetTrigger}</SheetTrigger>
+      <SheetContent
+        position="right"
+        size="lg"
+        className="flex flex-col overflow-y-auto"
+      >
         <SheetHeader className="flex-none">
           <SheetTitle>
-            { updatingSection ? 'Update' : 'Create' } section
+            {updatingSection ? "Update" : "Create"} section
           </SheetTitle>
           <SheetDescription>
-            {
-              updatingSection ? (
-                <>
-                  Update the section for students.
-                </>
-              ) : (
-                <>
-                  Add a new section for students to join.
-                </>
-              )
-            }
+            {updatingSection ? (
+              <>Update the section for students.</>
+            ) : (
+              <>Add a new section for students to join.</>
+            )}
           </SheetDescription>
         </SheetHeader>
-        {
-          !selectedCourse ? courseSearch : sectionForm
-        }
+        {!selectedCourse ? courseSearch : sectionForm}
       </SheetContent>
     </Sheet>
   )

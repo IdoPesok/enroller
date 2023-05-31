@@ -1,18 +1,17 @@
 import { PUBLIC_METADATA_KEYS } from "@/interfaces/PublicMetadata"
 import { internalServerError } from "@/lib/trpc"
 import { prisma } from "@/server/prisma"
-import { clerkClient } from '@clerk/nextjs'
+import { clerkClient } from "@clerk/nextjs"
 import { z } from "zod"
 import { onboardProcedure, router, studentProcedure } from "../trpc"
 
 export const onboardRouter = router({
-  catalogs: onboardProcedure
-    .query(async () => {
-      // select all catalogs from prisma
-      return await prisma.catalogs.findMany({
-        orderBy: {}
-      })
-    }),
+  catalogs: onboardProcedure.query(async () => {
+    // select all catalogs from prisma
+    return await prisma.catalogs.findMany({
+      orderBy: {},
+    })
+  }),
   majors: onboardProcedure
     .input(z.object({ catalogYear: z.string().nullish() }))
     .query(async ({ input }) => {
@@ -20,59 +19,67 @@ export const onboardRouter = router({
         return []
       }
 
-      return (await prisma.flowcharts.findMany({
-        where: {
-          CatalogYear: input.catalogYear
-        },
-        include: {
-          Major: true
-        },
-        orderBy: {
-          Major: {
-            Name: "asc"
-          }
-        },
-        distinct: ["MajorId"]
-      })).map(flowchart => flowchart.Major)
+      return (
+        await prisma.flowcharts.findMany({
+          where: {
+            CatalogYear: input.catalogYear,
+          },
+          include: {
+            Major: true,
+          },
+          orderBy: {
+            Major: {
+              Name: "asc",
+            },
+          },
+          distinct: ["MajorId"],
+        })
+      ).map((flowchart) => flowchart.Major)
     }),
   concentrations: onboardProcedure
-    .input(z.object({ 
-      catalogYear: z.string().nullish(),
-      majorId: z.string().nullish(),
-    }))
+    .input(
+      z.object({
+        catalogYear: z.string().nullish(),
+        majorId: z.string().nullish(),
+      })
+    )
     .query(async ({ input }) => {
       if (!input.catalogYear || !input.majorId) {
         return []
       }
 
-      return (await prisma.flowcharts.findMany({
-        where: {
-          AND: [
-            {
-              CatalogYear: input.catalogYear
+      return (
+        await prisma.flowcharts.findMany({
+          where: {
+            AND: [
+              {
+                CatalogYear: input.catalogYear,
+              },
+              {
+                MajorId: input.majorId,
+              },
+            ],
+          },
+          include: {
+            Concentration: true,
+          },
+          orderBy: {
+            Concentration: {
+              Name: "asc",
             },
-            {
-              MajorId: input.majorId
-            }
-          ]
-        },
-        include: {
-          Concentration: true,
-        },
-        orderBy: {
-          Concentration: {
-            Name: "asc"
-          }
-        },
-        distinct: ["ConcentrationId"]
-      })).map(flowchart => flowchart.Concentration)
+          },
+          distinct: ["ConcentrationId"],
+        })
+      ).map((flowchart) => flowchart.Concentration)
     }),
   saveUserFlowchart: onboardProcedure
-    .input(z.object({ 
-      catalogYear: z.string().nullish(),
-      majorId: z.string().nullish(),
-      concentrationId: z.string().nullish(),
-    }))
+    .input(
+      z.object({
+        catalogYear: z.string().nullish(),
+        majorId: z.string().nullish(),
+        concentrationId: z.string().nullish(),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       const getFlowchart = async () => {
         if (!input.catalogYear || !input.majorId || !input.concentrationId) {
@@ -83,48 +90,45 @@ export const onboardRouter = router({
           where: {
             AND: [
               {
-                CatalogYear: input.catalogYear
+                CatalogYear: input.catalogYear,
               },
               {
-                MajorId: input.majorId
+                MajorId: input.majorId,
               },
               {
-                ConcentrationId: input.concentrationId
-              }
-            ]
+                ConcentrationId: input.concentrationId,
+              },
+            ],
           },
           select: {
-            FlowchartId: true
-          }
+            FlowchartId: true,
+          },
         })
       }
 
       const updateUserData = async (flowchartId: string) => {
-        const user = await clerkClient.users.getUser(ctx.auth.userId);
-        await clerkClient.users.updateUser(
-          ctx.auth.userId,
-          {
-            publicMetadata: {
-              ...user.publicMetadata,
-              [PUBLIC_METADATA_KEYS.onboarding]: true,
-              [PUBLIC_METADATA_KEYS.flowchartId]: flowchartId
-            }
-          }
-        )
+        const user = await clerkClient.users.getUser(ctx.auth.userId)
+        await clerkClient.users.updateUser(ctx.auth.userId, {
+          publicMetadata: {
+            ...user.publicMetadata,
+            [PUBLIC_METADATA_KEYS.onboarding]: true,
+            [PUBLIC_METADATA_KEYS.flowchartId]: flowchartId,
+          },
+        })
       }
 
       // find the flowchart id
       try {
         const flowchart = await getFlowchart()
         if (!flowchart) {
-          throw new Error();
+          throw new Error()
         }
 
         // update the user's metadata
         try {
           await updateUserData(flowchart.FlowchartId)
 
-          return true;
+          return true
         } catch (e) {
           throw internalServerError("Failed to save user metadata", e)
         }
@@ -132,28 +136,24 @@ export const onboardRouter = router({
         throw internalServerError("Failed to find the flowchart", e)
       }
     }),
-  resetOnboarding: studentProcedure
-    .mutation(async ({ ctx }) => {
-      // update the user's metadata
-      try {
-        const user = await clerkClient.users.getUser(ctx.auth.userId);
+  resetOnboarding: studentProcedure.mutation(async ({ ctx }) => {
+    // update the user's metadata
+    try {
+      const user = await clerkClient.users.getUser(ctx.auth.userId)
 
-        await clerkClient.users.updateUser(
-          ctx.auth.userId,
-          {
-            publicMetadata: {
-              ...user.publicMetadata,
-              [PUBLIC_METADATA_KEYS.onboarding]: undefined,
-              [PUBLIC_METADATA_KEYS.flowchartId]: undefined
-            }
-          }
-        )
+      await clerkClient.users.updateUser(ctx.auth.userId, {
+        publicMetadata: {
+          ...user.publicMetadata,
+          [PUBLIC_METADATA_KEYS.onboarding]: undefined,
+          [PUBLIC_METADATA_KEYS.flowchartId]: undefined,
+        },
+      })
 
-        return true;
-      } catch (e) {
-        throw internalServerError("Failed to save reset user onboarding", e)
-      }
-    }),
+      return true
+    } catch (e) {
+      throw internalServerError("Failed to save reset user onboarding", e)
+    }
+  }),
 })
 
 export type AppRouter = typeof onboardRouter

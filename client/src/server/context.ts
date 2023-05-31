@@ -1,13 +1,16 @@
-import * as trpc from '@trpc/server'
-import * as trpcNext from '@trpc/server/adapters/next'
-import { getAuth } from '@clerk/nextjs/server'
-import type { SignedInAuthObject,SignedOutAuthObject } from "@clerk/nextjs/dist/api";
+import * as trpc from "@trpc/server"
+import * as trpcNext from "@trpc/server/adapters/next"
+import { getAuth } from "@clerk/nextjs/server"
+import type {
+  SignedInAuthObject,
+  SignedOutAuthObject,
+} from "@clerk/nextjs/dist/api"
 
 interface AuthContext {
-  auth: SignedInAuthObject | SignedOutAuthObject;
+  auth: SignedInAuthObject | SignedOutAuthObject
 }
 
-export const createContextInner = async ({ auth }: AuthContext  ) => {
+export const createContextInner = async ({ auth }: AuthContext) => {
   return {
     auth,
   }

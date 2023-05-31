@@ -1,4 +1,3 @@
-
 export const STUDENT_NAMESPACE = "/student"
 export const ADMIN_NAMESPACE = "/admin"
 export const ONBOARDING_NAMESPACE = "/onboarding"
@@ -13,25 +12,28 @@ export const generateRoute = (namespace: string, route: string) => {
     return namespace
   }
 
-  return (namespace + "/" + cleanedRoute)
+  return namespace + "/" + cleanedRoute
 }
 
-export const generateStudentRoute = (route: string) => generateRoute(STUDENT_NAMESPACE, route)
-export const generateAdminRoute = (route: string) => generateRoute(ADMIN_NAMESPACE, route)
-export const generateOnboardingRoute = (route: string) => generateRoute(ONBOARDING_NAMESPACE, route)
+export const generateStudentRoute = (route: string) =>
+  generateRoute(STUDENT_NAMESPACE, route)
+export const generateAdminRoute = (route: string) =>
+  generateRoute(ADMIN_NAMESPACE, route)
+export const generateOnboardingRoute = (route: string) =>
+  generateRoute(ONBOARDING_NAMESPACE, route)
 
 // Set the paths that don't require the user to be signed in
-const publicPaths = ['/', '/sign-in*', '/sign-up*']
-const errorPaths = ['/404']
+const publicPaths = ["/", "/sign-in*", "/sign-up*"]
+const errorPaths = ["/404"]
 
 export const isPublicRoute = (path: string) => {
-  return publicPaths.find(x =>
-    path.match(new RegExp(`^${x}$`.replace('*$', '($|/)')))
+  return publicPaths.find((x) =>
+    path.match(new RegExp(`^${x}$`.replace("*$", "($|/)")))
   )
 }
 
 export const isErrorPath = (path: string) => {
-  return errorPaths.includes(path);
+  return errorPaths.includes(path)
 }
 
 export const isApiPath = (path: string) => {
@@ -58,7 +60,7 @@ export enum RouteType {
 }
 
 export const getRouteType = (path: string): RouteType | null => {
-  let currentRouteType: RouteType | null = null;
+  let currentRouteType: RouteType | null = null
 
   if (isAdminRoute(path)) {
     currentRouteType = RouteType.ADMIN
@@ -70,5 +72,5 @@ export const getRouteType = (path: string): RouteType | null => {
     currentRouteType = RouteType.PUBLIC
   }
 
-  return currentRouteType;
+  return currentRouteType
 }

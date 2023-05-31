@@ -37,7 +37,7 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
-  isLoading
+  isLoading,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -70,7 +70,7 @@ export function DataTable<TData, TValue>({
   })
 
   return (
-    <div className="space-y-6 mt-6">
+    <div className="space-y-2 mt-1">
       <DataTableToolbar table={table} />
       <div className="rounded-md border">
         <Table>

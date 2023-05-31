@@ -4,7 +4,10 @@ import { z } from "zod"
 import { studentProcedure, router } from "../trpc"
 import { OpenAIEmbeddings } from "langchain/embeddings/openai"
 import { Configuration, OpenAIApi } from "openai"
-import { ScoredVector, VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch"
+import {
+  ScoredVector,
+  VectorOperationsApi,
+} from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch"
 import PromptBuilder from "@/lib/prompts"
 
 // these can get rebuilt a ton in development see prisma stuff
@@ -60,15 +63,15 @@ export const exploreRouter = router({
         return null
       }
 
-      let tokensUsed = 0;
+      let tokensUsed = 0
 
       try {
-        let filter: object | undefined;
+        let filter: object | undefined
 
         if (filterDatabase) {
           const filterCompletion = await openai.createChatCompletion({
             model: "gpt-3.5-turbo",
-            messages: PromptBuilder.courseFilter(prompt)
+            messages: PromptBuilder.courseFilter(prompt),
           })
 
           // substring filter completion from first { to last }
@@ -82,20 +85,20 @@ export const exploreRouter = router({
               console.log(filter)
             } catch {
               console.error("Failed to parse filter: " + f)
-              filter = undefined;
+              filter = undefined
             }
           }
 
-          tokensUsed += filterCompletion.data.usage?.total_tokens ?? 0;
+          tokensUsed += filterCompletion.data.usage?.total_tokens ?? 0
         }
 
         /* Embed queries */
         const queryEmbedding = await embeddings.embedQuery(prompt)
 
-        let numTries = 0;
+        let numTries = 0
         let matches: ScoredVector[] = []
         while (numTries < 2) {
-          numTries += 1;
+          numTries += 1
 
           // find top 5 most relevant vectors / courses
           try {
@@ -110,11 +113,14 @@ export const exploreRouter = router({
             })
 
             // if no matches are found
-            if (queryResponse.matches === undefined || queryResponse.matches.length === 0) {
+            if (
+              queryResponse.matches === undefined ||
+              queryResponse.matches.length === 0
+            ) {
               // if filters were on, retry again, this time with no filters
               if (filter !== undefined) {
-                filter = undefined;
-                continue;
+                filter = undefined
+                continue
               }
 
               // otherwise no matches were found
@@ -122,32 +128,32 @@ export const exploreRouter = router({
             }
 
             // matches found, continue to next step
-            matches = queryResponse.matches;
-            break;
+            matches = queryResponse.matches
+            break
           } catch (e) {
             if (filter !== undefined) {
               // filter was probably invalid, try again with no filter
-              filter = undefined;
-              continue;
+              filter = undefined
+              continue
             }
 
-            throw e;
+            throw e
           }
         }
 
         const completion = await openai.createChatCompletion({
           model: "gpt-3.5-turbo",
-          messages: PromptBuilder.studentCourseQuestion(prompt, matches)
+          messages: PromptBuilder.studentCourseQuestion(prompt, matches),
         })
 
         if (completion.data.choices[0].message === undefined) {
           throw new Error()
         }
 
-        tokensUsed += completion.data.usage?.total_tokens ?? 0;
+        tokensUsed += completion.data.usage?.total_tokens ?? 0
 
         // log to user how many tokens were used
-        console.log(`Open AI was called, tokens used: ${tokensUsed}`);
+        console.log(`Open AI was called, tokens used: ${tokensUsed}`)
 
         return completion.data.choices[0].message["content"]
       } catch (e) {

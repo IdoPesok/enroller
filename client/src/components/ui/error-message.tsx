@@ -8,9 +8,7 @@ export const ErrorMessage = ({ message }: Props) => {
       <h1 className="font-extrabold text-transparent text-3xl bg-clip-text bg-gradient-to-r from-red-400 to-red-600">
         Oops!
       </h1>
-      <p>
-        {message}
-      </p>
+      <p>{message}</p>
     </div>
   )
 }
