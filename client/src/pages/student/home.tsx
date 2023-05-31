@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import CourseRow from "@/components/courses/course-row"
 import { Button } from "@/components/ui/button"
 
+import WeekCalendar from "@/components/WeekCalendar/WeekCalendar"
 import SwapSheet from "@/components/courses/swap-sheet"
 import {
   AlertDialog,
@@ -28,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Spinner } from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -49,9 +49,7 @@ import {
   MoreHorizontal,
   ShoppingCart,
 } from "lucide-react"
-import WeekCalendar from "@/components/WeekCalendar/WeekCalendar"
 
-const CURRENT_QUARTER = "Spring 2023" // hard coded for now as placeholder
 const HEIGHT_OFFSET = 210
 
 export default function Home() {
@@ -117,42 +115,59 @@ export default function Home() {
     ["In Shopping Cart", Enrolled_Type.ShoppingCart],
   ]
 
+  const headers = [
+    "Course Number",
+    "Course Name",
+    "Section",
+    "Units",
+    "Days",
+    "Start Time",
+    "End Time",
+    "Professor",
+    "Status",
+  ].map((header) => (
+    <TableHead key={header} className="text-left">
+      {header}
+    </TableHead>
+  ))
+
+  const skeletonLoaders = (
+    <>
+      {[1, 2, 3].map((rowIx) => (
+        <TableRow key={rowIx + "skeleton-loader-row"}>
+          {headers.map((header) => (
+            <TableCell key={header + "skeleton-loader-cell"}>
+              <div className="animate-pulse flex w-full h-4 rounded bg-slate-200" />
+            </TableCell>
+          ))}
+        </TableRow>
+      ))}
+    </>
+  )
+
+  const emptyTable = (
+    <TableRow>
+      <TableCell colSpan={9}>
+        <div className="flex justify-center py-36">
+          <p>No courses found.</p>
+        </div>
+      </TableCell>
+    </TableRow>
+  )
+
   const homeTable = (
     <div className="rounded-md border-2 mt-8">
       <Table>
         <TableHeader>
-          <TableRow className="bg-white hover:bg-white">
-            <TableHead>Course&nbsp;Number</TableHead>
-            <TableHead>Course&nbsp;Name</TableHead>
-            <TableHead>Section</TableHead>
-            <TableHead>Units</TableHead>
-            <TableHead>Days</TableHead>
-            <TableHead>Start&nbsp;Time</TableHead>
-            <TableHead>End&nbsp;Time</TableHead>
-            <TableHead>Professor</TableHead>
-            {/* <TableHead>Location</TableHead> */}
-            <TableHead>Status</TableHead>
-          </TableRow>
+          <TableRow className="bg-white hover:bg-white">{headers}</TableRow>
         </TableHeader>
         <TableBody>
           {sections.error ? (
             <p>failed to fetch enrolled courses</p>
           ) : sections.isLoading ? (
-            <TableRow>
-              <TableCell colSpan={9}>
-                <div className="flex justify-center py-36">
-                  <Spinner />
-                </div>
-              </TableCell>
-            </TableRow>
+            skeletonLoaders
           ) : !sections.data || sections.data.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={9}>
-                <div className="flex justify-center py-36">
-                  <p>No courses found.</p>
-                </div>
-              </TableCell>
-            </TableRow>
+            emptyTable
           ) : (
             sections.data.map(({ Type: Status, Section }) => {
               const { SectionId, Professor, Start, End } = Section
@@ -287,8 +302,6 @@ export default function Home() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Spring 2023">Spring 2023</SelectItem>
-              <SelectItem value="Winter 2023">Winter 2023</SelectItem>
-              <SelectItem value="Fall 2022">Fall 2022</SelectItem>
             </SelectContent>
           </Select>
           <Tabs dir="ltr" defaultValue="list" className="ml-4">

@@ -49,7 +49,7 @@ const transformTime = (time: Date) => {
 }
 
 const createConflictEvent = (
-  v: (typeof DateValueArr)[number],
+  v: typeof DateValueArr[number],
   start: Date,
   end: Date
 ) => {
@@ -68,7 +68,7 @@ const checkAndPushConflict = (
   sectionOneEnd: Date,
   sectionTwoStart: Date,
   sectionTwoEnd: Date,
-  v: (typeof DateValueArr)[number],
+  v: typeof DateValueArr[number],
   conflictEvents: CalendarConflictEvent[]
 ) => {
   if (sectionOneStart < sectionTwoEnd && sectionOneEnd > sectionTwoStart) {
