@@ -21,7 +21,7 @@ export default function DegreeProgress() {
   return (
     <div>
       {courses.data.map((course) => (
-        <CourseCard course={course} key={course.Code} className="my-2"/>
+        <CourseCard course={course} key={course.Code} className="my-2" />
       ))}
     </div>
   )
