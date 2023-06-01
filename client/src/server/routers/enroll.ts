@@ -26,6 +26,7 @@ export const enrollRouter = router({
         return enrolled
     }),
 
+    //TODO: need to make a check if someone checked off to be added to the waitlist
     enrollShoppingCart: studentProcedure.query(async ({ ctx }) => {
         console.log(ctx.auth.userId)
     
