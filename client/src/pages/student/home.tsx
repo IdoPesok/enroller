@@ -59,14 +59,20 @@ enum ViewType {
 }
 
 export default function Home() {
-  const [showingSections, setShowingSections] = useRouterQueryState<Enrolled_Type[]>("type", [
-    Enrolled_Type.Enrolled,
-    Enrolled_Type.ShoppingCart,
-    Enrolled_Type.Waitlist,
-  ], {
-    serializer: (value) => value.join(","),
-    deserializer: (value) => value.split(","),
-  })
+  const [showingSections, setShowingSections] = useRouterQueryState<
+    Enrolled_Type[]
+  >(
+    "type",
+    [
+      Enrolled_Type.Enrolled,
+      Enrolled_Type.ShoppingCart,
+      Enrolled_Type.Waitlist,
+    ],
+    {
+      serializer: (value) => value.join(","),
+      deserializer: (value) => value.split(","),
+    }
+  )
 
   const [calendarHeight, setCalendarHeight] = useState<number>(
     window.innerHeight - HEIGHT_OFFSET
@@ -85,7 +91,7 @@ export default function Home() {
 
   const deleteMutation = trpc.enroll.delete.useMutation({
     onSuccess: (data, variables, context) => {
-      utils.enroll.listWithSectionCourses.invalidate()
+      utils.home.userSections.invalidate()
     },
   })
 
@@ -94,7 +100,10 @@ export default function Home() {
     Sections | null | undefined
   >(null)
   const [quarter, setQuarter] = useState("Spring 2023")
-  const [viewType, setViewType] = useRouterQueryState<ViewType>("view", ViewType.List)
+  const [viewType, setViewType] = useRouterQueryState<ViewType>(
+    "view",
+    ViewType.List
+  )
   const [modifyCourse, setModifyCourse] = useState("")
 
   const handleDropClick = (courseCode: string) => {
@@ -316,12 +325,23 @@ export default function Home() {
               <SelectItem value="Spring 2023">Spring 2023</SelectItem>
             </SelectContent>
           </Select>
-          <Tabs dir="ltr" value={viewType} className="ml-4" defaultValue={ViewType.List}>
+          <Tabs
+            dir="ltr"
+            value={viewType}
+            className="ml-4"
+            defaultValue={ViewType.List}
+          >
             <TabsList>
-              <TabsTrigger value={ViewType.List} onClick={() => setViewType(ViewType.List)}>
+              <TabsTrigger
+                value={ViewType.List}
+                onClick={() => setViewType(ViewType.List)}
+              >
                 List
               </TabsTrigger>
-              <TabsTrigger value={ViewType.Calendar} onClick={() => setViewType(ViewType.Calendar)}>
+              <TabsTrigger
+                value={ViewType.Calendar}
+                onClick={() => setViewType(ViewType.Calendar)}
+              >
                 Calendar
               </TabsTrigger>
             </TabsList>
@@ -344,7 +364,10 @@ export default function Home() {
                     : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                 )}
               >
-                {entry[0]} {showingSections && showingSections.includes(entry[1]) ? "✓" : ""}
+                {entry[0]}{" "}
+                {showingSections && showingSections.includes(entry[1])
+                  ? "✓"
+                  : ""}
               </Button>
             ))}
           </div>
