@@ -27,7 +27,7 @@ export const enrollRouter = router({
     }),
 
     //TODO: need to make a check if someone checked off to be added to the waitlist
-    enrollShoppingCart: studentProcedure.query(async ({ ctx }) => {
+    enrollShoppingCart: studentProcedure.mutation(async ({ ctx }) => {
         console.log(ctx.auth.userId)
     
         //do 2 queries and select from 2 separate ones?
@@ -44,20 +44,6 @@ export const enrollRouter = router({
             //join with section on sectionid
 
         // need to fill in the seat as well
-
-
-        // const enroll = await prisma.enrolled.updateMany({
-        //     where: {
-        //         User: ctx.auth.userId,
-        //         Type: "ShoppingCart",
-        //         Section: {
-        //             //have to query if capacity is greater than max
-        //         },
-        //     },
-        //     data :{
-
-        //     }
-        // }),
 
         // all shopping cart vals
         const shopping = await prisma.enrolled.findMany({
@@ -142,71 +128,6 @@ export const enrollRouter = router({
         //put error message?
         //return what was enrolled
     }),
-
-
-//     // convert shopping cart to enrolled. If section is full put into waitlist?
-//     updateToEnrolled: studentProcedure
-//         .input(enrolledSchema)
-//         .mutation(async ({ ctx, input }) => {
-//         const updateSection = await prisma.enrolled.update({
-//             where: {
-//             User_SectionId: {
-//                 User: ctx.auth.userId,
-//                 SectionId: input.SectionId,
-//             },
-//             },
-//             data: {
-//                 Type: "Enrolled",
-//             },
-//         })
-
-//         return updateSection
-//     }),
-
-//     updateToWaitlist: studentProcedure
-//         .input(enrolledSchema)
-//         .mutation(async ({ ctx, input }) => {
-//         const updateSection = await prisma.enrolled.update({
-//             where: {
-//             User_SectionId: {
-//                 User: ctx.auth.userId,
-//                 SectionId: input.SectionId,
-//             },
-//             },
-//             data: {
-//                 Type: "Waitlist",
-//             },
-//         })
-
-//     return updateSection
-// }),
-
-
-
-
-
-    // userShoppingCart: studentProcedure
-    //     .input(z.object({ user: z.string(), types: z.array(z.nativeEnum(Enrolled_Type)) }))
-    //     .query(async ({ input, ctx }) => {
-    //         const sections = await prisma.enrolled.findMany({
-    //         where: {
-    //             User: ctx.auth.userId,
-    //             Type: Enrolled_Type.ShoppingCart
-    //         },
-    //         include: {
-    //             Section: true
-    //         }
-    //         });
-    //         return sections.map(enrollment => enrollment.Section);
-    //     }),
-
-    //need user and their shopping cart to swap its type
-    // userEnroll: studentProcedure
-    //     .input(
-    //         z.object({
-    //             user: z.string()
-    //         })
-    //     )
 })
 
 export type AppRouter = typeof enrollRouter
