@@ -59,7 +59,7 @@ export default function Courses({
           )}
           {courses.hasNextPage && (
             <Button
-              className="w-full mt-6"
+              className="w-full mt-6 mb-10"
               onClick={() => courses.fetchNextPage()}
             >
               Load More

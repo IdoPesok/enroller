@@ -20,13 +20,23 @@ export function useRouterQueryState<T>(
 
   const serialize = (value: T): string | undefined => {
     if (opts.serializer) {
-      return opts.serializer(value)
+      try {
+        return opts.serializer(value)
+      } catch (e) {
+        return undefined
+      }
     }
     return value as string
   }
 
   const deserialize = (value: string): T => {
-    if (opts.deserializer) return opts.deserializer(value)
+    if (opts.deserializer) {
+      try {
+        return opts.deserializer(value)
+      } catch (e) {
+        return defaultValue as T
+      }
+    }
 
     // default deserializer for number type
     if (typeof defaultValue === "number") {
