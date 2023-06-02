@@ -1,4 +1,4 @@
-import { STOPWORDS } from "@/lib/utils"
+import { STOPWORDS, cn } from "@/lib/utils"
 import { Search } from "../ui/search"
 import { Option, SearchFilterCombobox } from "./search-filter"
 
@@ -22,7 +22,11 @@ export function SearchToolbar({
   return (
     <div className="flex gap-1">
       <Search
-        className="flex-1 max-w-xl h-10"
+        className={cn(
+          filters && "flex-1 max-w-xl",
+          !filters && "w-full",
+          "h-10 mb-4"
+        )}
         placeholder="Search for classes..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}

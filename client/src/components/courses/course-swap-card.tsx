@@ -21,6 +21,7 @@ import { trpc } from "@/lib/trpc"
 import {
   ArrowLeftRight,
   ChevronDown,
+  ChevronRight,
   ChevronUp,
   Loader2,
   ShoppingCart,
@@ -28,22 +29,22 @@ import {
 } from "lucide-react"
 import { Spinner } from "../ui/spinner"
 import CourseSections from "./course-sections"
-import { useAuth } from "@clerk/nextjs"
+
+export interface ConfirmSwapData {
+  course: Courses
+  sectionId: number
+}
 
 interface Props {
   course: Courses
-  swapSection: Sections
-  setSwapSection: (section?: Sections | null) => void
   showBorder?: boolean
-  onSwap: () => void
+  confirmSwap: (data: ConfirmSwapData) => void
 }
 
 const CourseSwapCard = React.forwardRef<
   React.ComponentRef<typeof Card>,
   React.ComponentPropsWithoutRef<typeof Card> & Props
->(({ course, swapSection, setSwapSection, showBorder = true, onSwap }, ref) => {
-  const { userId } = useAuth()
-  const utils = trpc.useContext()
+>(({ course, showBorder = true, confirmSwap }, ref) => {
   const [showSections, setShowSections] = useState(false)
   const sections = trpc.sections.list.useQuery(
     { code: course.Code },
@@ -55,41 +56,15 @@ const CourseSwapCard = React.forwardRef<
     enabled: showSections,
   })
 
-  const updateMutation = trpc.enroll.update.useMutation({
-    onMutate: async (updatedEnroll) => {
-      await utils.enroll.list.cancel()
-      const oldEnrolls = utils.enroll.list.getData()
-      const oldSection = swapSection
-      utils.enroll.list.setData(undefined, (old) =>
-        old?.map((enroll) =>
-          enroll.SectionId === updatedEnroll.SectionId
-            ? { User: userId!, ...updatedEnroll.Data }
-            : enroll
-        )
-      )
-      setSwapSection(
-        sections.data?.find(
-          (secion) => secion.SectionId === updatedEnroll.Data.SectionId
-        )
-      )
-      return { oldEnrolls, oldSection }
-    },
-    onError: (error, variables, context) => {
-      utils.enroll.list.setData(undefined, context?.oldEnrolls)
-      setSwapSection(context?.oldSection)
-    },
-    onSettled: (data, error, variables, context) => {
-      utils.enroll.invalidate()
-    },
-  })
-
   const { Code, Name, Description, MinUnits, MaxUnits, Prereqs } = course
   const prereqs = Prereqs as unknown as Prereq[] | null
 
-  let cardStyle = cn(showBorder ? "my-2" : "border-none shadow-none")
-
   return (
-    <Card ref={ref} className={cardStyle} key={Code}>
+    <Card 
+      ref={ref} 
+      className={cn(showBorder ? "my-2" : "border-none shadow-none")} 
+      key={Code}
+    >
       <CardHeader>
         <CardTitle>
           {Name}
@@ -107,9 +82,12 @@ const CourseSwapCard = React.forwardRef<
       <CardContent>
         <p>{Description}</p>
         <Collapsible open={showSections} onOpenChange={setShowSections}>
-          <CollapsibleTrigger className="flex flex-1 items-center justify-between py-1 font-medium transition-all hover:underline">
-            Sections
-            {!showSections ? <ChevronDown /> : <ChevronUp />}
+          <CollapsibleTrigger className={cn(
+            "flex flex-1 items-center justify-center py-1 font-medium transition-all hover:underline pt-5 text-emerald-600",
+            showSections && "mb-4"
+          )}>
+            Choose section
+            {!showSections ? <ChevronRight /> : <ChevronDown />}
           </CollapsibleTrigger>
           <CollapsibleContent>
             {sections.isError || enrolled.isError ? (
@@ -124,16 +102,7 @@ const CourseSwapCard = React.forwardRef<
                     (enroll) => enroll.SectionId === SectionId
                   ) && (
                     <Button
-                      onClick={() => {
-                        updateMutation.mutate({
-                          SectionId: swapSection.SectionId,
-                          Data: {
-                            SectionId,
-                            Type: Enrolled_Type.ShoppingCart,
-                            Seat: null,
-                          },
-                        })
-                      }}
+                      onClick={() => confirmSwap({ course, sectionId: SectionId })}
                     >
                       <ArrowLeftRight size={16} />
                     </Button>

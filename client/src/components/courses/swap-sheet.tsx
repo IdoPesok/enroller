@@ -3,14 +3,11 @@ import {
   SheetContent,
   SheetDescription,
   SheetHeader,
-  SheetTitle,
-  SheetTrigger,
+  SheetTitle
 } from "@/components/ui/sheet"
-import React, { useState } from "react"
-import CourseSearch from "./course-search"
-import { ArrowRightLeft } from "lucide-react"
-import CourseSwapSearch from "./course-swap-search"
 import { Courses, Sections } from "@prisma/client"
+import { useState } from "react"
+import CourseSwapSearch from "./course-swap-search"
 
 interface Props {
   course?: Courses | null
@@ -36,7 +33,7 @@ export default function SwapSheet({
         }
       }}
     >
-      <SheetContent size="xl">
+      <SheetContent size="xl" className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Course Swap</SheetTitle>
           <SheetDescription>
