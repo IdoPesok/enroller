@@ -58,14 +58,21 @@ const courses = [
 
 
 export default function ShoppingCart() {
-  const [open, setOpen] = useState(true)
 
-  const cartSections = trpc.enroll.listShoppingCart.useQuery(); 
+  //const [cartSections, setCartSections] = useState(trpc.enroll.listShoppingCart.useQuery())
+  const cartSections = trpc.enroll.listShoppingCart.useQuery();
+
+  const enrollCart = trpc.enroll.enrollShoppingCart.useMutation();
+
+  const handleEnroll = () => {
+    enrollCart.mutate();
+  };
+
 
   return (
-        <div className="flex overflow-auto">
-          <div className="overflow-auto">
-            <div className=" flex max-w-full pl-10">
+        //<div className="overflow-auto">
+          <div className="min-w-2/5 overflow-auto">
+            <div className=" flex min-w-2/5 max-w-full pl-10">
                   <div className="flex h-full flex-col overflow-y-auto bg-white shadow-xl">
                     <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
                       <div className="flex items-start justify-between">
@@ -111,20 +118,24 @@ export default function ShoppingCart() {
                     </div>
 
                     <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
-                      <div className="mt-6">
-                        <a
-                          href="#"
-                          className="flex items-center justify-center rounded-md border border-transparent bg-emerald-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-emerald-800"
-                        >
+                      <div className="mt-6 flex items-center justify-center">
+                        <button
+                          type = "button"
+                          className="rounded-md border border-transparent bg-emerald-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-emerald-800"
+                          onClick={() => { 
+                            enrollCart.mutate();
+                            cartSections.refetch();
+                          }}
+                          >
                           Enroll
-                        </a>
+                        </button>
                       </div>
                       <div className="mt-6 flex justify-center text-center text-sm text-gray-500">
                         <p> 
                           <button
                             type="button"
                             className="font-medium text-emerald-600 hover:text-emerald-500"
-                            onClick={() => setOpen(false)}
+                            //onClick={() => setOpen(false)}
                           >
                             Edit Shopping Cart
                             <span aria-hidden="true"> &rarr;</span>
@@ -135,7 +146,7 @@ export default function ShoppingCart() {
                   </div>
             </div>
           </div>
-        </div>
+        //</div>
   )
 }
 
