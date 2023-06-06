@@ -1,6 +1,13 @@
 @startuml uml
-
 skinparam linetype ortho
+skinparam Dpi 192
+
+skinparam class {
+  BackgroundColor<<External>> PowderBlue
+  BorderColor<<External>> CornflowerBlue
+  BackgroundColor<<JSON>> Khaki
+  BorderColor<<JSON>> DarkGoldenRod
+}
 
 left to right direction
 
@@ -44,11 +51,24 @@ entity Enrolled {
   * Type: Enrolled_Type
 }
 
+entity Terms {
+  * Year: Int
+  * Season: Season_Type
+}
+
+enum Season_Type {
+  Fall
+  Winter
+  Spring
+  Summer
+}
+
 entity Sections {
   * SectionId: Int
+  * Term: Terms
   * Course: String
-  * Start: DateTime
-  * End: DateTime
+  * Start: Time
+  * End: Time
   Sunday: Boolean?
   Monday: Boolean?
   Tuesday: Boolean?
@@ -62,10 +82,7 @@ entity Sections {
   Room: String?
   Format: Sections_Format?
   Modality: Sections_Modality?
-  * CatalogYear: String
   * Courses: Courses
-  * Waitlists: Waitlist[]
-  * ShoppingCarts: ShoppingCart[]
   * Enrolleds: Enrolled[]
 }
 
@@ -103,18 +120,48 @@ entity Majors {
   * Id: String
   * Name: String
   * Flowcharts: Flowcharts[]
-  * Concentrations: Concentrations[]
 }
 
+entity User <<External>> {
+  * Id: String
+  FlowchartId: String?
+  OnboardingComplete: Boolean?
+  Role: Role_Type?
+}
+
+enum Role_Type <<External>> {
+  User
+  Admin
+}
+
+class Prereqs <<JSON>> {
+  * Type: Prereq_Type
+  Children: Prereqs?
+  Code: String?
+}
+
+enum Prereq_Type <<JSON>> {
+  And
+  Or
+  Prerequisite
+}
+
+
 Courses "1" *-- "0..*" Sections
+Terms "1" *-- "0..*" Sections
 Sections "1" *-- "0..*" Enrolled
-Enrolled "1" *-- "1" Enrolled_Type
-Sections "1" *-- "1" Sections_Format
-Sections "1" *-- "1" Sections_Modality
 Flowcharts "0..*" o-- "1" Catalogs
 Flowcharts "0..*" o-- "1" Concentrations
 Flowcharts "0..*" o-- "1" Majors
 Flowcharts "1" *-- "0..*" GraduationRequirements
-GraduationRequirements "1"  o-- "1" Courses
+GraduationRequirements "0..*"  --* "1" Courses
+User "1" *-- "0..*" Enrolled
+Enrolled -[hidden]- Enrolled_Type
+Sections -[hidden]- Sections_Format
+Sections -[hidden]- Sections_Modality
+User -[hidden]- Role_Type
+Prereqs -[hidden]- Prereq_Type
+Courses -[hidden]- Prereqs
+Terms -up[hidden]- Season_Type
 
 @enduml
