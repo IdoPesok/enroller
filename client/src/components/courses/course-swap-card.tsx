@@ -46,12 +46,6 @@ const CourseSwapCard = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof Card> & Props
 >(({ course, showBorder = true, confirmSwap }, ref) => {
   const [showSections, setShowSections] = useState(false)
-  const sections = trpc.sections.list.useQuery(
-    { code: course.Code },
-    {
-      enabled: showSections,
-    }
-  )
   const enrolled = trpc.enroll.list.useQuery(undefined, {
     enabled: showSections,
   })
@@ -60,9 +54,9 @@ const CourseSwapCard = React.forwardRef<
   const prereqs = Prereqs as unknown as Prereq[] | null
 
   return (
-    <Card 
-      ref={ref} 
-      className={cn(showBorder ? "my-2" : "border-none shadow-none")} 
+    <Card
+      ref={ref}
+      className={cn(showBorder ? "my-2" : "border-none shadow-none")}
       key={Code}
     >
       <CardHeader>
@@ -82,27 +76,31 @@ const CourseSwapCard = React.forwardRef<
       <CardContent>
         <p>{Description}</p>
         <Collapsible open={showSections} onOpenChange={setShowSections}>
-          <CollapsibleTrigger className={cn(
-            "flex flex-1 items-center justify-center py-1 font-medium transition-all hover:underline pt-5 text-emerald-600",
-            showSections && "mb-4"
-          )}>
+          <CollapsibleTrigger
+            className={cn(
+              "flex flex-1 items-center justify-center py-1 font-medium transition-all hover:underline pt-5 text-emerald-600",
+              showSections && "mb-4"
+            )}
+          >
             Choose section
             {!showSections ? <ChevronRight /> : <ChevronDown />}
           </CollapsibleTrigger>
           <CollapsibleContent>
-            {sections.isError || enrolled.isError ? (
+            {enrolled.isError ? (
               <p>failed to fetch sections</p>
-            ) : !sections.data || !enrolled.data ? (
+            ) : !enrolled.data ? (
               <Spinner />
             ) : (
               <CourseSections
-                sections={sections.data}
+                code={Code}
                 enrollNode={({ SectionId }) =>
                   !enrolled.data.some(
                     (enroll) => enroll.SectionId === SectionId
                   ) && (
                     <Button
-                      onClick={() => confirmSwap({ course, sectionId: SectionId })}
+                      onClick={() =>
+                        confirmSwap({ course, sectionId: SectionId })
+                      }
                     >
                       <ArrowLeftRight size={16} />
                     </Button>

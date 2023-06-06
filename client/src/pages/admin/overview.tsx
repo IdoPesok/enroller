@@ -2,6 +2,7 @@ import { columns } from "@/components/courses/columns"
 import { DataTable } from "@/components/courses/data-table"
 import { getAdminSectionsColumns } from "@/components/sections/admin-sections-columns"
 import { SectionForm } from "@/components/sections/section-form"
+import TermSelect from "@/components/term/term-select"
 import { Button } from "@/components/ui/button"
 import ErrorMessage from "@/components/ui/error-message"
 import { Spinner } from "@/components/ui/spinner"
@@ -27,13 +28,16 @@ export default function Overview() {
   const [professors, setProfessors] = useRouterQueryState<string[] | undefined>(
     "prof"
   )
+  const [term, setTerm] = useRouterQueryState<Sections["TermId"] | undefined>(
+    "term"
+  )
 
   const debouncedSearch = useDebounce(search, 500)
 
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const sections = trpc.sections.retrieve.useInfiniteQuery(
-    { search: debouncedSearch, filters: { prefixes, professors } },
+    { search: debouncedSearch, filters: { prefixes, professors }, term },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     }
@@ -93,6 +97,7 @@ export default function Overview() {
           updatingSection={updatingSection}
         />
       </div>
+      <TermSelect term={term} setTerm={setTerm} />
       {sections.isLoading && search ? (
         <Spinner className="mt-10" />
       ) : sections.error ? (

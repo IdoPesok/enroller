@@ -25,6 +25,7 @@ async function main() {
     create: {
       CatalogYear: "2021-2022",
       Course: "CSC 307",
+      TermId: 1,
       Start: zero(set(new Date(), { hours: 10, minutes: 10 })),
       End: zero(set(new Date(), { hours: 11, minutes: 0 })),
       Sunday: false,
@@ -55,6 +56,7 @@ async function main() {
     create: {
       CatalogYear: "2021-2022",
       Course: "CSC 307",
+      TermId: 1,
       Start: zero(set(new Date(), { hours: 10, minutes: 10 })),
       End: zero(set(new Date(), { hours: 14, minutes: 0 })),
       Sunday: false,
@@ -85,6 +87,7 @@ async function main() {
     create: {
       CatalogYear: "2021-2022",
       Course: "CSC 307",
+      TermId: 1,
       Start: zero(set(new Date(), { hours: 13, minutes: 10 })),
       End: zero(set(new Date(), { hours: 15, minutes: 0 })),
       Sunday: false,

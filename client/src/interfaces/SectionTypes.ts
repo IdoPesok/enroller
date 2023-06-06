@@ -8,6 +8,7 @@ import { z } from "zod"
 
 export const ZodSectionObject = z.object({
   Course: z.string(),
+  TermId: z.number().int().positive(),
   Start: z.date(),
   End: z.date(),
   Sunday: z.boolean(),
@@ -93,6 +94,7 @@ export const SECTION_MODALITY_OPTIONS: string[] =
 
 export const sectionFormSchema = z.object({
   professorName: z.string().min(2).max(50),
+  termId: z.number().int().positive(),
   activeDays: z.array(z.nativeEnum(DaysOfTheWeek)).min(1),
   startTime: z.string(),
   endTime: z.string(),

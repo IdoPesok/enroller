@@ -36,8 +36,18 @@ model Enrolled {
   @@index([SectionId])
 }
 
+model Term {
+  TermId Int    @id @default(autoincrement())
+  Year   Int
+  Season String @db.VarChar(6)
+  Sections Sections[]
+
+  @@unique([Year, Season])
+}
+
 model Sections {
   SectionId        Int                @id @default(autoincrement())
+  TermId            Int            
   Course           String             @db.VarChar(10)
   Start            DateTime           @db.Time(0)
   End              DateTime           @db.Time(0)
@@ -55,12 +65,14 @@ model Sections {
   Format           Sections_Format?
   Modality         Sections_Modality?
   CatalogYear      String             @db.VarChar(16)
+  Term             Term?              @relation(fields: [TermId], references: [TermId])
   Courses          Courses            @relation(fields: [CatalogYear, Course], references: [CatalogYear, Code])
   Enrolleds        Enrolled[]
 
   @@unique([Course, Start, Professor])
   @@index([Course], map: "Course")
   @@index([CatalogYear, Course])
+  @@index([TermId])
 }
 
 model Flowcharts {

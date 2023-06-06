@@ -99,12 +99,20 @@ export default function Home() {
   const [swappingSection, setSwappingSection] = useState<
     Sections | null | undefined
   >(null)
-  const [quarter, setQuarter] = useState("Spring 2023")
+  const [quarter, setQuarter] = useState<string | undefined>(undefined)
   const [viewType, setViewType] = useRouterQueryState<ViewType>(
     "view",
     ViewType.List
   )
   const [modifyCourse, setModifyCourse] = useState("")
+
+  const terms = trpc.term.list.useQuery()
+
+  useEffect(() => {
+    if (terms.data) {
+      setQuarter(terms.data[0].TermId.toString())
+    }
+  }, [terms.data])
 
   const handleDropClick = (courseCode: string) => {
     setModifyCourse(courseCode)
@@ -119,7 +127,15 @@ export default function Home() {
     setQuarter(value)
   }
 
-  const sections = trpc.home.userSections.useQuery({ types: showingSections })
+  const sections = trpc.home.userSections.useQuery(
+    {
+      types: showingSections,
+      quarter: parseInt(quarter!),
+    },
+    {
+      enabled: Boolean(quarter),
+    }
+  )
 
   const updateShowingSections = (type: Enrolled_Type) => {
     if (showingSections.includes(type)) {
@@ -317,12 +333,16 @@ export default function Home() {
     <div>
       <div className="flex justify-between">
         <div className="flex items-center">
-          <Select onValueChange={handleQuarterChange}>
+          <Select value={quarter} onValueChange={handleQuarterChange}>
             <SelectTrigger className="w-[180px] focus-visible:ring-0">
               <SelectValue placeholder="Spring 2023" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Spring 2023">Spring 2023</SelectItem>
+              {terms.data?.map(({ TermId, Year, Season }) => (
+                <SelectItem key={TermId} value={TermId.toString()}>
+                  {Year} {Season}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Tabs

@@ -20,7 +20,13 @@ import {
 } from "@/components/ui/collapsible"
 
 import { trpc } from "@/lib/trpc"
-import { ChevronDown, ChevronUp, ShoppingCart, Trash2 } from "lucide-react"
+import {
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  ShoppingCart,
+  Trash2,
+} from "lucide-react"
 import { Spinner } from "../ui/spinner"
 import CourseSections from "./course-sections"
 import { useAuth } from "@clerk/nextjs"
@@ -42,7 +48,9 @@ const CourseEnrollCard = React.forwardRef<
 
   const [showSections, setShowSections] = useState(false)
   const sections = trpc.sections.list.useQuery(
-    { code: course.Code },
+    {
+      code: course.Code,
+    },
     {
       enabled: showSections,
     }
@@ -133,13 +141,13 @@ const CourseEnrollCard = React.forwardRef<
             {!showSections ? <ChevronDown /> : <ChevronUp />}
           </CollapsibleTrigger>
           <CollapsibleContent>
-            {sections.isError || enrolled.isError ? (
+            {enrolled.isError ? (
               <p>failed to fetch sections</p>
-            ) : !sections.data || !enrolled.data ? (
+            ) : !enrolled.data ? (
               <Spinner />
             ) : (
               <CourseSections
-                sections={sections.data}
+                code={Code}
                 enrollNode={({ SectionId }) =>
                   !enrolled.data.some(
                     (enroll) => enroll.SectionId === SectionId
@@ -155,13 +163,21 @@ const CourseEnrollCard = React.forwardRef<
                     >
                       <ShoppingCart size={16} />
                     </Button>
-                  ) : (
+                  ) : enrolled.data.some(
+                      (enroll) =>
+                        enroll.SectionId === SectionId &&
+                        enroll.Type === Enrolled_Type.ShoppingCart
+                    ) ? (
                     <Button
                       onClick={() => {
                         deleteMutation.mutate({ SectionId })
                       }}
                     >
                       <Trash2 size={16} />
+                    </Button>
+                  ) : (
+                    <Button disabled>
+                      <CheckCircle2 size={16} />
                     </Button>
                   )
                 }

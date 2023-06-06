@@ -60,6 +60,7 @@ export const sectionsRouter = router({
           .nullish(),
         limit: z.number().min(1).max(100).nullish(),
         cursor: z.number().nullish(),
+        term: z.number().positive().nullish(),
       })
     )
     .query(async ({ input }) => {
@@ -94,6 +95,7 @@ export const sectionsRouter = router({
                 }
               : undefined,
           },
+          TermId: input.term ?? undefined,
         },
         take: limit + 1,
         cursor: cursor
@@ -112,7 +114,12 @@ export const sectionsRouter = router({
       return { sections, nextCursor }
     }),
   list: studentProcedure
-    .input(z.object({ code: z.string().nullish() }))
+    .input(
+      z.object({
+        code: z.string().nullish(),
+        term: z.number().positive().nullish(),
+      })
+    )
     .query(async ({ ctx, input }) => {
       if (!input.code) {
         return []
@@ -123,6 +130,7 @@ export const sectionsRouter = router({
       const sections = await prisma.sections.findMany({
         where: {
           Course: input.code,
+          TermId: input.term ?? undefined,
           CatalogYear: catalogYear,
         },
       })
@@ -164,11 +172,11 @@ export const sectionsRouter = router({
         },
         include: {
           Courses: true,
-        }
+        },
       })
 
       return section
-    })
+    }),
 })
 
 export type AppRouter = typeof sectionsRouter

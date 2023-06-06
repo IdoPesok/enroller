@@ -57,6 +57,7 @@ import {
 import { Spinner } from "../ui/spinner"
 import { Toggle } from "../ui/toggle"
 import { useToast } from "../ui/use-toast"
+import TermSelect from "../term/term-select"
 
 type Props = {
   sheetTrigger: React.ReactNode
@@ -75,6 +76,8 @@ export const SectionForm = ({
   sheetOpen,
   setSheetOpen,
 }: Props) => {
+  const terms = trpc.term.list.useQuery()
+
   const form = useForm<z.infer<typeof sectionFormSchema>>({
     resolver: zodResolver(sectionFormSchema),
   })
@@ -160,7 +163,7 @@ export const SectionForm = ({
 
       setSearch("")
     }
-  }, [updatingSection, sheetOpen])
+  }, [updatingSection, sheetOpen, form])
 
   const createMutation = trpc.sections.create.useMutation({
     onSuccess: () => {
@@ -218,6 +221,7 @@ export const SectionForm = ({
 
     const sectionData = {
       Course: selectedCourse.Code,
+      TermId: values.termId,
       CatalogYear: selectedCourse.CatalogYear,
       Professor: values.professorName,
       Monday: values.activeDays.includes(DaysOfTheWeek.Monday),
@@ -321,6 +325,19 @@ export const SectionForm = ({
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FormField
+            control={form.control}
+            name="termId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Term</FormLabel>
+                <FormControl>
+                  <TermSelect term={field.value} setTerm={field.onChange} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="professorName"

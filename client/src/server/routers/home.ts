@@ -7,7 +7,12 @@ import { Enrolled_Type } from "@prisma/client"
 
 export const homeRouter = router({
   userSections: studentProcedure
-    .input(z.object({ types: z.array(z.nativeEnum(Enrolled_Type)) }))
+    .input(
+      z.object({
+        types: z.array(z.nativeEnum(Enrolled_Type)),
+        quarter: z.number().positive().nullish(),
+      })
+    )
     .query(async ({ input, ctx }) => {
       const sections = await prisma.enrolled.findMany({
         where: {
@@ -22,7 +27,9 @@ export const homeRouter = router({
           },
         },
       })
-      return sections
+      return sections.filter(
+        (section) => section.Section.TermId === input.quarter
+      )
     }),
 })
 
