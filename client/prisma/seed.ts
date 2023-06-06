@@ -99,7 +99,7 @@ async function main() {
       Saturday: null,
       Capacity: 30,
       WaitlistCapacity: 10,
-      Professor: "Perez",
+      Professor: "Keen",
       Room: "S420",
       Format: "Lecture",
       Modality: "Online",
@@ -114,36 +114,36 @@ async function main() {
   for (const uid of userIds) {
     await prisma.enrolled.upsert({
       where: {
-        User_SectionId: { User: uid, SectionId: 1 },
+        User_SectionId: { User: uid, SectionId: csc307Section1.SectionId },
       },
       update: {},
       create: {
         User: uid,
-        SectionId: 1,
+        SectionId: csc307Section1.SectionId,
         Type: Enrolled_Type.ShoppingCart,
       },
     })
 
     await prisma.enrolled.upsert({
       where: {
-        User_SectionId: { User: uid, SectionId: 2 },
+        User_SectionId: { User: uid, SectionId: csc307Section2.SectionId },
       },
       update: {},
       create: {
         User: uid,
-        SectionId: 2,
+        SectionId: csc307Section2.SectionId,
         Type: Enrolled_Type.Waitlist,
       },
     })
 
     await prisma.enrolled.upsert({
       where: {
-        User_SectionId: { User: uid, SectionId: 3 },
+        User_SectionId: { User: uid, SectionId: csc307Section3.SectionId },
       },
       update: {},
       create: {
         User: uid,
-        SectionId: 3,
+        SectionId: csc307Section3.SectionId,
         Type: Enrolled_Type.Enrolled,
       },
     })

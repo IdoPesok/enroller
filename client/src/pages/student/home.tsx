@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 
 import CourseRow from "@/components/courses/course-row"
 import { Button } from "@/components/ui/button"
-
+import * as Tooltip from "@radix-ui/react-tooltip"
 import WeekCalendar from "@/components/WeekCalendar/WeekCalendar"
 import SwapSheet from "@/components/courses/swap-sheet"
 import {
@@ -50,6 +50,7 @@ import {
   ShoppingCart,
 } from "lucide-react"
 import { useRouterQueryState } from "@/lib/use-router-query-state"
+import { Spinner } from "@/components/ui/spinner"
 
 const HEIGHT_OFFSET = 210
 
@@ -167,6 +168,16 @@ export default function Home() {
       {header}
     </TableHead>
   ))
+
+  const enrolledUnits = trpc.degreeProgress.enrolledUnits.useQuery()
+  let studentStatus = "Full-Time"
+  if (enrolledUnits.data! < 12) {
+    if (enrolledUnits.data === 0) {
+      studentStatus = "Not Enrolled"
+    } else {
+      studentStatus = "Part-Time"
+    }
+  }
 
   const skeletonLoaders = (
     <>
@@ -366,6 +377,31 @@ export default function Home() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
+          {enrolledUnits.isLoading ? (
+            <Spinner className="p-4" />
+          ) : (
+            <div className="flex items-center px-4 bg-white">
+              <span className=" rounded-lg p-2 border-gray-300 ">{`${enrolledUnits.data} units | ${studentStatus}`}</span>
+              <Tooltip.Provider>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <button className="IconButton mt-1">
+                      <HelpCircle size={16} />
+                    </button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal className="mt-2">
+                    <Tooltip.Content
+                      className="TooltipContent font-light italic"
+                      sideOffset={5}
+                    >
+                      Only takes into account enrolled courses
+                      <Tooltip.Arrow className="TooltipArrow" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
+            </div>
+          )}
         </div>
         <span className="flex justify-end">
           <div className="flex gap-2">

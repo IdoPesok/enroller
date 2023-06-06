@@ -3,7 +3,8 @@ import { studentProcedure, router } from "../trpc"
 import { clerkClient } from "@clerk/nextjs"
 import { PUBLIC_METADATA_KEYS } from "@/interfaces/PublicMetadata"
 import { internalServerError } from "@/lib/trpc"
-import { Courses } from "@prisma/client"
+import { Courses, Enrolled_Type } from "@prisma/client"
+import { z } from "zod"
 
 export const degreeProgressRouter = router({
   graduationRequirementCourses: studentProcedure.query(async ({ ctx }) => {
@@ -97,6 +98,30 @@ export const degreeProgressRouter = router({
       throw internalServerError("Error fetching graduation requirements", e)
     }
   }),
+
+  enrolledUnits: studentProcedure
+    .query(async ({ ctx }) => {
+      const sections = await prisma.enrolled.findMany({
+        where: {
+          User: ctx.auth.userId,
+          Type: Enrolled_Type.Enrolled,
+        },
+        include: {
+          Section: {
+            include: {
+              Courses: true,
+            },
+          },
+        },
+      })
+
+      if(!sections) return 0
+      
+      const units = sections.map(({ Section }) => Section.Courses.MinUnits)
+      return units.reduce((a, b) => {
+        return b ? a! + b : a
+      }, 0) 
+    }),
 })
 
 export type AppRouter = typeof degreeProgressRouter
