@@ -52,6 +52,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { HelpCircle } from "lucide-react"
 
 const HEIGHT_OFFSET = 210
 
@@ -366,7 +367,10 @@ export default function Home() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="rounded-lg border-gray-300 ">{`${enrolledUnits.data} units | ${studentStatus}`}</span>
+                  <span className="flex gap-2 items-center">
+                    {`${enrolledUnits.data} units | ${studentStatus}`}
+                    <HelpCircle size={16} />
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Only takes into account enrolled courses</p>
