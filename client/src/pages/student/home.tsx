@@ -53,6 +53,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { HelpCircle } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 
 enum ViewType {
   List = "list",
@@ -77,9 +78,15 @@ export default function Home() {
 
   const utils = trpc.useContext()
 
+  const { toast } = useToast()
   const deleteMutation = trpc.enroll.delete.useMutation({
-    onSuccess: (data, variables, context) => {
-      utils.home.userSections.invalidate()
+    onSuccess: async (data, variables, context) => {
+      await utils.home.userSections.invalidate()
+      toast({
+        title: "Section drpoped!",
+        description: "The section was successfully dropped.",
+        variant: "success",
+      })
     },
   })
 

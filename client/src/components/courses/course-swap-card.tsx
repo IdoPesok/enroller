@@ -1,5 +1,14 @@
-import React, { useState } from "react"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { Prereq } from "@/interfaces/PrereqTypes"
 import { prereqsString } from "@/lib/prereqs"
+import { cn } from "@/lib/utils"
+import { Courses } from "@prisma/client"
+import React, { useState } from "react"
+import { Button } from "../ui/button"
 import {
   Card,
   CardContent,
@@ -7,26 +16,9 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card"
-import { Courses, Enrolled_Type, Sections } from "@prisma/client"
-import { Prereq } from "@/interfaces/PrereqTypes"
-import { Button } from "../ui/button"
-import { cn } from "@/lib/utils"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
 
 import { trpc } from "@/lib/trpc"
-import {
-  ArrowLeftRight,
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
-  Loader2,
-  ShoppingCart,
-  Trash2,
-} from "lucide-react"
+import { ArrowLeftRight, ChevronDown, ChevronRight } from "lucide-react"
 import { Spinner } from "../ui/spinner"
 import CourseSections from "./course-sections"
 
@@ -39,12 +31,13 @@ interface Props {
   course: Courses
   showBorder?: boolean
   confirmSwap: (data: ConfirmSwapData) => void
+  quarter: string | undefined
 }
 
 const CourseSwapCard = React.forwardRef<
   React.ComponentRef<typeof Card>,
   React.ComponentPropsWithoutRef<typeof Card> & Props
->(({ course, showBorder = true, confirmSwap }, ref) => {
+>(({ course, showBorder = true, confirmSwap, quarter }, ref) => {
   const [showSections, setShowSections] = useState(false)
   const enrolled = trpc.enroll.list.useQuery(undefined, {
     enabled: showSections,
@@ -93,6 +86,7 @@ const CourseSwapCard = React.forwardRef<
             ) : (
               <CourseSections
                 code={Code}
+                quarter={quarter}
                 enrollNode={({ SectionId }) =>
                   !enrolled.data.some(
                     (enroll) => enroll.SectionId === SectionId

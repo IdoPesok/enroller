@@ -103,6 +103,7 @@ export default function CourseSwapSearch({
       <CourseSwapCard
         key={course.Code}
         confirmSwap={setConfirmingSectionData}
+        quarter={quarter}
         course={course}
       />
     ))
