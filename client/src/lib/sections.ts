@@ -12,7 +12,7 @@ export const getSectionsWithCounts = async (
   return await Promise.all(
     sections.map(async (section) => {
       const { SectionId } = section
-      const [enrolled, waitlisted] = await prisma.$transaction([
+      const [enrolled, waitlisted] = await Promise.all([
         prisma.enrolled.count({
           where: { SectionId, Type: Enrolled_Type.Enrolled },
         }),

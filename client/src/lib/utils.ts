@@ -59,7 +59,7 @@ export function addSearchModifiers(search: string): string {
 }
 
 export function getDateTimeFromString(str: string): Date {
-  const startDateTime = new Date()
+  const startDateTime = new Date(0)
   const startTime = str.split(":")
   if (startTime[1].includes("PM")) {
     startDateTime.setHours(parseInt(startTime[0]) + 12)
