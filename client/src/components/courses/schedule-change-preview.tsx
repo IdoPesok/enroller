@@ -92,10 +92,14 @@ export default function ScheduleChangePreview({
   )
 
   useEffect(() => {
-    if (enrolledSections.data) {
+    if (
+      enrolledSections.data &&
+      (!oldSectionId || oldSection.data) &&
+      (!newSectionId || newSection.data)
+    ) {
       populateNewSections(enrolledSections.data)
     }
-  }, [enrolledSections.data, viewType])
+  }, [enrolledSections.data, viewType, oldSection.data, newSection.data])
 
   return (
     <div className="flex flex-col mt-5">
