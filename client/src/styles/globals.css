@@ -95,3 +95,8 @@
   text-decoration: underline;
   color: rgb(16 185 129 / var(--tw-bg-opacity));
 }
+
+#markdown-viewer a:active {
+  text-decoration: underline;
+  color: rgb(12, 124, 86)
+}

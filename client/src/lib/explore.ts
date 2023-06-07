@@ -5,7 +5,7 @@ export const addLinksToModelResponse = (response: string): string => {
 
   const courseCodeToLink = (courseCode: string): string => {
     const [subject, number] = courseCode.split(" ")
-    const tail = `/student/courses?p=${subject}&q=${number}`
+    const tail = `/student/courses?p=${subject.toLowerCase()}&q=${number}`
     const fullUrl = window.location.origin + tail
     return `[${courseCode}](${fullUrl})`
   }
