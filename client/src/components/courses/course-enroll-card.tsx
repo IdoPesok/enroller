@@ -21,6 +21,7 @@ import {
 
 import { trpc } from "@/lib/trpc"
 import {
+  CheckCircle,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
@@ -82,6 +83,7 @@ const CourseEnrollCard = React.forwardRef<
         description: `Added ${section.Course} with ${
           section?.Professor
         } at ${hmFormat(section.Start)} to shopping cart`,
+        variant: "success",
       })
     },
   })
@@ -176,8 +178,11 @@ const CourseEnrollCard = React.forwardRef<
                       <Trash2 size={16} />
                     </Button>
                   ) : (
-                    <Button disabled>
-                      <CheckCircle2 size={16} />
+                    <Button disabled className="bg-emerald-100 opacity-100">
+                      <CheckCircle
+                        size={16}
+                        className="text-emerald-500 opacity-100"
+                      />
                     </Button>
                   )
                 }

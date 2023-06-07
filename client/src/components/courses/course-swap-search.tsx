@@ -26,6 +26,7 @@ interface Props {
   search: string
   setSearch: (search: string) => void
   onSwap: () => void
+  quarter: string | undefined
 }
 
 export default function CourseSwapSearch({
@@ -34,6 +35,7 @@ export default function CourseSwapSearch({
   search,
   setSearch,
   onSwap,
+  quarter,
 }: Props) {
   const [confirmingSectionData, setConfirmingSectionData] =
     useState<ConfirmSwapData | null>(null)
@@ -42,9 +44,9 @@ export default function CourseSwapSearch({
   const utils = trpc.useContext()
 
   const sections = trpc.sections.list.useQuery(
-    { code: confirmingSectionData?.course.Code },
+    { code: confirmingSectionData?.course.Code, term: parseInt(quarter!) },
     {
-      enabled: !!confirmingSectionData,
+      enabled: !!confirmingSectionData && !!quarter,
     }
   )
 
@@ -110,6 +112,7 @@ export default function CourseSwapSearch({
       {confirmingSectionData !== null ? (
         <ScheduleChangePreview
           oldSectionId={swapSection.SectionId}
+          quarter={quarter}
           newSectionId={confirmingSectionData.sectionId}
           onCancel={() => setConfirmingSectionData(null)}
           onConfirm={() => {

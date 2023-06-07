@@ -13,29 +13,16 @@ interface Props {
   newSectionId?: number
   onCancel: () => void
   onConfirm: () => void
+  quarter: string | undefined
 }
-
-const HEIGHT_OFFSET = 300
 
 export default function ScheduleChangePreview({
   oldSectionId,
   newSectionId,
   onCancel,
   onConfirm,
+  quarter,
 }: Props) {
-  const [calendarHeight, setCalendarHeight] = useState<number>(
-    window.innerHeight - HEIGHT_OFFSET
-  )
-
-  // watch for resize events and update calendar height
-  useEffect(() => {
-    const handleResize = () => {
-      setCalendarHeight(window.innerHeight - HEIGHT_OFFSET)
-    }
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
-
   const [viewType, setViewType] = useState<"before" | "after">("after")
 
   const [newSections, setNewSections] = useState<null | EnrolledWithSection[]>(
@@ -97,8 +84,10 @@ export default function ScheduleChangePreview({
         Enrolled_Type.Waitlist,
         Enrolled_Type.ShoppingCart,
       ],
+      quarter: parseInt(quarter!),
     },
     {
+      enabled: !!quarter,
       onSuccess(data) {
         populateNewSections(data)
       },
@@ -143,7 +132,7 @@ export default function ScheduleChangePreview({
       </div>
       <div className="flex-1">
         <WeekCalendar
-          height={calendarHeight}
+          heightOffset={300}
           sections={
             enrolledSections.data && newSections
               ? viewType === "before"

@@ -33,7 +33,7 @@ interface NavigationItem {
 const STUDENT_NAVIGATION: NavigationItem[] = [
   { name: "Home", href: generateStudentRoute("/home") },
   { name: "Course Search", href: generateStudentRoute("/courses") },
-  { name: "Enroll", href: generateStudentRoute("/enroll")},
+  { name: "Enroll", href: generateStudentRoute("/enroll") },
   { name: "Degree Progress", href: generateStudentRoute("/degree-progress") },
   { name: "Explore", href: generateStudentRoute("/explore") },
 ]

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 
 import WeekCalendar from "@/components/WeekCalendar/WeekCalendar"
 import CourseRow from "@/components/courses/course-row"
@@ -54,8 +54,6 @@ import {
 } from "@/components/ui/tooltip"
 import { HelpCircle } from "lucide-react"
 
-const HEIGHT_OFFSET = 210
-
 enum ViewType {
   List = "list",
   Calendar = "calendar",
@@ -76,19 +74,6 @@ export default function Home() {
       deserializer: (value) => value.split(","),
     }
   )
-
-  const [calendarHeight, setCalendarHeight] = useState<number>(
-    window.innerHeight - HEIGHT_OFFSET
-  )
-
-  // watch for resize events and update calendar height
-  useEffect(() => {
-    const handleResize = () => {
-      setCalendarHeight(window.innerHeight - HEIGHT_OFFSET)
-    }
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
 
   const utils = trpc.useContext()
 
@@ -164,7 +149,7 @@ export default function Home() {
     "Start Time",
     "End Time",
     "Professor",
-    "Status"
+    "Status",
   ]
 
   const headers = headerValues.map((header) => (
@@ -235,7 +220,7 @@ export default function Home() {
                 const { Code, Name, MinUnits, MaxUnits } = Section.Courses
 
                 return (
-                  <>
+                  <React.Fragment key={"course-row" + SectionId}>
                     <CourseRow key={SectionId} code={Code}>
                       <TableCell>{Code}</TableCell>
                       <TableCell>{Name}</TableCell>
@@ -289,6 +274,7 @@ export default function Home() {
                     </CourseRow>
 
                     <SwapSheet
+                      quarter={quarter}
                       course={
                         sections.data.find(
                           (sections) =>
@@ -323,7 +309,7 @@ export default function Home() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                  </>
+                  </React.Fragment>
                 )
               })}
         </TableBody>
@@ -412,7 +398,7 @@ export default function Home() {
       ) : (
         <div className="flex-1 mt-2">
           <WeekCalendar
-            height={calendarHeight}
+            heightOffset={210}
             sections={sections.data ? sections.data : []}
             isLoading={sections.isLoading}
             warningMessage={

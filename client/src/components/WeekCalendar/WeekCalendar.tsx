@@ -4,21 +4,40 @@ import FullCalendar from "@fullcalendar/react"
 import timeGridPlugin from "@fullcalendar/timegrid"
 import { InfoIcon } from "lucide-react"
 import { Spinner } from "../ui/spinner"
+import { useEffect, useState } from "react"
+import { CalendarEvent } from "@/interfaces/CalendarTypes"
 
 interface Props {
-  height: number
   sections: EnrolledWithSection[]
   warningMessage?: string
   isLoading?: boolean
+  heightOffset?: number
 }
 
 export default function WeekCalendar({
-  height,
   sections,
   warningMessage,
   isLoading,
+  heightOffset = 0,
 }: Props) {
-  const events = [...createEvents(sections), ...createConflictEvents(sections)]
+  const [calendarHeight, setCalendarHeight] = useState<number>(
+    window.innerHeight - heightOffset
+  )
+
+  // watch for resize events and update calendar height
+  useEffect(() => {
+    const handleResize = () => {
+      setCalendarHeight(window.innerHeight - heightOffset)
+    }
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [heightOffset])
+
+  const [events, setEvents] = useState<CalendarEvent[]>([])
+
+  useEffect(() => {
+    setEvents([...createEvents(sections), ...createConflictEvents(sections)])
+  }, [sections])
 
   return (
     <>
@@ -55,7 +74,7 @@ export default function WeekCalendar({
           slotMinTime={"06:00:00"}
           slotMaxTime={"22:00:00"}
           firstDay={1}
-          contentHeight={height} // 1150 for current calanderPage
+          contentHeight={calendarHeight} // 1150 for current calanderPage
           initialDate="2023-05-07"
           expandRows={true}
           dayHeaderContent={(day) => {

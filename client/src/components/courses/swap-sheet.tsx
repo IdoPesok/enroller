@@ -14,6 +14,7 @@ interface Props {
   section?: Sections | null
   setSection: (swap?: Sections | null) => void
   onSwap: () => void
+  quarter: string | undefined
 }
 
 export default function SwapSheet({
@@ -21,6 +22,7 @@ export default function SwapSheet({
   section,
   setSection,
   onSwap,
+  quarter,
 }: Props) {
   const [search, setSearch] = useState("")
 
@@ -43,6 +45,7 @@ export default function SwapSheet({
         {section && (
           <CourseSwapSearch
             swapSection={section}
+            quarter={quarter}
             setSwapSection={setSection}
             search={search}
             setSearch={setSearch}

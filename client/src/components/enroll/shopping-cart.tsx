@@ -1,245 +1,179 @@
-import React, { Fragment, useState } from 'react'
-import { trpc } from '@/lib/trpc';
-import { Enrolled, Sections, Enrolled_Type, Courses} from "@prisma/client"
-import { daysFormat } from '@/lib/section-formatting';
+import React, { useState } from "react"
+import { trpc } from "@/lib/trpc"
+import { Button } from "../ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { cn } from "@/lib/utils"
+import ErrorMessage from "../ui/error-message"
+import { daysFormat } from "@/lib/section-formatting"
+import { Check } from "lucide-react"
+import { Checkbox } from "../ui/checkbox"
+import { Switch } from "../ui/switch"
 
-
-const products = [
-  {
-    id: 1,
-    name: 'CSC 307: Intro to Software Engineering',
-    href: '#',
-    color: 'Salmon',
-    price: '$90.00',
-    quantity: 1,
-    imageSrc: 'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-01.jpg',
-    imageAlt: 'Salmon orange fabric pouch with match zipper, gray zipper pull, and adjustable hip belt.',
-  },
-  {
-    id: 2,
-    name: 'ISLA 340: Intro to Screenwriting',
-    href: '#',
-    color: 'Blue',
-    price: '$32.00',
-    quantity: 1,
-    imageSrc: 'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-02.jpg',
-    imageAlt:
-      'Front of satchel with blue canvas body, black straps and handle, drawstring top, and front zipper pouch.',
-  },
-  // More products...
-]
-
-const courses = [
-    {
-      id: 1,
-      name: 'CSC 307: Intro to Software Engineering',
-      href: '#',
-      professor: 'John Fox',
-      quantity: 1,
-      startTime: '12:10',
-      endTime: '2:00pm', //add am/pm
-      imageSrc: 'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-01.jpg',
-      imageAlt: 'Salmon orange fabric pouch with match zipper, gray zipper pull, and adjustable hip belt.',
-    },
-    {
-      id: 2,
-      name: 'ISLA 340: Intro to Screenwriting',
-      href: '#',
-      professor: 'Prof Blue',
-      startTime: '3:10',
-      endTime: '5:00pm',
-      quantity: 1,
-      imageSrc: 'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-02.jpg',
-      imageAlt:
-        'Front of satchel with blue canvas body, black straps and handle, drawstring top, and front zipper pouch.',
-    },
-    // More products...
-  ]
-
-
-export default function ShoppingCart() {
-
-  //const [cartSections, setCartSections] = useState(trpc.enroll.listShoppingCart.useQuery())
-  const cartSections = trpc.enroll.listShoppingCart.useQuery();
-
-  const enrollCart = trpc.enroll.enrollShoppingCart.useMutation();
-
-  const handleEnroll = () => {
-    enrollCart.mutate();
-  };
-
-
-  return (
-        //<div className="overflow-auto">
-          <div className="min-w-2/5 overflow-auto">
-            <div className=" flex min-w-2/5 max-w-full pl-10">
-                  <div className="flex h-full flex-col overflow-y-auto bg-white shadow-xl">
-                    <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
-                      <div className="flex items-start justify-between">
-                        <span className="text-lg font-medium text-gray-900">Shopping Cart</span>
-                        <div className="ml-3 flex h-7 items-center">
-                        </div>
-                      </div>
-
-                      <div className="mt-8">
-                        <div className="flow-root">
-                          <ul role="list" className="-my-6 divide-y divide-gray-200">
-                            {cartSections?.data?.map((cartSection) => (
-                              <li key={cartSection.SectionId} className="flex py-6">
-
-                                <div className=" flex flex-1 flex-col">
-                                  <div>
-                                    <div className="flex justify-between text-base font-medium text-gray-900">
-                                      <h3>
-                                        <a href="#">{cartSection.Section.Course}: {cartSection.Section.Courses.Name}</a>
-                                      </h3>
-                                    </div>
-                                    <p className="mt-1 text-sm text-gray-500">{cartSection.Section.Professor}</p>
-                                  </div>
-                                  <div className="flex flex-1 items-end justify-between text-sm">
-                                    <p className='text-gray-500'>{daysFormat(cartSection.Section)} {cartSection.Section.Start.toLocaleTimeString('en-US', { hour12: true, timeStyle: "short"})} - {cartSection.Section.End.toLocaleTimeString('en-US', { hour12: true, timeStyle: "short" })}</p>
-
-                                    <div className="flex">
-                                      <button
-                                        type="button"
-                                        className="font-medium text-emerald-600 hover:text-emerald-500"
-                                      >
-                                        Waitlist If Full
-                                      </button>
-                                      <input type="checkbox" className="ml-2"/>
-                                    </div>
-                                  </div>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
-                      <div className="mt-6 flex items-center justify-center">
-                        <button
-                          type = "button"
-                          className="rounded-md border border-transparent bg-emerald-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-emerald-800"
-                          onClick={() => { 
-                            enrollCart.mutate();
-                            cartSections.refetch();
-                          }}
-                          >
-                          Enroll
-                        </button>
-                      </div>
-                      <div className="mt-6 flex justify-center text-center text-sm text-gray-500">
-                        <p> 
-                          <button
-                            type="button"
-                            className="font-medium text-emerald-600 hover:text-emerald-500"
-                            //onClick={() => setOpen(false)}
-                          >
-                            Edit Shopping Cart
-                            <span aria-hidden="true"> &rarr;</span>
-                          </button>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-            </div>
-          </div>
-        //</div>
-  )
+type Props = React.ComponentProps<typeof Card> & {
+  hiddenSections: number[]
+  handleHideSection: (sectionId: number) => void
+  quarter: number | undefined
 }
 
+export default function ShoppingCart({
+  className,
+  hiddenSections,
+  handleHideSection,
+  quarter,
+  ...props
+}: Props) {
+  const cartSections = trpc.enroll.listShoppingCart.useQuery(
+    {
+      term: quarter!,
+    },
+    {
+      enabled: Boolean(quarter),
+    }
+  )
 
-// export default function ShoppingCart() {
-//   const [open, setOpen] = useState(true)
+  const enrollCart = trpc.enroll.enrollShoppingCart.useMutation()
 
-//   return (
-//         <div className="flex overflow-auto">
-//           <div className="overflow-auto">
-//             <div className=" flex max-w-full pl-10">
-//                   <div className="flex h-full flex-col overflow-y-auto bg-white shadow-xl">
-//                     <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
-//                       <div className="flex items-start justify-between">
-//                         <span className="text-lg font-medium text-gray-900">Shopping Cart</span>
-//                         <div className="ml-3 flex h-7 items-center">
-//                         </div>
-//                       </div>
+  const [dontWaitlist, setDontWaitlist] = useState<number[]>([])
+  const updateDontWaitlist = (sectionId: number) => {
+    if (dontWaitlist.includes(sectionId)) {
+      setDontWaitlist(dontWaitlist.filter((id) => id !== sectionId))
+    } else {
+      setDontWaitlist([...dontWaitlist, sectionId])
+    }
+  }
 
-//                       <div className="mt-8">
-//                         <div className="flow-root">
-//                           <ul role="list" className="-my-6 divide-y divide-gray-200">
-//                             {courses.map((course) => (
-//                               <li key={course.id} className="flex py-6">
-//                                 {/* <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-//                                   <img
-//                                     src={product.imageSrc}
-//                                     alt={product.imageAlt}
-//                                     className="h-full w-full object-cover object-center"
-//                                   />
-//                                 </div> */}
+  const handleEnroll = () => {
+    enrollCart.mutate()
+  }
 
-//                                 <div className=" flex flex-1 flex-col">
-//                                   <div>
-//                                     <div className="flex justify-between text-base font-medium text-gray-900">
-//                                       <h3>
-//                                         <a href={course.href}>{course.name}</a>
-//                                       </h3>
-//                                       {/* <p className="ml-4">{course.price}</p> */}
-//                                     </div>
-//                                     <p className="mt-1 text-sm text-gray-500">{course.professor}</p>
-//                                   </div>
-//                                   <div className="flex flex-1 items-end justify-between text-sm">
-//                                     <p className='text-gray-500'>MWF {course.startTime} - {course.endTime}</p>
+  const skeletonLoader = (
+    <div>
+      {[1, 2, 3].map((index) => (
+        <div
+          key={index}
+          className="mb-4 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0 animate-pulse"
+        >
+          <span className="flex h-2 w-2 translate-y-1 rounded-full bg-slate-200" />
+          <div className="space-y-2">
+            <p className="text-md font-medium leading-none rounded-md bg-muted h-6 w-50" />
+            <p className="text-sm text-muted-foreground w-24 rounded-md bg-muted h-5" />
+            <div className="flex justify-between">
+              <p className="text-sm text-muted-foreground w-24 rounded-md bg-muted h-5" />
+              <p className="text-sm text-muted-foreground w-24 rounded-md bg-muted h-5" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 
-//                                     <div className="flex">
-//                                       <button
-//                                         type="button"
-//                                         className="font-medium text-emerald-600 hover:text-emerald-500"
-//                                       >
-//                                         Waitlist If Full
-//                                       </button>
-//                                       <input type="checkbox" className="ml-2"/>
-//                                     </div>
-//                                   </div>
-//                                 </div>
-//                               </li>
-//                             ))}
-//                           </ul>
-//                         </div>
-//                       </div>
-//                     </div>
+  const emptyWarning = (
+    <div className="flex flex-col items-center justify-center">
+      <p className="text-lg font-medium">No sections in cart.</p>
+      <p className="text-sm text-muted-foreground">
+        Add sections to your cart to enroll.
+      </p>
+    </div>
+  )
 
-//                     <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
-//                       {/* <div className="flex justify-between text-base font-medium text-gray-900">
-//                         <p>Subtotal</p>
-//                         <p>$262.00</p>
-//                       </div>
-//                       <p className="mt-0.5 text-sm text-gray-500">Shipping and taxes calculated at checkout.</p> */}
-//                       <div className="mt-6">
-//                         <a
-//                           href="#"
-//                           className="flex items-center justify-center rounded-md border border-transparent bg-emerald-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-emerald-800"
-//                         >
-//                           Enroll
-//                         </a>
-//                       </div>
-//                       <div className="mt-6 flex justify-center text-center text-sm text-gray-500">
-//                         <p> 
-//                           <button
-//                             type="button"
-//                             className="font-medium text-emerald-600 hover:text-emerald-500"
-//                             onClick={() => setOpen(false)}
-//                           >
-//                             Edit Shopping Cart
-//                             <span aria-hidden="true"> &rarr;</span>
-//                           </button>
-//                         </p>
-//                       </div>
-//                     </div>
-//                   </div>
-//             </div>
-//           </div>
-//         </div>
-//   )
-// }
+  return (
+    <Card
+      className={cn("w-2/5 min-w-[30rem] flex flex-col", className)}
+      {...props}
+    >
+      <CardHeader>
+        <CardTitle>Shopping Cart</CardTitle>
+        <CardDescription>Enroll in classes here.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 flex-1 overflow-y-auto">
+        {cartSections.isLoading ? (
+          skeletonLoader
+        ) : cartSections.error ? (
+          <ErrorMessage message={cartSections.error.message} />
+        ) : cartSections.data.length === 0 ? (
+          emptyWarning
+        ) : (
+          <div>
+            {cartSections.data.map((cartSection, index) => (
+              <div
+                key={index}
+                className="mb-4 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0"
+              >
+                <span className="flex h-2 w-2 translate-y-1 rounded-full bg-emerald-500" />
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start">
+                    <p className="text-md font-medium leading-none">
+                      {cartSection.Section.Course}:{" "}
+                      {cartSection.Section.Courses.Name}
+                    </p>
+                    <Switch
+                      checked={!hiddenSections.includes(cartSection.SectionId)}
+                      onCheckedChange={() =>
+                        handleHideSection(cartSection.SectionId)
+                      }
+                      className={cn(
+                        !hiddenSections.includes(cartSection.SectionId) &&
+                          "!bg-emerald-500"
+                      )}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Professor: {cartSection.Section.Professor}
+                  </p>
+                  <div className="flex justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      {daysFormat(cartSection.Section)}{" "}
+                      {cartSection.Section.Start.toLocaleTimeString("en-US", {
+                        hour12: true,
+                        timeStyle: "short",
+                      })}{" "}
+                      -{" "}
+                      {cartSection.Section.End.toLocaleTimeString("en-US", {
+                        hour12: true,
+                        timeStyle: "short",
+                      })}
+                    </p>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="terms"
+                        checked={!dontWaitlist.includes(cartSection.SectionId)}
+                        onCheckedChange={() =>
+                          updateDontWaitlist(cartSection.SectionId)
+                        }
+                        className={cn(
+                          !dontWaitlist.includes(cartSection.SectionId) &&
+                            "!bg-emerald-200"
+                        )}
+                      />
+                      <label
+                        htmlFor="terms"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Waitlist if full
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+      <CardFooter>
+        <Button
+          className="w-full"
+          disabled={!cartSections.data || cartSections.data?.length === 0}
+        >
+          <Check className="mr-2 h-4 w-4" /> Enroll
+        </Button>
+      </CardFooter>
+    </Card>
+  )
+}
