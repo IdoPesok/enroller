@@ -12,9 +12,10 @@ import {
 import { cn } from "@/lib/utils"
 import ErrorMessage from "../ui/error-message"
 import { daysFormat } from "@/lib/section-formatting"
-import { Check } from "lucide-react"
+import { Check, ExternalLinkIcon } from "lucide-react"
 import { Checkbox } from "../ui/checkbox"
 import { Switch } from "../ui/switch"
+import Link from "next/link"
 
 type Props = React.ComponentProps<typeof Card> & {
   hiddenSections: number[]
@@ -109,20 +110,30 @@ export default function ShoppingCart({
                 <span className="flex h-2 w-2 translate-y-1 rounded-full bg-emerald-500" />
                 <div className="space-y-2">
                   <div className="flex justify-between items-start">
-                    <p className="text-md font-medium leading-none">
+                    <Link
+                      href={`/student/courses?p=${cartSection.Section.Courses.Prefix.toLowerCase()}&q=${
+                        cartSection.Section.Courses.Number
+                      }`}
+                      className="text-md font-medium leading-none flex gap-2 items-center hover:underline"
+                    >
                       {cartSection.Section.Course}:{" "}
                       {cartSection.Section.Courses.Name}
-                    </p>
-                    <Switch
-                      checked={!hiddenSections.includes(cartSection.SectionId)}
-                      onCheckedChange={() =>
-                        handleHideSection(cartSection.SectionId)
-                      }
-                      className={cn(
-                        !hiddenSections.includes(cartSection.SectionId) &&
-                          "!bg-emerald-500"
-                      )}
-                    />
+                      <ExternalLinkIcon size={16} />
+                    </Link>
+                    <div className="flex gap-4 justify-end items-center">
+                      <Switch
+                        checked={
+                          !hiddenSections.includes(cartSection.SectionId)
+                        }
+                        onCheckedChange={() =>
+                          handleHideSection(cartSection.SectionId)
+                        }
+                        className={cn(
+                          !hiddenSections.includes(cartSection.SectionId) &&
+                            "!bg-emerald-500"
+                        )}
+                      />
+                    </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Professor: {cartSection.Section.Professor}

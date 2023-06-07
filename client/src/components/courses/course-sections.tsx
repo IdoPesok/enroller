@@ -6,18 +6,15 @@ import { Sections } from "@prisma/client"
 interface Props {
   code: string
   enrollNode: (enrolled: Sections) => React.ReactNode
-  quarter: string | undefined
+  quarter?: string
 }
 
 export default function CourseSections({ code, enrollNode, quarter }: Props) {
   const sections = trpc.sections.list.useQuery(
     {
       code,
-      term: parseInt(quarter!),
+      term: quarter ? parseInt(quarter) : undefined,
     },
-    {
-      enabled: Boolean(quarter),
-    }
   )
 
   return (
