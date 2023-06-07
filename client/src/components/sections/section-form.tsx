@@ -147,6 +147,7 @@ export const SectionForm = ({
       form.reset({
         professorName: updatingSection?.Professor ?? "",
         activeDays: activeDays,
+        termId: updatingSection?.TermId,
         startTime: startTime,
         endTime: endTime,
         waitlistCapacity: updatingSection?.WaitlistCapacity ?? 99,
