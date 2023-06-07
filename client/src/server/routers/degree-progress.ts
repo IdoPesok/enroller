@@ -98,8 +98,8 @@ export const degreeProgressRouter = router({
       throw internalServerError("Error fetching graduation requirements", e)
     }
   }),
-
   enrolledUnits: studentProcedure.query(async ({ ctx }) => {
+    // make sure section is not null
     const sections = await prisma.enrolled.findMany({
       where: {
         User: ctx.auth.userId,

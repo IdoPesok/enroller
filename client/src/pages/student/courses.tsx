@@ -1,19 +1,15 @@
-import CourseCard from "@/components/courses/course-card"
 import { Button } from "@/components/ui/button"
 import ScrollToTopButton from "@/components/ui/scroll-to-top"
-import { Spinner } from "@/components/ui/spinner"
 import useDebounce from "@/lib/debounce"
 import { trpc } from "@/lib/trpc"
-import { STOPWORDS, addSearchModifiers } from "@/lib/utils"
+import { addSearchModifiers } from "@/lib/utils"
 import { Option } from "@/components/courses/search-filter"
 import { prisma } from "@/server/prisma"
 import { GetStaticProps, InferGetStaticPropsType } from "next"
 import { SearchToolbar } from "@/components/courses/search-toolbar"
 import { useRouterQueryState } from "@/lib/use-router-query-state"
-import CourseSearch from "@/components/courses/course-search"
-import { ShoppingCart, Trash2 } from "lucide-react"
-import { Enrolled_Type } from "@prisma/client"
 import CourseEnrollCard from "@/components/courses/course-enroll-card"
+import SkeletonCourseCard from "@/components/courses/skeleton-course-card"
 
 export default function Courses({
   prefixOptions,
@@ -71,7 +67,7 @@ export default function Courses({
           )}
         </>
       ) : (
-        courses.isFetching && search && <Spinner className="mt-3" />
+        courses.isFetching && search && <SkeletonCourseCard />
       )}
     </div>
   )

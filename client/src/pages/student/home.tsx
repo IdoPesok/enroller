@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react"
 
-import CourseRow from "@/components/courses/course-row"
-import { Button } from "@/components/ui/button"
-import * as Tooltip from "@radix-ui/react-tooltip"
 import WeekCalendar from "@/components/WeekCalendar/WeekCalendar"
+import CourseRow from "@/components/courses/course-row"
 import SwapSheet from "@/components/courses/swap-sheet"
+import EnrolledTypeBubble from "@/components/sections/enrolled-type-bubble"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,20 +38,20 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { camelAddSpace, daysFormat, hmFormat } from "@/lib/section-formatting"
+import { daysFormat, hmFormat } from "@/lib/section-formatting"
 import { trpc } from "@/lib/trpc"
+import { useRouterQueryState } from "@/lib/use-router-query-state"
 import { cn } from "@/lib/utils"
 import { Enrolled_Type, Sections } from "@prisma/client"
+import { MoreHorizontal } from "lucide-react"
+import { ButtonSpinner } from "@/components/ui/button-spinner"
+import ErrorMessage from "@/components/ui/error-message"
 import {
-  AlertCircle,
-  CheckCircle2,
-  HelpCircle,
-  MoreHorizontal,
-  ShoppingCart,
-} from "lucide-react"
-import { useRouterQueryState } from "@/lib/use-router-query-state"
-import { Spinner } from "@/components/ui/spinner"
-import EnrolledTypeBubble from "@/components/sections/enrolled-type-bubble"
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const HEIGHT_OFFSET = 210
 
@@ -204,6 +204,16 @@ export default function Home() {
     </TableRow>
   )
 
+  const errorTable = (
+    <TableRow>
+      <TableCell colSpan={headers.length}>
+        <div className="flex justify-center py-10">
+          <ErrorMessage message="Failed to fetch enrolled courses" />
+        </div>
+      </TableCell>
+    </TableRow>
+  )
+
   const homeTable = (
     <div className="rounded-md border-2 mt-8">
       <Table>
@@ -211,110 +221,108 @@ export default function Home() {
           <TableRow className="bg-white hover:bg-white">{headers}</TableRow>
         </TableHeader>
         <TableBody>
-          {sections.error ? (
-            <p>failed to fetch enrolled courses</p>
-          ) : sections.isLoading ? (
-            skeletonLoaders
-          ) : !sections.data || sections.data.length === 0 ? (
-            emptyTable
-          ) : (
-            sections.data.map(({ Type: Status, Section }) => {
-              const { SectionId, Professor, Start, End } = Section
-              const { Code, Name, MinUnits, MaxUnits } = Section.Courses
+          {sections.error
+            ? errorTable
+            : sections.isLoading
+            ? skeletonLoaders
+            : !sections.data || sections.data.length === 0
+            ? emptyTable
+            : sections.data.map(({ Type: Status, Section }) => {
+                const { SectionId, Professor, Start, End } = Section
+                const { Code, Name, MinUnits, MaxUnits } = Section.Courses
 
-              return (
-                <>
-                  <CourseRow key={SectionId} code={Code}>
-                    <TableCell>{Code}</TableCell>
-                    <TableCell>{Name}</TableCell>
-                    <TableCell>{SectionId}</TableCell>
-                    <TableCell>
-                      {MinUnits === MaxUnits
-                        ? MinUnits
-                        : `${MinUnits}-${MaxUnits}`}
-                    </TableCell>
-                    <TableCell>{daysFormat(Section)}</TableCell>
-                    <TableCell>{hmFormat(Start)}</TableCell>
-                    <TableCell>{hmFormat(End)}</TableCell>
-                    <TableCell>{Professor}</TableCell>
-                    <TableCell>
-                      <EnrolledTypeBubble Status={Status} />
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0 focus-visible:ring-0"
-                          >
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem
-                            id="swap"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setSwappingSection(Section)
-                            }}
-                          >
-                            Swap
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            id="drop"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDropClick(Code)
-                            }}
-                          >
-                            Drop
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </CourseRow>
+                return (
+                  <>
+                    <CourseRow key={SectionId} code={Code}>
+                      <TableCell>{Code}</TableCell>
+                      <TableCell>{Name}</TableCell>
+                      <TableCell>{SectionId}</TableCell>
+                      <TableCell>
+                        {MinUnits === MaxUnits
+                          ? MinUnits
+                          : `${MinUnits}-${MaxUnits}`}
+                      </TableCell>
+                      <TableCell>{daysFormat(Section)}</TableCell>
+                      <TableCell>{hmFormat(Start)}</TableCell>
+                      <TableCell>{hmFormat(End)}</TableCell>
+                      <TableCell>{Professor}</TableCell>
+                      <TableCell>
+                        <EnrolledTypeBubble Status={Status} />
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0 focus-visible:ring-0"
+                            >
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem
+                              id="swap"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSwappingSection(Section)
+                              }}
+                            >
+                              Swap
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              id="drop"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDropClick(Code)
+                              }}
+                            >
+                              Drop
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </CourseRow>
 
-                  <SwapSheet
-                    course={
-                      sections.data.find(
-                        (sections) =>
-                          sections.Section.SectionId ===
-                          swappingSection?.SectionId
-                      )?.Section.Courses
-                    }
-                    section={swappingSection}
-                    setSection={setSwappingSection}
-                    onSwap={() => sections.refetch()}
-                  />
+                    <SwapSheet
+                      course={
+                        sections.data.find(
+                          (sections) =>
+                            sections.Section.SectionId ===
+                            swappingSection?.SectionId
+                        )?.Section.Courses
+                      }
+                      section={swappingSection}
+                      setSection={setSwappingSection}
+                      onSwap={() => sections.refetch()}
+                    />
 
-                  <AlertDialog open={openDrop} onOpenChange={setOpenDrop}>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          Are you sure you want to drop {modifyCourse}?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. If this section is
-                          waitlisted, you will be placed at the end of the
-                          waitlist if you want to add it back.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDropConfirm(SectionId)}
-                        >
-                          Confirm
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              )
-            })
-          )}
+                    <AlertDialog open={openDrop} onOpenChange={setOpenDrop}>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Are you sure you want to drop {modifyCourse}?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. If this section is
+                            waitlisted, you will be placed at the end of the
+                            waitlist if you want to add it back.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDropConfirm(SectionId)}
+                          >
+                            Confirm
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )
+              })}
         </TableBody>
       </Table>
     </div>
@@ -323,7 +331,7 @@ export default function Home() {
   return (
     <div>
       <div className="flex justify-between">
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
           <Select value={quarter} onValueChange={handleQuarterChange}>
             <SelectTrigger className="w-[180px] focus-visible:ring-0">
               <SelectValue placeholder="Spring 2023" />
@@ -336,12 +344,7 @@ export default function Home() {
               ))}
             </SelectContent>
           </Select>
-          <Tabs
-            dir="ltr"
-            value={viewType}
-            className="ml-4"
-            defaultValue={ViewType.List}
-          >
+          <Tabs dir="ltr" value={viewType} defaultValue={ViewType.List}>
             <TabsList>
               <TabsTrigger
                 value={ViewType.List}
@@ -358,29 +361,18 @@ export default function Home() {
             </TabsList>
           </Tabs>
           {enrolledUnits.isLoading ? (
-            <Spinner className="p-4" />
-          ) : (
-            <div className="flex items-center px-4 bg-white">
-              <span className=" rounded-lg p-2 border-gray-300 ">{`${enrolledUnits.data} units | ${studentStatus}`}</span>
-              <Tooltip.Provider>
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <button className="IconButton mt-1">
-                      <HelpCircle size={16} />
-                    </button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal className="mt-2">
-                    <Tooltip.Content
-                      className="TooltipContent font-light italic"
-                      sideOffset={5}
-                    >
-                      Only takes into account enrolled courses
-                      <Tooltip.Arrow className="TooltipArrow" />
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
-              </Tooltip.Provider>
-            </div>
+            <ButtonSpinner className="p-4" />
+          ) : enrolledUnits.error ? null : (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="rounded-lg border-gray-300 ">{`${enrolledUnits.data} units | ${studentStatus}`}</span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Only takes into account enrolled courses</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
         <span className="flex justify-end">
