@@ -5,7 +5,6 @@ import { AlertTriangle } from "lucide-react"
 import { useEffect, useState } from "react"
 import WeekCalendar from "../WeekCalendar/WeekCalendar"
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
-import { SectionWithCourse } from "@/interfaces/SectionTypes"
 import { EnrolledWithSection } from "@/interfaces/EnrolledTypes"
 import { useAuth } from "@clerk/nextjs"
 

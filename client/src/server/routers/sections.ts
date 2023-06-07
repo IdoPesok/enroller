@@ -3,6 +3,7 @@ import { z } from "zod"
 import { adminProcedure, studentProcedure, router } from "../trpc"
 import { ZodSectionObject } from "@/interfaces/SectionTypes"
 import { fetchCatalogYear } from "@/lib/catalog-year"
+import { Enrolled_Type } from "@prisma/client"
 
 export const sectionsRouter = router({
   create: adminProcedure.input(ZodSectionObject).mutation(async ({ input }) => {
@@ -134,7 +135,22 @@ export const sectionsRouter = router({
           CatalogYear: catalogYear,
         },
       })
-      return sections
+      // this has to be done manually because right now in prisma you cannot
+      // do multiple filtered relation counts on the same column
+      return await Promise.all(
+        sections.map(async (section) => {
+          const { SectionId } = section
+          const [enrolled, waitlisted] = await prisma.$transaction([
+            prisma.enrolled.count({
+              where: { SectionId, Type: Enrolled_Type.Enrolled },
+            }),
+            prisma.enrolled.count({
+              where: { SectionId, Type: Enrolled_Type.Waitlist },
+            }),
+          ])
+          return { ...section, Enrolled: enrolled, Waitlisted: waitlisted }
+        })
+      )
     }),
   withEnrolleds: studentProcedure
     .input(z.object({ code: z.string() }))
