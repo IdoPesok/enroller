@@ -17,7 +17,7 @@ export default function TermSelect({ term, setTerm }: Props) {
   const terms = trpc.term.list.useQuery()
 
   useEffect(() => {
-    if (terms.data) {
+    if (terms.data && term === undefined) {
       setTerm(terms.data[0].TermId)
     }
   }, [terms.data, setTerm])

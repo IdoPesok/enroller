@@ -14,7 +14,11 @@ export default function Enroll() {
   const [hiddenSections, setHiddenSections] = useState<number[]>([])
 
   const [term, setTerm] = useRouterQueryState<Sections["TermId"] | undefined>(
-    "term"
+    "term",
+    undefined,
+    {
+      isNumber: true
+    }
   )
 
   const sections = trpc.home.userSections.useQuery(

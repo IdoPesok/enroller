@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/tooltip"
 import { HelpCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import TermSelect from "@/components/term/term-select"
 
 enum ViewType {
   List = "list",
@@ -94,20 +95,19 @@ export default function Home() {
   const [swappingSection, setSwappingSection] = useState<
     Sections | null | undefined
   >(null)
-  const [quarter, setQuarter] = useState<string | undefined>(undefined)
   const [viewType, setViewType] = useRouterQueryState<ViewType>(
     "view",
     ViewType.List
   )
   const [modifyCourse, setModifyCourse] = useState("")
 
-  const terms = trpc.term.list.useQuery()
-
-  useEffect(() => {
-    if (terms.data) {
-      setQuarter(terms.data[0].TermId.toString())
+  const [term, setTerm] = useRouterQueryState<Sections["TermId"] | undefined>(
+    "term",
+    undefined,
+    {
+      isNumber: true
     }
-  }, [terms.data])
+  )
 
   const handleDropClick = (courseCode: string) => {
     setModifyCourse(courseCode)
@@ -118,17 +118,13 @@ export default function Home() {
     deleteMutation.mutate({ SectionId: sectionId })
   }
 
-  const handleQuarterChange = (value: string) => {
-    setQuarter(value)
-  }
-
   const sections = trpc.home.userSections.useQuery(
     {
       types: showingSections,
-      quarter: parseInt(quarter!),
+      quarter: term!,
     },
     {
-      enabled: Boolean(quarter),
+      enabled: Boolean(term),
     }
   )
 
@@ -281,7 +277,7 @@ export default function Home() {
                     </CourseRow>
 
                     <SwapSheet
-                      quarter={quarter}
+                      quarter={term?.toString()}
                       course={
                         sections.data.find(
                           (sections) =>
@@ -328,18 +324,7 @@ export default function Home() {
     <div>
       <div className="flex justify-between">
         <div className="flex items-center gap-4">
-          <Select value={quarter} onValueChange={handleQuarterChange}>
-            <SelectTrigger className="w-[180px] focus-visible:ring-0">
-              <SelectValue placeholder="Spring 2023" />
-            </SelectTrigger>
-            <SelectContent>
-              {terms.data?.map(({ TermId, Year, Season }) => (
-                <SelectItem key={TermId} value={TermId.toString()}>
-                  {Year} {Season}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <TermSelect term={term} setTerm={setTerm} />
           <Tabs dir="ltr" value={viewType} defaultValue={ViewType.List}>
             <TabsList>
               <TabsTrigger
