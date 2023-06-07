@@ -25,6 +25,7 @@ export const SectionStudents = ({
   section,
 }: Props) => {
   const { toast } = useToast()
+  const utils = trpc.useContext()
 
   const usersEnrolled = trpc.enroll.usersEnrolledInSection.useQuery(
     {
@@ -43,6 +44,7 @@ export const SectionStudents = ({
         description: "The user was successfully removed from this section.",
         variant: "success",
       })
+      utils.sections.retrieve.invalidate();
     },
     onError: (error) => {
       toast({
