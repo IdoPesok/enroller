@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react"
+import React, { useState } from "react"
 
 import WeekCalendar from "@/components/WeekCalendar/WeekCalendar"
 import CourseRow from "@/components/courses/course-row"
 import SwapSheet from "@/components/courses/swap-sheet"
 import EnrolledTypeBubble from "@/components/sections/enrolled-type-bubble"
+import TermSelect from "@/components/term/term-select"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { ButtonSpinner } from "@/components/ui/button-spinner"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,13 +24,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import ErrorMessage from "@/components/ui/error-message"
 import {
   Table,
   TableBody,
@@ -38,23 +34,19 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { daysFormat, hmFormat } from "@/lib/section-formatting"
-import { trpc } from "@/lib/trpc"
-import { useRouterQueryState } from "@/lib/use-router-query-state"
-import { cn } from "@/lib/utils"
-import { Enrolled_Type, Sections } from "@prisma/client"
-import { MoreHorizontal } from "lucide-react"
-import { ButtonSpinner } from "@/components/ui/button-spinner"
-import ErrorMessage from "@/components/ui/error-message"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { HelpCircle } from "lucide-react"
-
-const HEIGHT_OFFSET = 210
+import { useToast } from "@/components/ui/use-toast"
+import { daysFormat, hmFormat } from "@/lib/section-formatting"
+import { trpc } from "@/lib/trpc"
+import { useRouterQueryState } from "@/lib/use-router-query-state"
+import { cn } from "@/lib/utils"
+import { Enrolled_Type, Sections } from "@prisma/client"
+import { HelpCircle, MoreHorizontal } from "lucide-react"
 
 enum ViewType {
   List = "list",
@@ -77,24 +69,17 @@ export default function Home() {
     }
   )
 
-  const [calendarHeight, setCalendarHeight] = useState<number>(
-    window.innerHeight - HEIGHT_OFFSET
-  )
-
-  // watch for resize events and update calendar height
-  useEffect(() => {
-    const handleResize = () => {
-      setCalendarHeight(window.innerHeight - HEIGHT_OFFSET)
-    }
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
-
   const utils = trpc.useContext()
 
+  const { toast } = useToast()
   const deleteMutation = trpc.enroll.delete.useMutation({
-    onSuccess: (data, variables, context) => {
-      utils.home.userSections.invalidate()
+    onSuccess: async (data, variables, context) => {
+      await utils.home.userSections.invalidate()
+      toast({
+        title: "Section drpoped!",
+        description: "The section was successfully dropped.",
+        variant: "success",
+      })
     },
   })
 
@@ -102,20 +87,19 @@ export default function Home() {
   const [swappingSection, setSwappingSection] = useState<
     Sections | null | undefined
   >(null)
-  const [quarter, setQuarter] = useState<string | undefined>(undefined)
   const [viewType, setViewType] = useRouterQueryState<ViewType>(
     "view",
     ViewType.List
   )
   const [modifyCourse, setModifyCourse] = useState("")
 
-  const terms = trpc.term.list.useQuery()
-
-  useEffect(() => {
-    if (terms.data) {
-      setQuarter(terms.data[0].TermId.toString())
+  const [term, setTerm] = useRouterQueryState<Sections["TermId"] | undefined>(
+    "term",
+    undefined,
+    {
+      isNumber: true,
     }
-  }, [terms.data])
+  )
 
   const handleDropClick = (courseCode: string) => {
     setModifyCourse(courseCode)
@@ -126,17 +110,13 @@ export default function Home() {
     deleteMutation.mutate({ SectionId: sectionId })
   }
 
-  const handleQuarterChange = (value: string) => {
-    setQuarter(value)
-  }
-
   const sections = trpc.home.userSections.useQuery(
     {
       types: showingSections,
-      quarter: parseInt(quarter!),
+      quarter: term!,
     },
     {
-      enabled: Boolean(quarter),
+      enabled: Boolean(term),
     }
   )
 
@@ -164,7 +144,7 @@ export default function Home() {
     "Start Time",
     "End Time",
     "Professor",
-    "Status"
+    "Status",
   ]
 
   const headers = headerValues.map((header) => (
@@ -235,7 +215,7 @@ export default function Home() {
                 const { Code, Name, MinUnits, MaxUnits } = Section.Courses
 
                 return (
-                  <>
+                  <React.Fragment key={"course-row" + SectionId}>
                     <CourseRow key={SectionId} code={Code}>
                       <TableCell>{Code}</TableCell>
                       <TableCell>{Name}</TableCell>
@@ -289,6 +269,7 @@ export default function Home() {
                     </CourseRow>
 
                     <SwapSheet
+                      quarter={term?.toString()}
                       course={
                         sections.data.find(
                           (sections) =>
@@ -323,7 +304,7 @@ export default function Home() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                  </>
+                  </React.Fragment>
                 )
               })}
         </TableBody>
@@ -335,18 +316,7 @@ export default function Home() {
     <div>
       <div className="flex justify-between">
         <div className="flex items-center gap-4">
-          <Select value={quarter} onValueChange={handleQuarterChange}>
-            <SelectTrigger className="w-[180px] focus-visible:ring-0">
-              <SelectValue placeholder="Spring 2023" />
-            </SelectTrigger>
-            <SelectContent>
-              {terms.data?.map(({ TermId, Year, Season }) => (
-                <SelectItem key={TermId} value={TermId.toString()}>
-                  {Year} {Season}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <TermSelect term={term} setTerm={setTerm} />
           <Tabs dir="ltr" value={viewType} defaultValue={ViewType.List}>
             <TabsList>
               <TabsTrigger
@@ -412,7 +382,7 @@ export default function Home() {
       ) : (
         <div className="flex-1 mt-2">
           <WeekCalendar
-            height={calendarHeight}
+            heightOffset={210}
             sections={sections.data ? sections.data : []}
             isLoading={sections.isLoading}
             warningMessage={

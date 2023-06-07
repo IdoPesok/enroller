@@ -7,35 +7,23 @@ import WeekCalendar from "../WeekCalendar/WeekCalendar"
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 import { EnrolledWithSection } from "@/interfaces/EnrolledTypes"
 import { useAuth } from "@clerk/nextjs"
+import { Skeleton } from "../ui/skeleton"
 
 interface Props {
   oldSectionId?: number
   newSectionId?: number
   onCancel: () => void
   onConfirm: () => void
+  quarter: string | undefined
 }
-
-const HEIGHT_OFFSET = 300
 
 export default function ScheduleChangePreview({
   oldSectionId,
   newSectionId,
   onCancel,
   onConfirm,
+  quarter,
 }: Props) {
-  const [calendarHeight, setCalendarHeight] = useState<number>(
-    window.innerHeight - HEIGHT_OFFSET
-  )
-
-  // watch for resize events and update calendar height
-  useEffect(() => {
-    const handleResize = () => {
-      setCalendarHeight(window.innerHeight - HEIGHT_OFFSET)
-    }
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
-
   const [viewType, setViewType] = useState<"before" | "after">("after")
 
   const [newSections, setNewSections] = useState<null | EnrolledWithSection[]>(
@@ -97,18 +85,27 @@ export default function ScheduleChangePreview({
         Enrolled_Type.Waitlist,
         Enrolled_Type.ShoppingCart,
       ],
+      quarter: parseInt(quarter!),
     },
     {
-      onSuccess(data) {
-        populateNewSections(data)
-      },
+      enabled: !!quarter,
     }
   )
+
+  useEffect(() => {
+    if (
+      enrolledSections.data &&
+      (!oldSectionId || oldSection.data) &&
+      (!newSectionId || newSection.data)
+    ) {
+      populateNewSections(enrolledSections.data)
+    }
+  }, [enrolledSections.data, viewType, oldSection.data, newSection.data])
 
   return (
     <div className="flex flex-col mt-5">
       <div className="flex justify-between items-center">
-        <p className="my-0 flex gap-2">
+        <div className="my-0 flex gap-2 items-center">
           <AlertTriangle />
           {isCreating
             ? "Please confirm: your new schedule if you add "
@@ -117,14 +114,16 @@ export default function ScheduleChangePreview({
             : isSwapping
             ? "Please confirm: your new schedule if you swap "
             : ""}
-          {isCreating
-            ? `${newSection.data?.Courses.Code}(${newSection.data?.SectionId})`
-            : isDropping
-            ? `${oldSection.data?.Courses.Code}(${oldSection.data?.SectionId})`
-            : isSwapping
-            ? `${oldSection.data?.Courses.Code}(${oldSection.data?.SectionId}) with ${newSection.data?.Courses.Code}(${newSection.data?.SectionId})`
-            : ""}
-        </p>
+          {isCreating && newSection.data ? (
+            `${newSection.data?.Courses.Code}(${newSection.data?.SectionId})`
+          ) : isDropping && oldSection.data ? (
+            `${oldSection.data?.Courses.Code}(${oldSection.data?.SectionId})`
+          ) : isSwapping && oldSection.data && newSection.data ? (
+            `${oldSection.data?.Courses.Code}(${oldSection.data?.SectionId}) with ${newSection.data?.Courses.Code}(${newSection.data?.SectionId})`
+          ) : (
+            <Skeleton className="w-24 h-5"></Skeleton>
+          )}
+        </div>
         <Tabs
           dir="ltr"
           value={viewType}
@@ -143,7 +142,7 @@ export default function ScheduleChangePreview({
       </div>
       <div className="flex-1">
         <WeekCalendar
-          height={calendarHeight}
+          heightOffset={300}
           sections={
             enrolledSections.data && newSections
               ? viewType === "before"

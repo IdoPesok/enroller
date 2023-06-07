@@ -64,7 +64,7 @@ export default function Onboarding() {
       duration: 1000,
     }).finished
 
-    const nextRoute = generateStudentRoute("courses")
+    const nextRoute = generateStudentRoute("home")
     // redirect to next route
     router.replace(nextRoute)
   }

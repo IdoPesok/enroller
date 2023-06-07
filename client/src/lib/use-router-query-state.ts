@@ -1,6 +1,7 @@
 import { useRouter } from "next/router"
 import { Dispatch, SetStateAction, useState } from "react"
 import { useWatch } from "./use-watch"
+import { options } from "@fullcalendar/core/preact"
 
 type SerializerFunction = (value: any) => string | undefined
 type DeserializerFunction = (value: string) => any
@@ -8,6 +9,7 @@ type DeserializerFunction = (value: string) => any
 interface Options {
   serializer?: SerializerFunction
   deserializer?: DeserializerFunction
+  isNumber?: boolean
 }
 
 // https://dev.to/jeffsalive/solving-the-challenge-of-state-persistence-in-nextjs-effortless-state-management-with-query-parameters-4a6p
@@ -39,7 +41,7 @@ export function useRouterQueryState<T>(
     }
 
     // default deserializer for number type
-    if (typeof defaultValue === "number") {
+    if (opts.isNumber || typeof defaultValue === "number") {
       const numValue = Number(value === "" ? "r" : value)
       return isNaN(numValue) ? (defaultValue as T) : (numValue as T)
     }

@@ -27,7 +27,11 @@ export default function Overview() {
     "prof"
   )
   const [term, setTerm] = useRouterQueryState<Sections["TermId"] | undefined>(
-    "term"
+    "term",
+    undefined,
+    {
+      isNumber: true,
+    }
   )
 
   const debouncedSearch = useDebounce(search, 500)

@@ -11,6 +11,7 @@ import { Enrolled_Type, Sections } from "@prisma/client"
 import { useAuth } from "@clerk/nextjs"
 import ScheduleChangePreview from "./schedule-change-preview"
 import { useToast } from "../ui/use-toast"
+import SkeletonCourseCard from "./skeleton-course-card"
 
 function addSearchModifiers(search: string): string {
   return search
@@ -26,6 +27,7 @@ interface Props {
   search: string
   setSearch: (search: string) => void
   onSwap: () => void
+  quarter: string | undefined
 }
 
 export default function CourseSwapSearch({
@@ -34,6 +36,7 @@ export default function CourseSwapSearch({
   search,
   setSearch,
   onSwap,
+  quarter,
 }: Props) {
   const [confirmingSectionData, setConfirmingSectionData] =
     useState<ConfirmSwapData | null>(null)
@@ -42,9 +45,9 @@ export default function CourseSwapSearch({
   const utils = trpc.useContext()
 
   const sections = trpc.sections.list.useQuery(
-    { code: confirmingSectionData?.course.Code },
+    { code: confirmingSectionData?.course.Code, term: parseInt(quarter!) },
     {
-      enabled: !!confirmingSectionData,
+      enabled: !!confirmingSectionData && !!quarter,
     }
   )
 
@@ -101,6 +104,7 @@ export default function CourseSwapSearch({
       <CourseSwapCard
         key={course.Code}
         confirmSwap={setConfirmingSectionData}
+        quarter={quarter}
         course={course}
       />
     ))
@@ -110,6 +114,7 @@ export default function CourseSwapSearch({
       {confirmingSectionData !== null ? (
         <ScheduleChangePreview
           oldSectionId={swapSection.SectionId}
+          quarter={quarter}
           newSectionId={confirmingSectionData.sectionId}
           onCancel={() => setConfirmingSectionData(null)}
           onConfirm={() => {
@@ -148,7 +153,7 @@ export default function CourseSwapSearch({
               )}
             </>
           ) : (
-            courses.isFetching && search && <Spinner className="mt-3" />
+            courses.isFetching && search && <SkeletonCourseCard />
           )}
         </div>
       )}
