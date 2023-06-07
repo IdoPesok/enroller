@@ -35,7 +35,8 @@ export default function CourseSwapSearch({
   setSearch,
   onSwap,
 }: Props) {
-  const [confirmingSectionData, setConfirmingSectionData] = useState<ConfirmSwapData | null>(null);
+  const [confirmingSectionData, setConfirmingSectionData] =
+    useState<ConfirmSwapData | null>(null)
   const debouncedSearch = useDebounce(search, 500)
   const { userId } = useAuth()
   const utils = trpc.useContext()
@@ -91,7 +92,7 @@ export default function CourseSwapSearch({
         title: "Success!",
         description: "Your schedule has been updated.",
       })
-    }
+    },
   })
 
   const cards = courses.data?.pages
@@ -106,51 +107,51 @@ export default function CourseSwapSearch({
 
   return (
     <>
-      {
-        confirmingSectionData !== null ? (
-          <ScheduleChangePreview 
-            oldSectionId={swapSection.SectionId}
-            newSectionId={confirmingSectionData.sectionId}
-            onCancel={() => setConfirmingSectionData(null)}
-            onConfirm={() => {
-              updateMutation.mutate({
-                SectionId: swapSection.SectionId,
-                Data: {
-                  Type: Enrolled_Type.Enrolled,
-                  Seat: null,
-                  SectionId: confirmingSectionData.sectionId,
-                },
-              })
-              setConfirmingSectionData(null)
-              onSwap()
-            }}
-          />
-        ) : (
-          <div className="mx-auto max-w-4xl pt-10">
-            <ScrollToTopButton />
-            <SearchToolbar search={search} setSearch={setSearch} />
-            {cards ? (
-              <>
-                {cards.length > 0 ? (
-                  cards
-                ) : (
-                  <p className="text-center mt-3">No courses meet search criteria</p>
-                )}
-                {courses.hasNextPage && (
-                  <Button
-                    className="w-full mt-6"
-                    onClick={() => courses.fetchNextPage()}
-                  >
-                    Load More
-                  </Button>
-                )}
-              </>
-            ) : (
-              courses.isFetching && search && <Spinner className="mt-3" />
-            )}
-          </div>
-        )
-      }
+      {confirmingSectionData !== null ? (
+        <ScheduleChangePreview
+          oldSectionId={swapSection.SectionId}
+          newSectionId={confirmingSectionData.sectionId}
+          onCancel={() => setConfirmingSectionData(null)}
+          onConfirm={() => {
+            updateMutation.mutate({
+              SectionId: swapSection.SectionId,
+              Data: {
+                Type: Enrolled_Type.Enrolled,
+                Seat: null,
+                SectionId: confirmingSectionData.sectionId,
+              },
+            })
+            setConfirmingSectionData(null)
+            onSwap()
+          }}
+        />
+      ) : (
+        <div className="mx-auto max-w-4xl pt-10">
+          <ScrollToTopButton />
+          <SearchToolbar search={search} setSearch={setSearch} />
+          {cards ? (
+            <>
+              {cards.length > 0 ? (
+                cards
+              ) : (
+                <p className="text-center mt-3">
+                  No courses meet search criteria
+                </p>
+              )}
+              {courses.hasNextPage && (
+                <Button
+                  className="w-full mt-6"
+                  onClick={() => courses.fetchNextPage()}
+                >
+                  Load More
+                </Button>
+              )}
+            </>
+          ) : (
+            courses.isFetching && search && <Spinner className="mt-3" />
+          )}
+        </div>
+      )}
     </>
   )
 }

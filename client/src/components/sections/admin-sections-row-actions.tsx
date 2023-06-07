@@ -1,7 +1,7 @@
 "use client"
 
 import { Row } from "@tanstack/react-table"
-import { MoreHorizontal, Pen, Trash } from "lucide-react"
+import { MoreHorizontal, Pen, Trash, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -19,6 +19,7 @@ import { SectionWithCourse } from "@/interfaces/SectionTypes"
 export interface AdminSectionRowActionHandlers {
   handleRefresh: () => void
   handleEdit: (row: Row<SectionWithCourse>) => void
+  handleShowStudents: (row: Row<SectionWithCourse>) => void
 }
 
 interface DataTableRowActionsProps<TData>
@@ -30,6 +31,7 @@ export function AdminSectionsRowActions<TData>({
   row,
   handleRefresh,
   handleEdit,
+  handleShowStudents,
 }: DataTableRowActionsProps<TData>) {
   const { toast } = useToast()
 
@@ -78,6 +80,10 @@ export function AdminSectionsRowActions<TData>({
         <DropdownMenuItem onClick={() => handleEdit(row)}>
           <Pen className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
           Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleShowStudents(row)}>
+          <User className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+          Students
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleDelete}>
           <Trash className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />

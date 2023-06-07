@@ -19,10 +19,14 @@ export default function Courses({
   prefixOptions,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const [search, setSearch] = useRouterQueryState("q", "")
-  const [prefixes, setPrefixes] = useRouterQueryState<string[] | undefined>("p", undefined, {
-    serializer: (value) => value.join(","),
-    deserializer: (value) => value.split(","),
-  })
+  const [prefixes, setPrefixes] = useRouterQueryState<string[] | undefined>(
+    "p",
+    undefined,
+    {
+      serializer: (value) => value.join(","),
+      deserializer: (value) => value.split(","),
+    }
+  )
 
   const debouncedSearch = useDebounce(search, 500)
   const courses = trpc.courses.list.useInfiniteQuery(

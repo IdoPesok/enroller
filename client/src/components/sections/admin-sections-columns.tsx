@@ -27,9 +27,10 @@ export const getAdminSectionsColumns = (
           row={row}
           handleEdit={handlers.handleEdit}
           handleRefresh={handlers.handleRefresh}
+          handleShowStudents={handlers.handleShowStudents}
         />
       ),
-    }
+    },
   ] as ColumnDef<SectionWithCourse>[]
 
   return temp

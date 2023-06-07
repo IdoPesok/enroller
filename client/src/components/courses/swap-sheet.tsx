@@ -3,7 +3,7 @@ import {
   SheetContent,
   SheetDescription,
   SheetHeader,
-  SheetTitle
+  SheetTitle,
 } from "@/components/ui/sheet"
 import { Courses, Sections } from "@prisma/client"
 import { useState } from "react"

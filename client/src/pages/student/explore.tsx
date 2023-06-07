@@ -8,9 +8,9 @@ import { useUser } from "@clerk/nextjs"
 import { ChatItem } from "@/components/explore/chat-item"
 
 interface Chat {
-  message: string,
-  response: string,
-  error: 0 | 1,
+  message: string
+  response: string
+  error: 0 | 1
   errorMessage?: string
 }
 
@@ -28,28 +28,34 @@ export default function Courses() {
 
   const exploreMutation = trpc.explore.prompt.useMutation({
     onSuccess: (data) => {
-      setChatHistory((prev) => [{
-        message: promptInput,
-        response: data ?? "No response was given.",
-        error: 0
-      }, ...prev])
+      setChatHistory((prev) => [
+        {
+          message: promptInput,
+          response: data ?? "No response was given.",
+          error: 0,
+        },
+        ...prev,
+      ])
       clearUserInput()
     },
     onError: (error) => {
-      setChatHistory((prev) => [{
-        message: promptInput,
-        response: "There has been an error. Please try again later.",
-        error: 1,
-        errorMessage: error.message
-      }, ...prev])
+      setChatHistory((prev) => [
+        {
+          message: promptInput,
+          response: "There has been an error. Please try again later.",
+          error: 1,
+          errorMessage: error.message,
+        },
+        ...prev,
+      ])
       clearUserInput()
-    }
-  });
+    },
+  })
 
   const handleExplore = () => {
     exploreMutation.mutateAsync({
       prompt: promptInput,
-      filterDatabase
+      filterDatabase,
     })
   }
 
@@ -64,9 +70,9 @@ export default function Courses() {
       className="mb-3 bg-slate-100 rounded py-3 px-3 border flex gap-3 hover:border hover:border-emerald-500 cursor-pointer"
       key={question}
       onClick={() => {
-        setSearch(question);
-        setPromptInput(question);
-        handleExplore();
+        setSearch(question)
+        setPromptInput(question)
+        handleExplore()
       }}
     >
       <Stars className="text-emerald-500" />
@@ -96,12 +102,10 @@ export default function Courses() {
 
   const skeletonChat = (
     <>
-      { userMessage(promptInput) }
+      {userMessage(promptInput)}
       <ChatItem
         message={skeletonLoader}
-        userIcon={
-          <Wand className="text-white" size={18} /> 
-        }
+        userIcon={<Wand className="text-white" size={18} />}
       />
     </>
   )
@@ -115,18 +119,18 @@ export default function Courses() {
 
   const chats = chatHistory.map((chat) => (
     <>
-      { userMessage(chat.message) }
+      {userMessage(chat.message)}
       <ChatItem
-        message={(
+        message={
           chat.error === 0 ? (
             <ReactMarkdown>{chat.response}</ReactMarkdown>
           ) : (
-            <p className="text-red-500">{`${chat.response} - ${chat.errorMessage ?? "No Error Message"}`}</p>
+            <p className="text-red-500">{`${chat.response} - ${
+              chat.errorMessage ?? "No Error Message"
+            }`}</p>
           )
-        )}
-        userIcon={
-          <Wand className="text-white" size={18} /> 
         }
+        userIcon={<Wand className="text-white" size={18} />}
       />
     </>
   ))
@@ -139,8 +143,8 @@ export default function Courses() {
         value={promptInput}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            setSearch(e.currentTarget.value);
-            handleExplore();
+            setSearch(e.currentTarget.value)
+            handleExplore()
           }
         }}
         onChange={(e) => {
@@ -150,18 +154,14 @@ export default function Courses() {
           }
         }}
       />
-      {
-        (chatHistory.length === 0 && !exploreMutation.isLoading) ? (
-          emptyChatHistory
-        ) : (
-          <div className="flex gap-8 flex-col mt-10">
-            {
-              exploreMutation.isLoading && skeletonChat
-            }
-            { chats }
-          </div>
-        )
-      }
+      {chatHistory.length === 0 && !exploreMutation.isLoading ? (
+        emptyChatHistory
+      ) : (
+        <div className="flex gap-8 flex-col mt-10">
+          {exploreMutation.isLoading && skeletonChat}
+          {chats}
+        </div>
+      )}
     </div>
   )
 }
