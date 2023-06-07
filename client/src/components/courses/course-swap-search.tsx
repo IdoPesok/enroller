@@ -11,6 +11,7 @@ import { Enrolled_Type, Sections } from "@prisma/client"
 import { useAuth } from "@clerk/nextjs"
 import ScheduleChangePreview from "./schedule-change-preview"
 import { useToast } from "../ui/use-toast"
+import SkeletonCourseCard from "./skeleton-course-card"
 
 function addSearchModifiers(search: string): string {
   return search
@@ -152,7 +153,7 @@ export default function CourseSwapSearch({
               )}
             </>
           ) : (
-            courses.isFetching && search && <Spinner className="mt-3" />
+            courses.isFetching && search && <SkeletonCourseCard />
           )}
         </div>
       )}
