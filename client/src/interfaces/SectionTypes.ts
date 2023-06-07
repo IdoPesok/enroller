@@ -113,3 +113,8 @@ export type SectionsWithCounts = Sections & {
   Enrolled: number
   Waitlisted: number
 }
+
+export type SectionsWithCourseAndCounts = SectionWithCourse & {
+  Enrolled: number
+  Waitlisted: number
+}
