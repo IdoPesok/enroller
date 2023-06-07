@@ -28,7 +28,7 @@ model Courses {
 model Enrolled {
   User      String        @db.VarChar(35)
   SectionId Int
-  Section   Sections      @relation(fields: [SectionId], references: [SectionId])
+  Section   Sections      @relation(fields: [SectionId], references: [SectionId], onDelete: Cascade)
   Seat      Int?
   Type      Enrolled_Type
 

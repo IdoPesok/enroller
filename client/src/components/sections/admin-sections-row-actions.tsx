@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { trpc } from "@/lib/trpc"
-import { Sections } from "@prisma/client"
 import { ButtonSpinner } from "../ui/button-spinner"
 import { useToast } from "../ui/use-toast"
 import { SectionWithCourse } from "@/interfaces/SectionTypes"
@@ -39,6 +38,7 @@ export function AdminSectionsRowActions<TData>({
       toast({
         title: "Section deleted!",
         description: "The section was successfully deleted.",
+        variant: "success",
       })
       handleRefresh()
     },

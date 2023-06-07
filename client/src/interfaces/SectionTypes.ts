@@ -93,14 +93,14 @@ export const SECTION_MODALITY_OPTIONS: string[] =
   Object.values(Sections_Modality)
 
 export const sectionFormSchema = z.object({
-  professorName: z.string().min(2).max(50),
+  professorName: z.string().trim().min(2).max(50),
   termId: z.number().int().positive(),
   activeDays: z.array(z.nativeEnum(DaysOfTheWeek)).min(1),
   startTime: z.string(),
   endTime: z.string(),
   waitlistCapacity: z.number().int().positive(),
   enrollmentCapacity: z.number().int().positive(),
-  roomNumber: z.string().min(2).max(10),
+  roomNumber: z.string().trim().min(2).max(10),
   format: z.nativeEnum(Sections_Format),
   modality: z.nativeEnum(Sections_Modality),
 })

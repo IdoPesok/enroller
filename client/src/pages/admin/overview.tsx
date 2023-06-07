@@ -84,6 +84,7 @@ export default function Overview() {
             toast({
               title: "Section created!",
               description: "The section was successfully created.",
+              variant: "success", 
             })
           }}
           handleUpdateSuccess={async () => {
@@ -92,6 +93,7 @@ export default function Overview() {
             toast({
               title: "Section updated!",
               description: "The section was successfully updated.",
+              variant: "success", 
             })
           }}
           updatingSection={updatingSection}
@@ -103,11 +105,13 @@ export default function Overview() {
       ) : sections.error ? (
         <ErrorMessage message={JSON.stringify(sections.error)} />
       ) : (
-        <DataTable
-          columns={adminSectionsColumns}
-          data={sections.data?.pages.flatMap((s) => s.sections) ?? []}
-          isLoading={sections.isLoading}
-        />
+        <div className="my-6">
+          <DataTable
+            columns={adminSectionsColumns}
+            data={sections.data?.pages.flatMap((s) => s.sections) ?? []}
+            isLoading={sections.isLoading}
+          />
+        </div>
       )}
     </div>
   )
