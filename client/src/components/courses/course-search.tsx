@@ -1,15 +1,12 @@
 import CourseEnrollCard from "./course-enroll-card"
 import { Button } from "@/components/ui/button"
 import ScrollToTopButton from "@/components/ui/scroll-to-top"
-import { Spinner } from "@/components/ui/spinner"
 import useDebounce from "@/lib/debounce"
 import { trpc } from "@/lib/trpc"
 import { STOPWORDS } from "@/lib/utils"
 import { SearchToolbar, Filters } from "@/components/courses/search-toolbar"
-import { useRouterQueryState } from "@/lib/use-router-query-state"
-import { Option } from "@/components/courses/search-filter"
-import { ShoppingCart } from "lucide-react"
 import React from "react"
+import SkeletonCourseCard from "./skeleton-course-card"
 
 function addSearchModifiers(search: string): string {
   return search
@@ -66,7 +63,7 @@ export default function CourseSearch({ search, setSearch, filters }: Props) {
           )}
         </>
       ) : (
-        courses.isFetching && search && <Spinner className="mt-3" />
+        courses.isFetching && search && <SkeletonCourseCard />
       )}
     </div>
   )

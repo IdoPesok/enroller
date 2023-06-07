@@ -58,6 +58,7 @@ import { Spinner } from "../ui/spinner"
 import { Toggle } from "../ui/toggle"
 import { useToast } from "../ui/use-toast"
 import TermSelect from "../term/term-select"
+import SkeletonCourseCard from "../courses/skeleton-course-card"
 
 type Props = {
   sheetTrigger: React.ReactNode
@@ -302,7 +303,7 @@ export const SectionForm = ({
             )}
           </>
         ) : (
-          courses.isFetching && search && <Spinner className="mt-3" />
+          courses.isFetching && search && <SkeletonCourseCard />
         )}
       </div>
     </div>

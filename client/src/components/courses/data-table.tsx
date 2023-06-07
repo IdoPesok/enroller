@@ -26,12 +26,14 @@ import {
 } from "@/components/ui/table"
 
 import { DataTableToolbar } from "./data-table-toolbar"
-import { Spinner } from "../ui/spinner"
+import ErrorMessage from "../ui/error-message"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  isLoading?: boolean
+  isLoading: boolean
+  isError: boolean
+  errorMessage?: string
   showToolbar?: boolean
 }
 
@@ -39,6 +41,8 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   isLoading,
+  isError,
+  errorMessage,
   showToolbar = true,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
@@ -95,7 +99,19 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isError ? (
+              <TableRow>
+                <TableCell colSpan={columns.length}>
+                  <div className="flex justify-center py-10">
+                    <ErrorMessage
+                      message={
+                        errorMessage ?? "Failed to fetch enrolled courses"
+                      }
+                    />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}

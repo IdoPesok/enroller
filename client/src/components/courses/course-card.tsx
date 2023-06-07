@@ -23,8 +23,6 @@ const CourseCard = React.forwardRef<
   const { Code, Name, Description, MinUnits, MaxUnits, Prereqs } = course
   const prereqs = Prereqs as unknown as Prereq[] | null
 
-  // let cardStyle = "my-2" : "border-none shadow-none")
-
   return (
     <Card ref={ref} key={Code} {...props}>
       <CardHeader>
