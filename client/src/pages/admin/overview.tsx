@@ -4,8 +4,6 @@ import { SectionForm } from "@/components/sections/section-form"
 import { SectionStudents } from "@/components/sections/section-students"
 import TermSelect from "@/components/term/term-select"
 import { Button } from "@/components/ui/button"
-import ErrorMessage from "@/components/ui/error-message"
-import { Spinner } from "@/components/ui/spinner"
 import { useToast } from "@/components/ui/use-toast"
 import { SectionWithCourse } from "@/interfaces/SectionTypes"
 import useDebounce from "@/lib/debounce"
@@ -108,19 +106,15 @@ export default function Overview() {
           />
         </div>
       </div>
-      {sections.isLoading && search ? (
-        <Spinner className="mt-10" />
-      ) : sections.error ? (
-        <ErrorMessage message={JSON.stringify(sections.error)} />
-      ) : (
-        <div className="my-6">
-          <DataTable
-            columns={adminSectionsColumns}
-            data={sections.data?.pages.flatMap((s) => s.sections) ?? []}
-            isLoading={sections.isLoading}
-          />
-        </div>
-      )}
+      <div className="my-6">
+        <DataTable
+          columns={adminSectionsColumns}
+          data={sections.data?.pages.flatMap((s) => s.sections) ?? []}
+          isLoading={sections.isLoading}
+          isError={sections.isError}
+          errorMessage="Failed to fetch sections."
+        />
+      </div>
       <SectionStudents
         sheetOpen={studentsSheetData !== undefined}
         setSheetOpen={(open) => {
