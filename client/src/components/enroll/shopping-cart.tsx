@@ -113,7 +113,7 @@ export default function ShoppingCart({
                     <Link
                       href={`/student/courses?p=${cartSection.Section.Courses.Prefix.toLowerCase()}&q=${
                         cartSection.Section.Courses.Number
-                      }`}
+                      }&term=${quarter}`}
                       className="text-md font-medium leading-none flex gap-2 items-center hover:underline"
                     >
                       {cartSection.Section.Course}:{" "}

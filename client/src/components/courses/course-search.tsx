@@ -7,6 +7,8 @@ import { STOPWORDS } from "@/lib/utils"
 import { SearchToolbar, Filters } from "@/components/courses/search-toolbar"
 import React from "react"
 import SkeletonCourseCard from "./skeleton-course-card"
+import { useRouterQueryState } from "@/lib/use-router-query-state"
+import { Sections } from "@prisma/client"
 
 function addSearchModifiers(search: string): string {
   return search
@@ -40,7 +42,9 @@ export default function CourseSearch({ search, setSearch, filters }: Props) {
 
   const cards = courses.data?.pages
     .flatMap(({ courses }) => courses)
-    .map((course) => <CourseEnrollCard key={course.Code} course={course} />)
+    .map((course) => (
+      <CourseEnrollCard key={course.Code} course={course} term={undefined} />
+    ))
 
   return (
     <div className="mx-auto max-w-4xl pt-10">

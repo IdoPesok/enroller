@@ -37,12 +37,13 @@ import { hmFormat } from "@/lib/section-formatting"
 interface Props {
   course: Courses
   showBorder?: boolean
+  term: number | undefined
 }
 
 const CourseEnrollCard = React.forwardRef<
   React.ComponentRef<typeof Card>,
   React.ComponentPropsWithoutRef<typeof Card> & Props
->(({ course, showBorder = true }, ref) => {
+>(({ course, showBorder = true, term }, ref) => {
   const { userId } = useAuth()
   const utils = trpc.useContext()
   const toast = useToast()
@@ -150,6 +151,7 @@ const CourseEnrollCard = React.forwardRef<
             ) : (
               <CourseSections
                 code={Code}
+                quarter={term?.toString()}
                 enrollNode={({ SectionId }) =>
                   !enrolled.data.some(
                     (enroll) => enroll.SectionId === SectionId

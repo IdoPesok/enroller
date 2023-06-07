@@ -10,12 +10,10 @@ interface Props {
 }
 
 export default function CourseSections({ code, enrollNode, quarter }: Props) {
-  const sections = trpc.sections.list.useQuery(
-    {
-      code,
-      term: quarter ? parseInt(quarter) : undefined,
-    },
-  )
+  const sections = trpc.sections.list.useQuery({
+    code,
+    term: quarter ? parseInt(quarter) : undefined,
+  })
 
   return (
     <>

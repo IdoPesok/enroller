@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 
 import WeekCalendar from "@/components/WeekCalendar/WeekCalendar"
 import CourseRow from "@/components/courses/course-row"
 import SwapSheet from "@/components/courses/swap-sheet"
 import EnrolledTypeBubble from "@/components/sections/enrolled-type-bubble"
+import TermSelect from "@/components/term/term-select"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { ButtonSpinner } from "@/components/ui/button-spinner"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,13 +24,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import ErrorMessage from "@/components/ui/error-message"
 import {
   Table,
   TableBody,
@@ -38,23 +34,19 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { daysFormat, hmFormat } from "@/lib/section-formatting"
-import { trpc } from "@/lib/trpc"
-import { useRouterQueryState } from "@/lib/use-router-query-state"
-import { cn } from "@/lib/utils"
-import { Enrolled_Type, Sections } from "@prisma/client"
-import { MoreHorizontal } from "lucide-react"
-import { ButtonSpinner } from "@/components/ui/button-spinner"
-import ErrorMessage from "@/components/ui/error-message"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { HelpCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import TermSelect from "@/components/term/term-select"
+import { daysFormat, hmFormat } from "@/lib/section-formatting"
+import { trpc } from "@/lib/trpc"
+import { useRouterQueryState } from "@/lib/use-router-query-state"
+import { cn } from "@/lib/utils"
+import { Enrolled_Type, Sections } from "@prisma/client"
+import { HelpCircle, MoreHorizontal } from "lucide-react"
 
 enum ViewType {
   List = "list",

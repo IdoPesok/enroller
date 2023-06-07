@@ -10,6 +10,7 @@ import { SearchToolbar } from "@/components/courses/search-toolbar"
 import { useRouterQueryState } from "@/lib/use-router-query-state"
 import CourseEnrollCard from "@/components/courses/course-enroll-card"
 import SkeletonCourseCard from "@/components/courses/skeleton-course-card"
+import { Sections } from "@prisma/client"
 
 export default function Courses({
   prefixOptions,
@@ -21,6 +22,13 @@ export default function Courses({
     {
       serializer: (value) => value.join(","),
       deserializer: (value) => value.split(","),
+    }
+  )
+  const [term, setTerm] = useRouterQueryState<Sections["TermId"] | undefined>(
+    "term",
+    undefined,
+    {
+      isNumber: true,
     }
   )
 
@@ -40,7 +48,9 @@ export default function Courses({
 
   const cards = courses.data?.pages
     .flatMap(({ courses }) => courses)
-    .map((course) => <CourseEnrollCard key={course.Code} course={course} />)
+    .map((course) => (
+      <CourseEnrollCard key={course.Code} course={course} term={term} />
+    ))
 
   return (
     <div className="mx-auto max-w-4xl pt-10">
@@ -49,6 +59,8 @@ export default function Courses({
         search={search}
         setSearch={setSearch}
         filters={{ prefixOptions, prefixes, setPrefixes }}
+        setTerm={setTerm}
+        term={term}
       />
       {cards ? (
         <>

@@ -7,6 +7,7 @@ import WeekCalendar from "../WeekCalendar/WeekCalendar"
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 import { EnrolledWithSection } from "@/interfaces/EnrolledTypes"
 import { useAuth } from "@clerk/nextjs"
+import { Skeleton } from "../ui/skeleton"
 
 interface Props {
   oldSectionId?: number
@@ -104,7 +105,7 @@ export default function ScheduleChangePreview({
   return (
     <div className="flex flex-col mt-5">
       <div className="flex justify-between items-center">
-        <p className="my-0 flex gap-2">
+        <div className="my-0 flex gap-2 items-center">
           <AlertTriangle />
           {isCreating
             ? "Please confirm: your new schedule if you add "
@@ -113,14 +114,16 @@ export default function ScheduleChangePreview({
             : isSwapping
             ? "Please confirm: your new schedule if you swap "
             : ""}
-          {isCreating
-            ? `${newSection.data?.Courses.Code}(${newSection.data?.SectionId})`
-            : isDropping
-            ? `${oldSection.data?.Courses.Code}(${oldSection.data?.SectionId})`
-            : isSwapping
-            ? `${oldSection.data?.Courses.Code}(${oldSection.data?.SectionId}) with ${newSection.data?.Courses.Code}(${newSection.data?.SectionId})`
-            : ""}
-        </p>
+          {isCreating && newSection.data ? (
+            `${newSection.data?.Courses.Code}(${newSection.data?.SectionId})`
+          ) : isDropping && oldSection.data ? (
+            `${oldSection.data?.Courses.Code}(${oldSection.data?.SectionId})`
+          ) : isSwapping && oldSection.data && newSection.data ? (
+            `${oldSection.data?.Courses.Code}(${oldSection.data?.SectionId}) with ${newSection.data?.Courses.Code}(${newSection.data?.SectionId})`
+          ) : (
+            <Skeleton className="w-24 h-5"></Skeleton>
+          )}
+        </div>
         <Tabs
           dir="ltr"
           value={viewType}
