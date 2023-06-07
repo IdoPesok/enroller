@@ -10,8 +10,8 @@ export const addLinksToModelResponse = (response: string): string => {
     return `[${courseCode}](${fullUrl})`
   }
 
-  courseCodes.forEach(courseCode => {
-    const courseCodeRegex = new RegExp(courseCode, 'g')
+  courseCodes.forEach((courseCode) => {
+    const courseCodeRegex = new RegExp(courseCode, "g")
     response = response.replace(courseCodeRegex, courseCodeToLink(courseCode))
   })
 

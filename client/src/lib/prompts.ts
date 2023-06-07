@@ -109,7 +109,7 @@ export default class PromptBuilder {
 
       Use the course data above to respond to the student question. Be concise and correct. If you don't know the answer, respond with "I don't know, I am a Cal Poly courses AI".
 
-      Response:`
+      Response:`,
     })
 
     return messages

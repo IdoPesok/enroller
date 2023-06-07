@@ -125,7 +125,9 @@ export default function Courses() {
         message={
           chat.error === 0 ? (
             <div id="markdown-viewer">
-              <ReactMarkdown>{ addLinksToModelResponse(chat.response) }</ReactMarkdown>
+              <ReactMarkdown>
+                {addLinksToModelResponse(chat.response)}
+              </ReactMarkdown>
             </div>
           ) : (
             <p className="text-red-500">{`${chat.response} - ${
