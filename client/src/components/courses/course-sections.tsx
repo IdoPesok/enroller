@@ -1,9 +1,7 @@
 import { columns } from "@/components/courses/course-sections-columns"
 import { DataTable } from "@/components/courses/data-table"
 import { trpc } from "@/lib/trpc"
-import { Enrolled, Sections } from "@prisma/client"
-import { ArrowLeftRight } from "lucide-react"
-import { Spinner } from "../ui/spinner"
+import { Sections } from "@prisma/client"
 import { useEffect, useState } from "react"
 import {
   Select,
@@ -38,11 +36,7 @@ export default function CourseSections({ code, enrollNode }: Props) {
     }
   )
 
-  return sections.isError ? (
-    <p>failed to fetch sections</p>
-  ) : !sections.data ? (
-    <Spinner />
-  ) : (
+  return (
     <>
       <Select value={quarter} onValueChange={setQuarter}>
         <SelectTrigger className="w-[180px] focus-visible:ring-0">
@@ -56,7 +50,13 @@ export default function CourseSections({ code, enrollNode }: Props) {
           ))}
         </SelectContent>
       </Select>
-      <DataTable columns={columns(enrollNode)} data={sections.data} />
+      <DataTable
+        columns={columns(enrollNode)}
+        data={sections.data ?? []}
+        isLoading={sections.isLoading}
+        isError={sections.isError}
+        errorMessage="Failed to fetch sections"
+      />
     </>
   )
 }

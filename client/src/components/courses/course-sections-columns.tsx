@@ -7,10 +7,11 @@ import { DataTableSortableColumnHeader } from "./data-table-sortable-column-head
 import { camelAddSpace, daysFormat, hmFormat } from "@/lib/section-formatting"
 import { Trash2 } from "lucide-react"
 import React from "react"
+import { SectionsWithCounts } from "@/interfaces/SectionTypes"
 
 export function columns(
-  enrollNode: (section: Sections) => React.ReactNode
-): ColumnDef<Sections>[] {
+  enrollNode: (section: SectionsWithCounts) => React.ReactNode
+): ColumnDef<SectionsWithCounts>[] {
   return [
     {
       header: ({ column }) => (
@@ -44,12 +45,17 @@ export function columns(
     },
     {
       header: "Enrolled",
-      // TODO: get enrolled programatically
-      accessorFn: ({ Capacity }) => `${0}/${Capacity}`,
+      cell: ({ row }) => {
+        const { Enrolled, Capacity } = row.original
+        return `${Enrolled}/${Capacity}`
+      },
     },
     {
       header: "Waitlist",
-      accessorKey: "WaitlistCapacity",
+      cell: ({ row }) => {
+        const { Waitlisted } = row.original
+        return Waitlisted
+      },
     },
     {
       header: "Class Type",

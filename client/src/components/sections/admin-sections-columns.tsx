@@ -6,13 +6,13 @@ import {
   AdminSectionRowActionHandlers,
   AdminSectionsRowActions,
 } from "./admin-sections-row-actions"
-import { SectionWithCourse } from "@/interfaces/SectionTypes"
+import { SectionsWithCourseAndCounts } from "@/interfaces/SectionTypes"
 import { DataTableSortableColumnHeader } from "../courses/data-table-sortable-column-header"
 
 export const getAdminSectionsColumns = (
   handlers: AdminSectionRowActionHandlers
-): ColumnDef<SectionWithCourse>[] => {
-  const temp: ColumnDef<SectionWithCourse>[] = [
+): ColumnDef<SectionsWithCourseAndCounts>[] => {
+  return [
     {
       header: ({ column }) => (
         <DataTableSortableColumnHeader column={column} title="Course" />
@@ -31,7 +31,5 @@ export const getAdminSectionsColumns = (
         />
       ),
     },
-  ] as ColumnDef<SectionWithCourse>[]
-
-  return temp
+  ] as ColumnDef<SectionsWithCourseAndCounts>[]
 }

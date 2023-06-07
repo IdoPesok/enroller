@@ -6,8 +6,6 @@ import {
   EnrolledWithUserData,
   enrolledSchema,
 } from "@/interfaces/EnrolledTypes"
-import { User } from "@clerk/nextjs/server"
-import { Enrolled_Type } from "@prisma/client"
 
 export const enrollRouter = router({
   create: studentProcedure

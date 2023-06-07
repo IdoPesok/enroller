@@ -108,3 +108,13 @@ export const sectionFormSchema = z.object({
 export type SectionWithCourse = Sections & {
   Courses: Courses
 }
+
+export type SectionsWithCounts = Sections & {
+  Enrolled: number
+  Waitlisted: number
+}
+
+export type SectionsWithCourseAndCounts = SectionWithCourse & {
+  Enrolled: number
+  Waitlisted: number
+}

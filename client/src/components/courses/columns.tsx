@@ -6,7 +6,7 @@ import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { ArrowUpDown } from "lucide-react"
 import { DataTableSortableColumnHeader } from "./data-table-sortable-column-header"
-import { SectionWithCourse } from "@/interfaces/SectionTypes"
+import { SectionsWithCounts } from "@/interfaces/SectionTypes"
 
 type SectionDays = { [key: string]: boolean | null | undefined }
 
@@ -41,7 +41,7 @@ function daysFormat({ Start, End, ...section }: Sections): string {
     .join("/")
 }
 
-export const columns: ColumnDef<Sections>[] = [
+export const columns: ColumnDef<SectionsWithCounts>[] = [
   {
     header: ({ column }) => (
       <DataTableSortableColumnHeader column={column} title="Professor" />
@@ -74,12 +74,17 @@ export const columns: ColumnDef<Sections>[] = [
   },
   {
     header: "Enrolled",
-    // TODO: get enrolled programatically
-    accessorFn: ({ Capacity }) => `${0}/${Capacity}`,
+    cell: ({ row }) => {
+      const { Enrolled, Capacity } = row.original
+      return `${Enrolled}/${Capacity}`
+    },
   },
   {
     header: "Waitlist",
-    accessorKey: "WaitlistCapacity",
+    cell: ({ row }) => {
+      const { Waitlisted } = row.original
+      return Waitlisted
+    },
   },
   {
     header: "Class Type",

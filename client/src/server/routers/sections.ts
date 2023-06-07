@@ -1,8 +1,13 @@
 import { prisma } from "@/server/prisma"
 import { z } from "zod"
 import { adminProcedure, studentProcedure, router } from "../trpc"
-import { ZodSectionObject } from "@/interfaces/SectionTypes"
+import {
+  SectionsWithCourseAndCounts,
+  ZodSectionObject,
+} from "@/interfaces/SectionTypes"
 import { fetchCatalogYear } from "@/lib/catalog-year"
+import { Enrolled_Type } from "@prisma/client"
+import { getSectionsWithCounts } from "@/lib/sections"
 
 export const sectionsRouter = router({
   create: adminProcedure.input(ZodSectionObject).mutation(async ({ input }) => {
@@ -68,7 +73,7 @@ export const sectionsRouter = router({
       const limit = input.limit ?? PER_PAGE
       const { search, cursor, filters } = input
 
-      const sections = await prisma.sections.findMany({
+      const initial = await prisma.sections.findMany({
         include: {
           Courses: true,
         },
@@ -105,6 +110,10 @@ export const sectionsRouter = router({
           : undefined,
       })
 
+      const sections = (await getSectionsWithCounts(
+        initial
+      )) as SectionsWithCourseAndCounts[]
+
       let nextCursor: typeof cursor | null = null
       if (sections.length > limit) {
         const nextSections = sections.pop()
@@ -134,7 +143,10 @@ export const sectionsRouter = router({
           CatalogYear: catalogYear,
         },
       })
-      return sections
+      // this has to be done manually because right now in prisma you cannot
+      // do multiple filtered relation counts on the same column
+
+      return await getSectionsWithCounts(sections)
     }),
   withEnrolleds: studentProcedure
     .input(z.object({ code: z.string() }))

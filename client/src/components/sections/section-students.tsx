@@ -7,7 +7,6 @@ import {
   SheetTitle,
 } from "../ui/sheet"
 import { trpc } from "@/lib/trpc"
-import { Spinner } from "../ui/spinner"
 import ErrorMessage from "../ui/error-message"
 import { getEnrolledUsersColumns } from "./enrolled-users-columns"
 import { DataTable } from "../courses/data-table"
@@ -25,6 +24,7 @@ export const SectionStudents = ({
   section,
 }: Props) => {
   const { toast } = useToast()
+  const utils = trpc.useContext()
 
   const usersEnrolled = trpc.enroll.usersEnrolledInSection.useQuery(
     {
@@ -43,6 +43,7 @@ export const SectionStudents = ({
         description: "The user was successfully removed from this section.",
         variant: "success",
       })
+      utils.sections.retrieve.invalidate();
     },
     onError: (error) => {
       toast({
@@ -85,6 +86,8 @@ export const SectionStudents = ({
           <div className="my-6">
             <DataTable
               showToolbar={false}
+              errorMessage="Failed to fetch enrolled users."
+              isError={usersEnrolled.isError}
               columns={columns}
               data={usersEnrolled.data ?? []}
               isLoading={usersEnrolled.isLoading}
