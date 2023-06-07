@@ -16,7 +16,7 @@ interface Options {
 export function useRouterQueryState<T>(
   name: string,
   defaultValue?: T,
-  opts: Options = {},
+  opts: Options = {}
 ): [T, Dispatch<SetStateAction<T>>] {
   const router = useRouter()
 

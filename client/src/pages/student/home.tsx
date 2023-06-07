@@ -105,7 +105,7 @@ export default function Home() {
     "term",
     undefined,
     {
-      isNumber: true
+      isNumber: true,
     }
   )
 

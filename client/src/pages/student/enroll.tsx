@@ -17,7 +17,7 @@ export default function Enroll() {
     "term",
     undefined,
     {
-      isNumber: true
+      isNumber: true,
     }
   )
 
