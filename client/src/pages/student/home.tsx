@@ -155,7 +155,7 @@ export default function Home() {
     ["In Shopping Cart", Enrolled_Type.ShoppingCart],
   ]
 
-  const headers = [
+  const headerValues = [
     "Course Number",
     "Course Name",
     "Section",
@@ -164,8 +164,10 @@ export default function Home() {
     "Start Time",
     "End Time",
     "Professor",
-    "Status",
-  ].map((header) => (
+    "Status"
+  ]
+
+  const headers = headerValues.map((header) => (
     <TableHead key={header} className="text-left">
       {header}
     </TableHead>
@@ -185,7 +187,7 @@ export default function Home() {
     <>
       {[1, 2, 3].map((rowIx) => (
         <TableRow key={rowIx + "skeleton-loader-row"}>
-          {headers.map((header) => (
+          {headerValues.map((header) => (
             <TableCell key={header + "skeleton-loader-cell"}>
               <div className="animate-pulse flex w-full h-4 rounded bg-slate-200" />
             </TableCell>
