@@ -99,16 +99,17 @@ export default class PromptBuilder {
     messages.push({
       role: "user",
       content: `
-      Given the following course data:
-
-      ---
+      <course_data>
       ${JSON.stringify(matches)}
-      ---
+      </course_data>
 
       <student_question>
       ${q}
       </student_question>
-    `,
+
+      Use the course data above to respond to the student question. Be concise and correct. If you don't know the answer, respond with "I don't know, I am a Cal Poly courses AI".
+
+      Response:`
     })
 
     return messages

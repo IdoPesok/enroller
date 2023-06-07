@@ -3,9 +3,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Search } from "@/components/ui/search"
 import { trpc } from "@/lib/trpc"
 import { ReactMarkdown } from "react-markdown/lib/react-markdown"
-import { Stars, Wand } from "lucide-react"
+import { Divide, Stars, Wand } from "lucide-react"
 import { useUser } from "@clerk/nextjs"
 import { ChatItem } from "@/components/explore/chat-item"
+import { addLinksToModelResponse } from "@/lib/explore"
 
 interface Chat {
   message: string
@@ -52,9 +53,9 @@ export default function Courses() {
     },
   })
 
-  const handleExplore = () => {
+  const handleExplore = (prompt?: string) => {
     exploreMutation.mutateAsync({
-      prompt: promptInput,
+      prompt: prompt ?? promptInput,
       filterDatabase,
     })
   }
@@ -72,7 +73,7 @@ export default function Courses() {
       onClick={() => {
         setSearch(question)
         setPromptInput(question)
-        handleExplore()
+        handleExplore(question)
       }}
     >
       <Stars className="text-emerald-500" />
@@ -117,13 +118,15 @@ export default function Courses() {
     </div>
   )
 
-  const chats = chatHistory.map((chat) => (
-    <>
+  const chats = chatHistory.map((chat, ix) => (
+    <div className="flex gap-8 flex-col" key={chat.message + ix}>
       {userMessage(chat.message)}
       <ChatItem
         message={
           chat.error === 0 ? (
-            <ReactMarkdown>{chat.response}</ReactMarkdown>
+            <div id="markdown-viewer">
+              <ReactMarkdown>{ addLinksToModelResponse(chat.response) }</ReactMarkdown>
+            </div>
           ) : (
             <p className="text-red-500">{`${chat.response} - ${
               chat.errorMessage ?? "No Error Message"
@@ -132,7 +135,7 @@ export default function Courses() {
         }
         userIcon={<Wand className="text-white" size={18} />}
       />
-    </>
+    </div>
   ))
 
   return (
