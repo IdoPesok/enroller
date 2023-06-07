@@ -7,12 +7,8 @@ import {
   generateOnboardingRoute,
   generateStudentRoute,
   getRouteType,
-  isAdminRoute,
   isApiPath,
   isErrorPath,
-  isOnboardingRoute,
-  isPublicRoute,
-  isStudentRoute,
 } from "./lib/routes"
 import { doesUserNeedOnboarding, isUserAdmin } from "./lib/auth"
 

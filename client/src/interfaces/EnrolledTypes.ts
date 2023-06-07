@@ -1,3 +1,4 @@
+import { User } from "@clerk/nextjs/server"
 import { Enrolled, Sections } from "@prisma/client"
 import { z } from "zod"
 
@@ -12,3 +13,7 @@ export const enrolledSchema = z.object({
   Seat: z.number().nullable(),
   Type: z.enum(["Enrolled", "Waitlist", "ShoppingCart"]),
 })
+
+export type EnrolledWithUserData = Enrolled & {
+  userData: User
+}

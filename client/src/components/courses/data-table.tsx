@@ -32,12 +32,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   isLoading?: boolean
+  showToolbar?: boolean
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   isLoading,
+  showToolbar = true,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -71,7 +73,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-2 mt-1">
-      <DataTableToolbar table={table} />
+      {showToolbar && <DataTableToolbar table={table} />}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -119,14 +121,17 @@ export function DataTable<TData, TValue>({
                 </TableCell>
               </TableRow>
             ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  <Spinner />
-                </TableCell>
-              </TableRow>
+              <>
+                {[1, 2, 3].map((rowIx) => (
+                  <TableRow key={rowIx + "skeleton-loader-row"}>
+                    {table.getAllColumns().map((column) => (
+                      <TableCell key={column.id + "skeleton-loader-cell"}>
+                        <div className="animate-pulse flex w-full h-4 rounded bg-slate-200" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </>
             )}
           </TableBody>
         </Table>

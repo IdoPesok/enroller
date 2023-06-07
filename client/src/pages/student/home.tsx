@@ -51,6 +51,7 @@ import {
 } from "lucide-react"
 import { useRouterQueryState } from "@/lib/use-router-query-state"
 import { Spinner } from "@/components/ui/spinner"
+import EnrolledTypeBubble from "@/components/sections/enrolled-type-bubble"
 
 const HEIGHT_OFFSET = 210
 
@@ -237,28 +238,7 @@ export default function Home() {
                     <TableCell>{hmFormat(End)}</TableCell>
                     <TableCell>{Professor}</TableCell>
                     <TableCell>
-                      <span
-                        className={cn(
-                          "whitespace-nowrap w-32 h-2 py-3 px-1 text-xs font-medium rounded-full flex gap-2 items-center justify-center",
-                          Status === Enrolled_Type.Enrolled &&
-                            "text-green-900 bg-green-200",
-                          Status === Enrolled_Type.Waitlist &&
-                            "text-amber-900 bg-amber-200",
-                          Status === Enrolled_Type.ShoppingCart &&
-                            "text-sky-900 bg-sky-200"
-                        )}
-                      >
-                        {camelAddSpace(Status)}{" "}
-                        {Status === Enrolled_Type.Enrolled ? (
-                          <CheckCircle2 size={10} />
-                        ) : Status === Enrolled_Type.Waitlist ? (
-                          <AlertCircle size={10} />
-                        ) : Status === Enrolled_Type.ShoppingCart ? (
-                          <ShoppingCart size={10} />
-                        ) : (
-                          <HelpCircle size={10} />
-                        )}
-                      </span>
+                      <EnrolledTypeBubble Status={Status} />
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>

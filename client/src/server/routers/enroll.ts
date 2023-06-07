@@ -1,8 +1,12 @@
 import { prisma } from "@/server/prisma"
-import { z } from "zod"
-import { studentProcedure, router } from "../trpc"
-import { enrolledSchema } from "@/interfaces/EnrolledTypes"
 import { clerkClient } from "@clerk/nextjs"
+import { z } from "zod"
+import { studentProcedure, router, adminProcedure } from "../trpc"
+import {
+  EnrolledWithUserData,
+  enrolledSchema,
+} from "@/interfaces/EnrolledTypes"
+import { User } from "@clerk/nextjs/server"
 import { Enrolled_Type } from "@prisma/client"
 
 export const enrollRouter = router({
@@ -81,6 +85,53 @@ export const enrollRouter = router({
     })
     return enrolled
   }),
+  usersEnrolledInSection: adminProcedure
+    .input(
+      z.object({
+        SectionId: z.number().min(0),
+      })
+    )
+    .query(async ({ input }) => {
+      const enrolled = await prisma.enrolled.findMany({
+        where: {
+          SectionId: input.SectionId,
+        },
+      })
+
+      const ret: EnrolledWithUserData[] = []
+
+      for (const e of enrolled) {
+        const clerkUser = await clerkClient.users.getUser(e.User)
+
+        if (clerkUser) {
+          ret.push({
+            ...e,
+            userData: clerkUser,
+          })
+        }
+      }
+
+      return ret
+    }),
+  unenrollUser: adminProcedure
+    .input(
+      z.object({
+        SectionId: z.number().min(0),
+        UserId: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const enrolled = await prisma.enrolled.delete({
+        where: {
+          User_SectionId: {
+            User: input.UserId,
+            SectionId: input.SectionId,
+          },
+        },
+      })
+
+      return enrolled
+    }),
 })
 
 export type AppRouter = typeof enrollRouter

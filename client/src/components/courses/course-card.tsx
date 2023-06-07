@@ -44,7 +44,7 @@ const CourseCard = React.forwardRef<
       <CardContent>
         <p>{Description}</p>
       </CardContent>
-      <CardFooter>{linkButton}</CardFooter>
+      <CardFooter className="justify-end flex">{linkButton}</CardFooter>
     </Card>
   )
 })
