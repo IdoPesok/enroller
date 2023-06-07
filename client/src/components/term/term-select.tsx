@@ -28,10 +28,11 @@ export default function TermSelect({ term, setTerm }: Props) {
       onValueChange={(t) => setTerm(parseInt(t))}
     >
       <SelectTrigger className="w-[180px] focus-visible:ring-0">
-        {terms.isLoading && (
+        {terms.isLoading ? (
           <div className="animate-pulse flex w-full h-4 rounded bg-slate-200" />
+        ) : (
+          <SelectValue placeholder="Spring 2023" />
         )}
-        <SelectValue placeholder="Spring 2023" />
       </SelectTrigger>
       <SelectContent>
         {terms.data?.map(({ TermId, Year, Season }) => (
