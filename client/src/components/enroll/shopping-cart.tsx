@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils"
 import ErrorMessage from "../ui/error-message"
 import { daysFormat } from "@/lib/section-formatting"
-import { Check, ExternalLinkIcon } from "lucide-react"
+import { Check } from "lucide-react"
 import { Checkbox } from "../ui/checkbox"
 import { Switch } from "../ui/switch"
 import Link from "next/link"
@@ -51,7 +51,14 @@ export default function ShoppingCart({
   const enrollCart = trpc.enroll.enrollShoppingCart.useMutation({
     onSuccess: async () => {
       await cartSections.refetch()
-      //utils.enroll.enrollShoppingCart.invalidate()
+      utils.home.userSections.invalidate()
+    },
+  })
+
+  const enrollSect = trpc.enroll.enrollSection.useMutation({
+    onSuccess: async () => {
+      await cartSections.refetch()
+      utils.home.userSections.invalidate()
     },
   })
 
@@ -65,15 +72,25 @@ export default function ShoppingCart({
   }
 
   const handleEnroll = () => {
-    enrollCart.mutate() 
-    // updateSections(trpc.enroll.listShoppingCart.useQuery(
-    //   {
-    //     term: quarter!,
-    //   },
-    //   {
-    //     enabled: Boolean(quarter),
-    //   }
-    // ))
+
+    //TODO: for all sections not hidden, call enroll on them :)
+    if(cartSections?.data != null){
+      for(var sect of cartSections?.data){
+        enrollSect.mutate({
+          SectionId: sect.SectionId,
+          ToWaitlist: true //TODO: placeholder until I input logic here from dontwaitlist
+        })
+      }
+    }
+
+    //enrollCart.mutate() 
+
+    //should go through each section in the cart and enroll if valid
+    //don't enroll hidden sections
+
+    //check if the class is under "dontWaitlist before waitlisting"
+    //input true or false to waitlist
+
     //await mutate return and then refetch
     cartSections.refetch()
     //updateCart(true)
@@ -128,6 +145,8 @@ export default function ShoppingCart({
         ) : cartSections.data.length === 0 ? (
           emptyWarning
         ) : enrollCart.isLoading ? (
+          skeletonLoader
+        ) : enrollSect.isLoading ? (
           skeletonLoader
         ) : (
           <div>

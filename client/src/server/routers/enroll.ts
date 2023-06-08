@@ -159,6 +159,85 @@ export const enrollRouter = router({
       return enrolled
     }),
 
+
+    enrollSection: studentProcedure
+    .input(
+      z.object({
+        SectionId: z.number(),
+        ToWaitlist: z.boolean() //whether to add to waitlist or not
+      })
+    )
+    .mutation(async ({ctx, input}) => {
+
+      const numTakenSeats = await prisma.enrolled.count({
+        where: {
+          SectionId: input.SectionId, //could do section itself
+          Type: "Enrolled",
+        },
+      })
+
+      const numWaitlistedSeats = await prisma.enrolled.count({
+        where: {
+          SectionId: input.SectionId, //could do section itself
+          Type: "Waitlist",
+        },
+      })
+
+      const section = await prisma.enrolled.findFirst({
+        where: {
+          User: ctx.auth.userId,
+          SectionId: input.SectionId,
+          Type: "ShoppingCart",
+        },
+        include: {
+          Section: true,
+        },
+      })
+
+      if (
+        section?.Section.Capacity != null &&
+        numTakenSeats < section.Section.Capacity &&
+        section.Type == "ShoppingCart"
+      ) {
+        const enrollSection = await prisma.enrolled.update({
+          where: {
+            User_SectionId: {
+              User: ctx.auth.userId,
+              SectionId: section.SectionId,
+            },
+          },
+          data: {
+            Type: "Enrolled",
+            Seat: numTakenSeats + 1,
+          },
+        })
+      } //input into waitlist if waitlist not full
+      else if (
+        section?.Section.Capacity != null &&
+        numTakenSeats >= section.Section.Capacity &&
+        section.Section.WaitlistCapacity != null &&
+        numWaitlistedSeats < section.Section.WaitlistCapacity &&
+        section.Type == "ShoppingCart" &&
+        input.ToWaitlist
+      ) {
+        const waitlistSection = await prisma.enrolled.update({
+          where: {
+            User_SectionId: {
+              User: ctx.auth.userId,
+              SectionId: section.SectionId,
+            },
+          },
+          data: {
+            Type: "Waitlist",
+            Seat: numWaitlistedSeats + 1,
+          },
+        })
+      } else {
+        //Mention waitlist was full / class is closed
+      }
+
+    }),
+
   //TODO: need to make a check if someone checked off to be added to the waitlist
   enrollShoppingCart: studentProcedure.mutation(async ({ ctx }) => {
     console.log(ctx.auth.userId)
