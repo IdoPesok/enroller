@@ -378,6 +378,10 @@ export const SectionForm = ({
                       placeholder="Enrolled Capacity"
                       {...field}
                       type="number"
+                      onChange={(event) => {
+                        const numericValue = parseInt(event.target.value, 10)
+                        field.onChange(numericValue)
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -395,6 +399,10 @@ export const SectionForm = ({
                       placeholder="Waitlist Capacity"
                       {...field}
                       type="number"
+                      onChange={(event) => {
+                        const numericValue = parseInt(event.target.value, 10)
+                        field.onChange(numericValue)
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
