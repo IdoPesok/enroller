@@ -12,10 +12,12 @@ import {
 import { cn } from "@/lib/utils"
 import ErrorMessage from "../ui/error-message"
 import { daysFormat } from "@/lib/section-formatting"
-import { Check, ExternalLinkIcon } from "lucide-react"
+import { Check } from "lucide-react"
 import { Checkbox } from "../ui/checkbox"
 import { Switch } from "../ui/switch"
 import Link from "next/link"
+import { useToast } from "../ui/use-toast"
+import { ButtonSpinner } from "../ui/button-spinner"
 
 type Props = React.ComponentProps<typeof Card> & {
   hiddenSections: number[]
@@ -30,6 +32,9 @@ export default function ShoppingCart({
   quarter,
   ...props
 }: Props) {
+  const utils = trpc.useContext()
+  const { toast } = useToast()
+
   const cartSections = trpc.enroll.listShoppingCart.useQuery(
     {
       term: quarter!,
@@ -39,7 +44,37 @@ export default function ShoppingCart({
     }
   )
 
-  const enrollCart = trpc.enroll.enrollShoppingCart.useMutation()
+  //TODO: different toasts for different statuses: waitlisted, enrolled, not enrolled (check if in waitlist, shopping cart, or enrolled)
+  const enrollSect = trpc.enroll.enrollSection.useMutation({
+    onSuccess: async (transactions) => {
+      utils.home.userSections.invalidate()
+      await cartSections.refetch()
+      for (const { status, message, waitlisted } of transactions) {
+        if (status === "success") {
+          toast({
+            title: waitlisted
+              ? "Waitlisted for section"
+              : "Enrolled in section",
+            description: message,
+            variant: "success",
+          })
+        } else {
+          toast({
+            title: "Failed to enroll in section",
+            description: message,
+            variant: "success",
+          })
+        }
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Enroll endpoint error",
+        description: error.message,
+        variant: "destructive",
+      })
+    },
+  })
 
   const [dontWaitlist, setDontWaitlist] = useState<number[]>([])
   const updateDontWaitlist = (sectionId: number) => {
@@ -50,8 +85,27 @@ export default function ShoppingCart({
     }
   }
 
-  const handleEnroll = () => {
-    enrollCart.mutate()
+  const handleEnroll = async () => {
+    let sectionIds = cartSections.data?.map((sect) => sect.SectionId)
+    sectionIds = sectionIds?.filter(
+      (sectionId) => !hiddenSections.includes(sectionId)
+    )
+
+    if (!sectionIds || sectionIds.length === 0) {
+      toast({
+        title: "Enroll failed!",
+        description: "No sections selected.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    enrollSect.mutateAsync(
+      sectionIds.map((id) => ({
+        SectionId: id,
+        ToWaitlist: !dontWaitlist.includes(id),
+      }))
+    )
   }
 
   const skeletonLoader = (
@@ -100,6 +154,8 @@ export default function ShoppingCart({
           <ErrorMessage message={cartSections.error.message} />
         ) : cartSections.data.length === 0 ? (
           emptyWarning
+        ) : enrollSect.isLoading ? (
+          skeletonLoader
         ) : (
           <div>
             {cartSections.data.map((cartSection, index) => (
@@ -118,7 +174,6 @@ export default function ShoppingCart({
                     >
                       {cartSection.Section.Course}:{" "}
                       {cartSection.Section.Courses.Name}
-                      <ExternalLinkIcon size={16} />
                     </Link>
                     <div className="flex gap-4 justify-end items-center">
                       <Switch
@@ -180,9 +235,20 @@ export default function ShoppingCart({
       <CardFooter>
         <Button
           className="w-full"
-          disabled={!cartSections.data || cartSections.data?.length === 0}
+          disabled={
+            !cartSections.data ||
+            cartSections.data?.length === 0 ||
+            hiddenSections.length === cartSections.data?.length ||
+            enrollSect.isLoading
+          }
+          onClick={handleEnroll}
         >
-          <Check className="mr-2 h-4 w-4" /> Enroll
+          {enrollSect.isLoading ? (
+            <ButtonSpinner className="mr-2" />
+          ) : (
+            <Check className="mr-2 h-4 w-4" />
+          )}
+          Enroll
         </Button>
       </CardFooter>
     </Card>

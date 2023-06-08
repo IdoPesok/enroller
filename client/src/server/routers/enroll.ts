@@ -4,9 +4,197 @@ import { z } from "zod"
 import { studentProcedure, router, adminProcedure } from "../trpc"
 import {
   EnrolledWithUserData,
+  EnrollmentTransaction,
   enrolledSchema,
 } from "@/interfaces/EnrolledTypes"
-import { Enrolled_Type } from "@prisma/client"
+import { Enrolled, Enrolled_Type } from "@prisma/client"
+import { internalServerError } from "@/lib/trpc"
+import { TRPCError } from "@trpc/server"
+
+async function enroll(
+  userId: string,
+  sectionId: number,
+  toWaitlist?: boolean
+): Promise<EnrollmentTransaction> {
+  try {
+    const numTakenSeats = await prisma.enrolled.count({
+      where: {
+        SectionId: sectionId, //could do section itself
+        Type: "Enrolled",
+      },
+    })
+
+    const numWaitlistedSeats = await prisma.enrolled.count({
+      where: {
+        SectionId: sectionId, //could do section itself
+        Type: "Waitlist",
+      },
+    })
+
+    const carted = await prisma.enrolled.findFirst({
+      where: {
+        User: userId,
+        SectionId: sectionId,
+        Type: "ShoppingCart",
+      },
+      include: {
+        Section: true,
+      },
+    })
+
+    if (!carted) {
+      return {
+        status: "failure",
+        message: `section with id ${sectionId} does not exist`,
+      }
+    }
+    const section = carted.Section
+
+    if (section.Capacity && numTakenSeats < section.Capacity) {
+      await prisma.enrolled.update({
+        where: {
+          User_SectionId: {
+            User: userId,
+            SectionId: section.SectionId,
+          },
+        },
+        data: {
+          Type: Enrolled_Type.Enrolled,
+          Seat: numTakenSeats + 1,
+        },
+      })
+
+      return {
+        status: "success",
+        message: `${section.Course} (${section.SectionId}) successfully enrolled`,
+      }
+    } else if (
+      section.WaitlistCapacity &&
+      numWaitlistedSeats < section.WaitlistCapacity &&
+      toWaitlist
+    ) {
+      //input into waitlist if waitlist not full
+      await prisma.enrolled.update({
+        where: {
+          User_SectionId: {
+            User: userId,
+            SectionId: section.SectionId,
+          },
+        },
+        data: {
+          Type: "Waitlist",
+          Seat: numWaitlistedSeats + 1,
+        },
+      })
+
+      return {
+        status: "success",
+        message: `${section.Course} (${section.SectionId}) WAITLISTED`,
+        waitlisted: true,
+      }
+    } else {
+      return {
+        status: "failure",
+        message: "Class is full",
+      }
+    }
+  } catch (e) {
+    return {
+      status: "failure",
+      message: "Could not enroll in class due to database error",
+    }
+  }
+}
+
+async function drop(
+  userId: string,
+  sectionId: number
+): Promise<Enrolled> {
+  try {
+    const enrolled = await prisma.enrolled.findFirst({
+      where: {
+        User: userId,
+        SectionId: sectionId,
+      },
+    })
+
+    if (!enrolled) {
+      throw internalServerError("Could not find enrolled record")
+    }
+
+    const dropped = await prisma.enrolled.delete({
+      where: {
+        User_SectionId: {
+          User: userId,
+          SectionId: sectionId,
+        },
+      },
+    })
+
+    if (enrolled.Type === Enrolled_Type.Enrolled && enrolled.Seat != null) {
+      // move all the seat numbers down by one
+      const enrolledRecords = await prisma.enrolled.findMany({
+        where: {
+          SectionId: sectionId,
+          Type: Enrolled_Type.Enrolled,
+          Seat: {
+            gt: enrolled.Seat ?? undefined,
+          },
+        },
+      })
+
+      const transactions: Promise<Enrolled>[] = []
+      for (const enrolledRecord of enrolledRecords) {
+        if (!enrolledRecord.Seat) continue
+        transactions.push(
+          prisma.enrolled.update({
+            where: {
+              User_SectionId: {
+                User: enrolledRecord.User,
+                SectionId: sectionId,
+              },
+            },
+            data: {
+              Seat: enrolledRecord.Seat - 1,
+            },
+          })
+        )
+      }
+
+      await Promise.all(transactions)
+
+      const waitlisted = await prisma.enrolled.findFirst({
+        where: {
+          SectionId: sectionId,
+          Type: Enrolled_Type.Waitlist,
+        },
+        orderBy: {
+          Seat: "asc",
+        },
+      })
+
+      // if there is a waitlist, move the first person in the waitlist to enrolled
+      if (waitlisted) {
+        await prisma.enrolled.update({
+          where: {
+            User_SectionId: {
+              User: waitlisted.User,
+              SectionId: sectionId,
+            },
+          },
+          data: {
+            Type: Enrolled_Type.Enrolled,
+            Seat: enrolledRecords.length + 1,
+          },
+        })
+      }
+    }
+
+    return dropped;
+  } catch (e) {
+    throw internalServerError("Could not drop class due to database error")
+  }
+}
 
 export const enrollRouter = router({
   create: studentProcedure
@@ -50,16 +238,7 @@ export const enrollRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const deletedSection = await prisma.enrolled.delete({
-        where: {
-          User_SectionId: {
-            User: ctx.auth.userId,
-            SectionId: input.SectionId,
-          },
-        },
-      })
-
-      return deletedSection
+      return await drop(ctx.auth.userId, input.SectionId)
     }),
   list: studentProcedure.query(async ({ ctx }) => {
     const enrolled = await prisma.enrolled.findMany({
@@ -120,16 +299,7 @@ export const enrollRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const enrolled = await prisma.enrolled.delete({
-        where: {
-          User_SectionId: {
-            User: input.UserId,
-            SectionId: input.SectionId,
-          },
-        },
-      })
-
-      return enrolled
+      return await drop(input.UserId, input.SectionId)
     }),
   listShoppingCart: studentProcedure
     .input(
@@ -159,113 +329,24 @@ export const enrollRouter = router({
       return enrolled
     }),
 
-  //TODO: need to make a check if someone checked off to be added to the waitlist
-  enrollShoppingCart: studentProcedure.mutation(async ({ ctx }) => {
-    console.log(ctx.auth.userId)
-
-    //do 2 queries and select from 2 separate ones?
-    //select the 2 separate sets and mutate individually
-
-    // have to query _count in
-    // use a join and group by for query
-    // need to determine if the section should:
-    //  - go into enrolled (fewer enrolled than capacity)
-    //  - go into waitlist (more enrolled than capacity, fewer waitlist than waitlist capacity)
-    //  - nothing, stays in shopping cart
-
-    // query all shopping cart for the user
-    //join with section on sectionid
-
-    // need to fill in the seat as well
-
-    // all shopping cart vals
-    const shopping = await prisma.enrolled.findMany({
-      where: {
-        User: ctx.auth.userId,
-        Type: "ShoppingCart",
-      },
-      include: {
-        Section: true,
-      },
-    })
-
-    // count the number of sections in enrolled that are of the same as the user
-    // go through their shopping cart and enroll or waitlist them
-
-    // have to query _count in
-    // need to determine if the section should:
-    //  - go into enrolled (fewer enrolled than capacity)
-    //  - go into waitlist (more enrolled than capacity, fewer waitlist than waitlist capacity)
-    //  - nothing, stays in shopping cart
-
-    for (var sect of shopping) {
-      //counts number of enrolled seats
-      const numTakenSeats = await prisma.enrolled.count({
-        where: {
-          SectionId: sect.SectionId, //could do section itself
-          Type: "Enrolled",
-        },
-      })
-
-      const numWaitlistedSeats = await prisma.enrolled.count({
-        where: {
-          SectionId: sect.SectionId, //could do section itself
-          Type: "Waitlist",
-        },
-      })
-
-      //TODO: error when section is null
-      // enroll user into section if not full, double check it's in shoppingcart
-      if (
-        sect.Section.Capacity != null &&
-        numTakenSeats < sect.Section.Capacity &&
-        sect.Type == "ShoppingCart"
-      ) {
-        const enrollSection = await prisma.enrolled.update({
-          where: {
-            User_SectionId: {
-              User: ctx.auth.userId,
-              SectionId: sect.SectionId,
-            },
-          },
-          data: {
-            Type: "Enrolled",
-            Seat: numTakenSeats + 1,
-          },
+  enrollSection: studentProcedure
+    .input(
+      z.array(
+        z.object({
+          SectionId: z.number(),
+          ToWaitlist: z.boolean(), //whether to add to waitlist or not
         })
-      } //input into waitlist if waitlist not full
-      else if (
-        sect.Section.Capacity != null &&
-        numTakenSeats >= sect.Section.Capacity &&
-        sect.Section.WaitlistCapacity != null &&
-        numWaitlistedSeats < sect.Section.WaitlistCapacity &&
-        sect.Type == "ShoppingCart"
-      ) {
-        const waitlistSection = await prisma.enrolled.update({
-          where: {
-            User_SectionId: {
-              User: ctx.auth.userId,
-              SectionId: sect.SectionId,
-            },
-          },
-          data: {
-            Type: "Waitlist",
-            Seat: numWaitlistedSeats + 1,
-          },
-        })
-      } else {
-        //Mention waitlist was full / class is closed
+      )
+    )
+    .mutation(async ({ ctx, input }) => {
+      const transactions: Promise<EnrollmentTransaction>[] = []
+
+      for (const { SectionId, ToWaitlist } of input) {
+        transactions.push(enroll(ctx.auth.userId, SectionId, ToWaitlist))
       }
-    }
 
-    //TODO: return status messages
-
-    //return enrolled
-    //return status code if enroll success or failure
-    //use default trpc? internal server error?
-    //put error message?
-    //return what was enrolled
-  }),
+      return await Promise.all(transactions)
+    }),
 })
 
 export type AppRouter = typeof enrollRouter

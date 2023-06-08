@@ -17,3 +17,9 @@ export const enrolledSchema = z.object({
 export type EnrolledWithUserData = Enrolled & {
   userData: User
 }
+
+export interface EnrollmentTransaction {
+  status: "success" | "failure"
+  message: string
+  waitlisted?: boolean
+}
