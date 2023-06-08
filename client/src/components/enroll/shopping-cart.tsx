@@ -30,6 +30,15 @@ export default function ShoppingCart({
   quarter,
   ...props
 }: Props) {
+  const utils = trpc.useContext()
+  // const [cartSections, updateSections] = React.useState(trpc.enroll.listShoppingCart.useQuery(
+  //   {
+  //     term: quarter!,
+  //   },
+  //   {
+  //     enabled: Boolean(quarter),
+  //   }
+  // ));
   const cartSections = trpc.enroll.listShoppingCart.useQuery(
     {
       term: quarter!,
@@ -39,7 +48,12 @@ export default function ShoppingCart({
     }
   )
 
-  const enrollCart = trpc.enroll.enrollShoppingCart.useMutation()
+  const enrollCart = trpc.enroll.enrollShoppingCart.useMutation({
+    onSuccess: async () => {
+      await cartSections.refetch()
+      //utils.enroll.enrollShoppingCart.invalidate()
+    },
+  })
 
   const [dontWaitlist, setDontWaitlist] = useState<number[]>([])
   const updateDontWaitlist = (sectionId: number) => {
@@ -51,8 +65,21 @@ export default function ShoppingCart({
   }
 
   const handleEnroll = () => {
-    enrollCart.mutate()
+    enrollCart.mutate() 
+    // updateSections(trpc.enroll.listShoppingCart.useQuery(
+    //   {
+    //     term: quarter!,
+    //   },
+    //   {
+    //     enabled: Boolean(quarter),
+    //   }
+    // ))
+    //await mutate return and then refetch
+    cartSections.refetch()
+    //updateCart(true)
+
   }
+
 
   const skeletonLoader = (
     <div>
@@ -100,6 +127,8 @@ export default function ShoppingCart({
           <ErrorMessage message={cartSections.error.message} />
         ) : cartSections.data.length === 0 ? (
           emptyWarning
+        ) : enrollCart.isLoading ? (
+          skeletonLoader
         ) : (
           <div>
             {cartSections.data.map((cartSection, index) => (
@@ -118,7 +147,6 @@ export default function ShoppingCart({
                     >
                       {cartSection.Section.Course}:{" "}
                       {cartSection.Section.Courses.Name}
-                      <ExternalLinkIcon size={16} />
                     </Link>
                     <div className="flex gap-4 justify-end items-center">
                       <Switch
@@ -181,6 +209,7 @@ export default function ShoppingCart({
         <Button
           className="w-full"
           disabled={!cartSections.data || cartSections.data?.length === 0}
+          onClick={handleEnroll}
         >
           <Check className="mr-2 h-4 w-4" /> Enroll
         </Button>

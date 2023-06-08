@@ -76,7 +76,7 @@ export default function Home() {
     onSuccess: async (data, variables, context) => {
       await utils.home.userSections.invalidate()
       toast({
-        title: "Section drpoped!",
+        title: "Section dropped!",
         description: "The section was successfully dropped.",
         variant: "success",
       })
