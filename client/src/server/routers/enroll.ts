@@ -9,6 +9,103 @@ import {
 } from "@/interfaces/EnrolledTypes"
 import { Enrolled_Type } from "@prisma/client"
 
+async function enroll(
+  userId: string,
+  sectionId: number,
+  waitlist?: boolean
+): Promise<EnrollmentTransaction> {
+  try {
+    const numTakenSeats = await prisma.enrolled.count({
+      where: {
+        SectionId: sectionId, //could do section itself
+        Type: "Enrolled",
+      },
+    })
+
+    const numWaitlistedSeats = await prisma.enrolled.count({
+      where: {
+        SectionId: sectionId, //could do section itself
+        Type: "Waitlist",
+      },
+    })
+
+    const section = await prisma.enrolled.findFirst({
+      where: {
+        User: userId,
+        SectionId: sectionId,
+        Type: "ShoppingCart",
+      },
+      include: {
+        Section: true,
+      },
+    })
+
+    if (
+      section?.Section.Capacity != null &&
+      numTakenSeats < section.Section.Capacity &&
+      section.Type == Enrolled_Type.ShoppingCart
+    ) {
+      await prisma.enrolled.update({
+        where: {
+          User_SectionId: {
+            User: userId,
+            SectionId: section.SectionId,
+          },
+        },
+        data: {
+          Type: Enrolled_Type.Enrolled,
+          Seat: numTakenSeats + 1,
+        },
+      })
+
+      return {
+        status: "success",
+        message: `${section.Section.Course} (${section.SectionId}) successfully enrolled`,
+        waitlisted: false,
+      }
+    } else if (
+      section?.Section.Capacity != null &&
+      numTakenSeats >= section.Section.Capacity &&
+      section.Section.WaitlistCapacity != null &&
+      numWaitlistedSeats < section.Section.WaitlistCapacity &&
+      section.Type === Enrolled_Type.ShoppingCart &&
+      waitlist
+    ) {
+      //input into waitlist if waitlist not full
+      await prisma.enrolled.update({
+        where: {
+          User_SectionId: {
+            User: userId,
+            SectionId: section.SectionId,
+          },
+        },
+        data: {
+          Type: "Waitlist",
+          Seat: numWaitlistedSeats + 1,
+        },
+      })
+
+      return {
+        status: "success",
+        message: `${section.Section.Course} (${section.SectionId}) WAITLISTED`,
+        waitlisted: false,
+      }
+    } else {
+      return {
+        status: "failure",
+        message: "Class is full",
+        waitlisted: false,
+      }
+    }
+  } catch (e) {
+    return {
+      status: "failure",
+      message: "Could not enroll in class due to database error",
+      waitlisted: false,
+    }
+  }
+}
+
 export const enrollRouter = router({
   create: studentProcedure
     .input(enrolledSchema)
@@ -170,102 +267,13 @@ export const enrollRouter = router({
       )
     )
     .mutation(async ({ ctx, input }) => {
-      const transactions: EnrollmentTransaction[] = []
+      const transactions: Promise<EnrollmentTransaction>[] = []
 
       for (const { SectionId, ToWaitlist } of input) {
-        try {
-          const numTakenSeats = await prisma.enrolled.count({
-            where: {
-              SectionId: SectionId, //could do section itself
-              Type: "Enrolled",
-            },
-          })
-
-          const numWaitlistedSeats = await prisma.enrolled.count({
-            where: {
-              SectionId: SectionId, //could do section itself
-              Type: "Waitlist",
-            },
-          })
-
-          const section = await prisma.enrolled.findFirst({
-            where: {
-              User: ctx.auth.userId,
-              SectionId: SectionId,
-              Type: "ShoppingCart",
-            },
-            include: {
-              Section: true,
-            },
-          })
-
-          if (
-            section?.Section.Capacity != null &&
-            numTakenSeats < section.Section.Capacity &&
-            section.Type == Enrolled_Type.ShoppingCart
-          ) {
-            await prisma.enrolled.update({
-              where: {
-                User_SectionId: {
-                  User: ctx.auth.userId,
-                  SectionId: section.SectionId,
-                },
-              },
-              data: {
-                Type: Enrolled_Type.Enrolled,
-                Seat: numTakenSeats + 1,
-              },
-            })
-
-            transactions.push({
-              status: "success",
-              message: `${section.Section.Course} (${section.SectionId}) successfully enrolled`,
-              waitlisted: false,
-            })
-          } else if (
-            section?.Section.Capacity != null &&
-            numTakenSeats >= section.Section.Capacity &&
-            section.Section.WaitlistCapacity != null &&
-            numWaitlistedSeats < section.Section.WaitlistCapacity &&
-            section.Type === Enrolled_Type.ShoppingCart &&
-            ToWaitlist
-          ) {
-            //input into waitlist if waitlist not full
-            await prisma.enrolled.update({
-              where: {
-                User_SectionId: {
-                  User: ctx.auth.userId,
-                  SectionId: section.SectionId,
-                },
-              },
-              data: {
-                Type: "Waitlist",
-                Seat: numWaitlistedSeats + 1,
-              },
-            })
-
-            transactions.push({
-              status: "success",
-              message: `${section.Section.Course} (${section.SectionId}) WAITLISTED`,
-              waitlisted: false,
-            })
-          } else {
-            transactions.push({
-              status: "failure",
-              message: "Class is full",
-              waitlisted: false,
-            })
-          }
-        } catch (e) {
-          transactions.push({
-            status: "failure",
-            message: "Could not enroll in class due to database error",
-            waitlisted: false,
-          })
-        }
+        transactions.push(enroll(ctx.auth.userId, SectionId, ToWaitlist))
       }
 
-      return transactions
+      return await Promise.all(transactions)
     }),
 })
 
