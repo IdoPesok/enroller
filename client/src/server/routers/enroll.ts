@@ -7,7 +7,9 @@ import {
   EnrollmentTransaction,
   enrolledSchema,
 } from "@/interfaces/EnrolledTypes"
-import { Enrolled_Type } from "@prisma/client"
+import { Enrolled, Enrolled_Type } from "@prisma/client"
+import { internalServerError } from "@/lib/trpc"
+import { TRPCError } from "@trpc/server"
 
 async function enroll(
   userId: string,
@@ -106,6 +108,94 @@ async function enroll(
   }
 }
 
+async function drop(
+  userId: string,
+  sectionId: number
+): Promise<void | TRPCError> {
+  try {
+    const enrolled = await prisma.enrolled.findFirst({
+      where: {
+        User: userId,
+        SectionId: sectionId,
+      },
+    })
+
+    if (!enrolled) {
+      return internalServerError("Could not find enrolled record")
+    }
+
+    await prisma.enrolled.delete({
+      where: {
+        User_SectionId: {
+          User: userId,
+          SectionId: sectionId,
+        },
+      },
+    })
+
+    if (enrolled.Type === Enrolled_Type.Enrolled && enrolled.Seat != null) {
+      // move all the seat numbers down by one
+      const enrolledRecords = await prisma.enrolled.findMany({
+        where: {
+          SectionId: sectionId,
+          Type: Enrolled_Type.Enrolled,
+          Seat: {
+            gt: enrolled.Seat ?? undefined,
+          },
+        },
+      })
+
+      const transactions: Promise<Enrolled>[] = []
+      for (const enrolledRecord of enrolledRecords) {
+        if (!enrolledRecord.Seat) continue
+        transactions.push(
+          prisma.enrolled.update({
+            where: {
+              User_SectionId: {
+                User: enrolledRecord.User,
+                SectionId: sectionId,
+              },
+            },
+            data: {
+              Seat: enrolledRecord.Seat - 1,
+            },
+          })
+        )
+      }
+
+      await Promise.all(transactions)
+
+      const waitlisted = await prisma.enrolled.findFirst({
+        where: {
+          SectionId: sectionId,
+          Type: Enrolled_Type.Waitlist,
+        },
+        orderBy: {
+          Seat: "asc",
+        },
+      })
+
+      // if there is a waitlist, move the first person in the waitlist to enrolled
+      if (waitlisted) {
+        await prisma.enrolled.update({
+          where: {
+            User_SectionId: {
+              User: waitlisted.User,
+              SectionId: sectionId,
+            },
+          },
+          data: {
+            Type: Enrolled_Type.Enrolled,
+            Seat: enrolledRecords.length + 1,
+          },
+        })
+      }
+    }
+  } catch (e) {
+    return internalServerError("Could not drop class due to database error")
+  }
+}
+
 export const enrollRouter = router({
   create: studentProcedure
     .input(enrolledSchema)
@@ -148,16 +238,7 @@ export const enrollRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const deletedSection = await prisma.enrolled.delete({
-        where: {
-          User_SectionId: {
-            User: ctx.auth.userId,
-            SectionId: input.SectionId,
-          },
-        },
-      })
-
-      return deletedSection
+      return await drop(ctx.auth.userId, input.SectionId)
     }),
   list: studentProcedure.query(async ({ ctx }) => {
     const enrolled = await prisma.enrolled.findMany({
@@ -218,16 +299,7 @@ export const enrollRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const enrolled = await prisma.enrolled.delete({
-        where: {
-          User_SectionId: {
-            User: input.UserId,
-            SectionId: input.SectionId,
-          },
-        },
-      })
-
-      return enrolled
+      return await drop(input.UserId, input.SectionId)
     }),
   listShoppingCart: studentProcedure
     .input(
