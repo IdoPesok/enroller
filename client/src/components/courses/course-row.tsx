@@ -38,6 +38,7 @@ export default function CourseRow({ children, code }: Props) {
       </TableRow>
       {expanded && (
         <CourseExpandedRow
+          columnCount={React.Children.count(children)}
           courseCode={code}
           onClick={() => setExpanded(false)}
         />

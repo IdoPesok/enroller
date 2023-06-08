@@ -1,5 +1,4 @@
-import React, { useState } from "react"
-import { prereqsString } from "@/lib/prereqs"
+import React from "react"
 import {
   Card,
   CardContent,
@@ -7,10 +6,16 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card"
+import { cn } from "@/lib/utils"
 
-const SkeletonCourseCard = () => {
+interface Props {
+  className?: string
+  descriptionRowCount?: number
+}
+
+const SkeletonCourseCard = ({ className, descriptionRowCount = 4 }: Props) => {
   return (
-    <Card className="animate-pulse">
+    <Card className={cn("animate-pulse", className)}>
       <CardHeader>
         <CardTitle className="mb-5">
           <span className="rounded bg-slate-200 h-6 text-left w-24 font-normal float-left" />
@@ -22,10 +27,15 @@ const SkeletonCourseCard = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
-        <p className="rounded bg-slate-200 h-6" />
-        <p className="rounded bg-slate-200 h-6" />
-        <p className="rounded bg-slate-200 h-6" />
-        <p className="rounded bg-slate-200 h-6 w-50" />
+        {Array.from({ length: descriptionRowCount }).map((_, i) => (
+          <p
+            key={i}
+            className={cn(
+              "rounded bg-slate-200 h-6",
+              i === descriptionRowCount - 1 ? "w-1/2" : "w-full"
+            )}
+          />
+        ))}
       </CardContent>
     </Card>
   )
