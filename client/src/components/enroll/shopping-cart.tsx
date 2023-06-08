@@ -16,6 +16,7 @@ import { Check } from "lucide-react"
 import { Checkbox } from "../ui/checkbox"
 import { Switch } from "../ui/switch"
 import Link from "next/link"
+import { useToast } from "../ui/use-toast"
 
 type Props = React.ComponentProps<typeof Card> & {
   hiddenSections: number[]
@@ -31,6 +32,7 @@ export default function ShoppingCart({
   ...props
 }: Props) {
   const utils = trpc.useContext()
+  const { toast } = useToast()
   // const [cartSections, updateSections] = React.useState(trpc.enroll.listShoppingCart.useQuery(
   //   {
   //     term: quarter!,
@@ -55,9 +57,15 @@ export default function ShoppingCart({
     },
   })
 
+  //TODO: different toasts for different statuses: waitlisted, enrolled, not enrolled (check if in waitlist, shopping cart, or enrolled)
   const enrollSect = trpc.enroll.enrollSection.useMutation({
     onSuccess: async () => {
       await cartSections.refetch()
+      toast({
+        title: "Enroll success!",
+        description: "Section was successfully enrolled.",
+        variant: "success",
+      })
       utils.home.userSections.invalidate()
     },
   })
