@@ -111,7 +111,7 @@ async function enroll(
 async function drop(
   userId: string,
   sectionId: number
-): Promise<void | TRPCError> {
+): Promise<Enrolled> {
   try {
     const enrolled = await prisma.enrolled.findFirst({
       where: {
@@ -121,10 +121,10 @@ async function drop(
     })
 
     if (!enrolled) {
-      return internalServerError("Could not find enrolled record")
+      throw internalServerError("Could not find enrolled record")
     }
 
-    await prisma.enrolled.delete({
+    const dropped = await prisma.enrolled.delete({
       where: {
         User_SectionId: {
           User: userId,
@@ -191,8 +191,10 @@ async function drop(
         })
       }
     }
+
+    return dropped;
   } catch (e) {
-    return internalServerError("Could not drop class due to database error")
+    throw internalServerError("Could not drop class due to database error")
   }
 }
 
