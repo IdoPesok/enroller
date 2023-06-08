@@ -46,18 +46,30 @@ export default function ShoppingCart({
 
   //TODO: different toasts for different statuses: waitlisted, enrolled, not enrolled (check if in waitlist, shopping cart, or enrolled)
   const enrollSect = trpc.enroll.enrollSection.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (transactions) => {
       utils.home.userSections.invalidate()
       await cartSections.refetch()
-      toast({
-        title: "Enroll success!",
-        description: "Section was successfully enrolled.",
-        variant: "success",
-      })
+      for (const { status, message, waitlisted } of transactions) {
+        if (status === "success") {
+          toast({
+            title: waitlisted
+              ? "Waitlisted for section"
+              : "Enrolled in section",
+            description: message,
+            variant: "success",
+          })
+        } else {
+          toast({
+            title: "Failed to enroll in section",
+            description: message,
+            variant: "success",
+          })
+        }
+      }
     },
     onError: (error) => {
       toast({
-        title: "Enroll failed!",
+        title: "Enroll endpoint error",
         description: error.message,
         variant: "destructive",
       })

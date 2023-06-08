@@ -21,5 +21,5 @@ export type EnrolledWithUserData = Enrolled & {
 export interface EnrollmentTransaction {
   status: "success" | "failure"
   message: string
-  waitlisted: boolean
+  waitlisted?: boolean
 }

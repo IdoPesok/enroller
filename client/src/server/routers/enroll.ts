@@ -14,7 +14,7 @@ import { TRPCError } from "@trpc/server"
 async function enroll(
   userId: string,
   sectionId: number,
-  waitlist?: boolean
+  toWaitlist?: boolean
 ): Promise<EnrollmentTransaction> {
   try {
     const numTakenSeats = await prisma.enrolled.count({
@@ -31,7 +31,7 @@ async function enroll(
       },
     })
 
-    const section = await prisma.enrolled.findFirst({
+    const carted = await prisma.enrolled.findFirst({
       where: {
         User: userId,
         SectionId: sectionId,
@@ -42,11 +42,15 @@ async function enroll(
       },
     })
 
-    if (
-      section?.Section.Capacity != null &&
-      numTakenSeats < section.Section.Capacity &&
-      section.Type == Enrolled_Type.ShoppingCart
-    ) {
+    if (!carted) {
+      return {
+        status: "failure",
+        message: `section with id ${sectionId} does not exist`,
+      }
+    }
+    const section = carted.Section
+
+    if (section.Capacity && numTakenSeats < section.Capacity) {
       await prisma.enrolled.update({
         where: {
           User_SectionId: {
@@ -62,16 +66,12 @@ async function enroll(
 
       return {
         status: "success",
-        message: `${section.Section.Course} (${section.SectionId}) successfully enrolled`,
-        waitlisted: false,
+        message: `${section.Course} (${section.SectionId}) successfully enrolled`,
       }
     } else if (
-      section?.Section.Capacity != null &&
-      numTakenSeats >= section.Section.Capacity &&
-      section.Section.WaitlistCapacity != null &&
-      numWaitlistedSeats < section.Section.WaitlistCapacity &&
-      section.Type === Enrolled_Type.ShoppingCart &&
-      waitlist
+      section.WaitlistCapacity &&
+      numWaitlistedSeats < section.WaitlistCapacity &&
+      toWaitlist
     ) {
       //input into waitlist if waitlist not full
       await prisma.enrolled.update({
@@ -89,21 +89,19 @@ async function enroll(
 
       return {
         status: "success",
-        message: `${section.Section.Course} (${section.SectionId}) WAITLISTED`,
-        waitlisted: false,
+        message: `${section.Course} (${section.SectionId}) WAITLISTED`,
+        waitlisted: true,
       }
     } else {
       return {
         status: "failure",
         message: "Class is full",
-        waitlisted: false,
       }
     }
   } catch (e) {
     return {
       status: "failure",
       message: "Could not enroll in class due to database error",
-      waitlisted: false,
     }
   }
 }
