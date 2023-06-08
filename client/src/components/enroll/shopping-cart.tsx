@@ -17,6 +17,7 @@ import { Checkbox } from "../ui/checkbox"
 import { Switch } from "../ui/switch"
 import Link from "next/link"
 import { useToast } from "../ui/use-toast"
+import { ButtonSpinner } from "../ui/button-spinner"
 
 type Props = React.ComponentProps<typeof Card> & {
   hiddenSections: number[]
@@ -33,14 +34,7 @@ export default function ShoppingCart({
 }: Props) {
   const utils = trpc.useContext()
   const { toast } = useToast()
-  // const [cartSections, updateSections] = React.useState(trpc.enroll.listShoppingCart.useQuery(
-  //   {
-  //     term: quarter!,
-  //   },
-  //   {
-  //     enabled: Boolean(quarter),
-  //   }
-  // ));
+
   const cartSections = trpc.enroll.listShoppingCart.useQuery(
     {
       term: quarter!,
@@ -50,23 +44,23 @@ export default function ShoppingCart({
     }
   )
 
-  const enrollCart = trpc.enroll.enrollShoppingCart.useMutation({
-    onSuccess: async () => {
-      await cartSections.refetch()
-      utils.home.userSections.invalidate()
-    },
-  })
-
   //TODO: different toasts for different statuses: waitlisted, enrolled, not enrolled (check if in waitlist, shopping cart, or enrolled)
   const enrollSect = trpc.enroll.enrollSection.useMutation({
     onSuccess: async () => {
+      utils.home.userSections.invalidate()
       await cartSections.refetch()
       toast({
         title: "Enroll success!",
         description: "Section was successfully enrolled.",
         variant: "success",
       })
-      utils.home.userSections.invalidate()
+    },
+    onError: (error) => {
+      toast({
+        title: "Enroll failed!",
+        description: error.message,
+        variant: "destructive",
+      })
     },
   })
 
@@ -79,32 +73,28 @@ export default function ShoppingCart({
     }
   }
 
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
+    let sectionIds = cartSections.data?.map((sect) => sect.SectionId)
+    sectionIds = sectionIds?.filter(
+      (sectionId) => !hiddenSections.includes(sectionId)
+    )
 
-    //TODO: for all sections not hidden, call enroll on them :)
-    if(cartSections?.data != null){
-      for(var sect of cartSections?.data){
-        enrollSect.mutate({
-          SectionId: sect.SectionId,
-          ToWaitlist: true //TODO: placeholder until I input logic here from dontwaitlist
-        })
-      }
+    if (!sectionIds || sectionIds.length === 0) {
+      toast({
+        title: "Enroll failed!",
+        description: "No sections selected.",
+        variant: "destructive",
+      })
+      return
     }
 
-    //enrollCart.mutate() 
-
-    //should go through each section in the cart and enroll if valid
-    //don't enroll hidden sections
-
-    //check if the class is under "dontWaitlist before waitlisting"
-    //input true or false to waitlist
-
-    //await mutate return and then refetch
-    cartSections.refetch()
-    //updateCart(true)
-
+    enrollSect.mutateAsync(
+      sectionIds.map((id) => ({
+        SectionId: id,
+        ToWaitlist: !dontWaitlist.includes(id),
+      }))
+    )
   }
-
 
   const skeletonLoader = (
     <div>
@@ -152,8 +142,6 @@ export default function ShoppingCart({
           <ErrorMessage message={cartSections.error.message} />
         ) : cartSections.data.length === 0 ? (
           emptyWarning
-        ) : enrollCart.isLoading ? (
-          skeletonLoader
         ) : enrollSect.isLoading ? (
           skeletonLoader
         ) : (
@@ -235,10 +223,20 @@ export default function ShoppingCart({
       <CardFooter>
         <Button
           className="w-full"
-          disabled={!cartSections.data || cartSections.data?.length === 0}
+          disabled={
+            !cartSections.data ||
+            cartSections.data?.length === 0 ||
+            hiddenSections.length === cartSections.data?.length ||
+            enrollSect.isLoading
+          }
           onClick={handleEnroll}
         >
-          <Check className="mr-2 h-4 w-4" /> Enroll
+          {enrollSect.isLoading ? (
+            <ButtonSpinner className="mr-2" />
+          ) : (
+            <Check className="mr-2 h-4 w-4" />
+          )}
+          Enroll
         </Button>
       </CardFooter>
     </Card>
