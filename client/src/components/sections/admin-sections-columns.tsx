@@ -15,6 +15,12 @@ export const getAdminSectionsColumns = (
   return [
     {
       header: ({ column }) => (
+        <DataTableSortableColumnHeader column={column} title="Catalog Year" />
+      ),
+      accessorKey: "Courses.CatalogYear",
+    },
+    {
+      header: ({ column }) => (
         <DataTableSortableColumnHeader column={column} title="Course" />
       ),
       accessorKey: "Course",

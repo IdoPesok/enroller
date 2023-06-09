@@ -6,7 +6,6 @@ import {
   ZodSectionObject,
 } from "@/interfaces/SectionTypes"
 import { fetchCatalogYear } from "@/lib/catalog-year"
-import { Enrolled_Type } from "@prisma/client"
 import { getSectionsWithCounts } from "@/lib/sections"
 
 export const sectionsRouter = router({

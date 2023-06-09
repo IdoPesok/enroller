@@ -77,8 +77,6 @@ export const SectionForm = ({
   sheetOpen,
   setSheetOpen,
 }: Props) => {
-  const terms = trpc.term.list.useQuery()
-
   const form = useForm<z.infer<typeof sectionFormSchema>>({
     resolver: zodResolver(sectionFormSchema),
   })
