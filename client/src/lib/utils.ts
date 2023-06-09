@@ -1,4 +1,5 @@
 import { ClassValue, clsx } from "clsx"
+import { parse } from "date-fns/esm"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -59,14 +60,5 @@ export function addSearchModifiers(search: string): string {
 }
 
 export function getDateTimeFromString(str: string): Date {
-  const startDateTime = new Date(0)
-  const startTime = str.split(":")
-  if (startTime[1].includes("PM")) {
-    startDateTime.setHours(parseInt(startTime[0]) + 12)
-  } else {
-    startDateTime.setHours(parseInt(startTime[0]))
-  }
-  startDateTime.setMinutes(parseInt(startTime[1]))
-
-  return startDateTime
+  return parse(str, "hh:mm a", new Date(0))
 }
