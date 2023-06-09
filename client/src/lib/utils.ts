@@ -60,5 +60,7 @@ export function addSearchModifiers(search: string): string {
 }
 
 export function getDateTimeFromString(str: string): Date {
-  return parse(str, "hh:mm a", new Date(0))
+  const date = parse(str, "hh:mm a", new Date(0))
+  date.setMilliseconds(100) // sacrifice to the prisma gods
+  return date
 }
