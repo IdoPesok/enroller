@@ -14,17 +14,17 @@ import {
 import { trpc } from "@/lib/trpc"
 import { ButtonSpinner } from "../ui/button-spinner"
 import { useToast } from "../ui/use-toast"
-import { SectionWithCourse } from "@/interfaces/SectionTypes"
+import { SectionsWithCourseAndCounts } from "@/interfaces/SectionTypes"
 
 export interface AdminSectionRowActionHandlers {
   handleRefresh: () => void
-  handleEdit: (row: Row<SectionWithCourse>) => void
-  handleShowStudents: (row: Row<SectionWithCourse>) => void
+  handleEdit: (row: Row<SectionsWithCourseAndCounts>) => void
+  handleShowStudents: (row: Row<SectionsWithCourseAndCounts>) => void
 }
 
 interface DataTableRowActionsProps<TData>
   extends AdminSectionRowActionHandlers {
-  row: Row<SectionWithCourse>
+  row: Row<SectionsWithCourseAndCounts>
 }
 
 export function AdminSectionsRowActions<TData>({
