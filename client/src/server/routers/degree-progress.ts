@@ -105,32 +105,32 @@ export const degreeProgressRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-    // make sure section is not null
-    let sections = await prisma.enrolled.findMany({
-      where: {
-        User: ctx.auth.userId,
-        Type: Enrolled_Type.Enrolled,
-      },
-      include: {
-        Section: {
-          include: {
-            Courses: true,
+      // make sure section is not null
+      let sections = await prisma.enrolled.findMany({
+        where: {
+          User: ctx.auth.userId,
+          Type: Enrolled_Type.Enrolled,
+        },
+        include: {
+          Section: {
+            include: {
+              Courses: true,
+            },
           },
         },
-      },
-    })
+      })
 
-    if (!sections) return 0
+      if (!sections) return 0
 
-    if (input.term) {
-      sections = sections.filter((e) => e.Section.TermId === input.term)
-    }
+      if (input.term) {
+        sections = sections.filter((e) => e.Section.TermId === input.term)
+      }
 
-    const units = sections.map(({ Section }) => Section.Courses.MinUnits)
-    return units.reduce((a, b) => {
-      return b ? a! + b : a
-    }, 0)
-  }),
+      const units = sections.map(({ Section }) => Section.Courses.MinUnits)
+      return units.reduce((a, b) => {
+        return b ? a! + b : a
+      }, 0)
+    }),
 })
 
 export type AppRouter = typeof degreeProgressRouter
