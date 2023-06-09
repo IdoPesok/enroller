@@ -64,9 +64,25 @@ async function enroll(
         },
       })
 
+      const data = await prisma.enrolled.findFirst({
+        where: {
+          User: userId,
+          SectionId: section.SectionId,
+        },
+        include: {
+          Section: true,
+        },
+      })
+
+      if (!data) {
+        throw internalServerError("Could not find enrolled record")
+      }
+
       return {
         status: "success",
         message: `${section.Course} (${section.SectionId}) successfully enrolled`,
+        data: data,
+        waitlisted: false,
       }
     } else if (
       section.WaitlistCapacity &&
@@ -87,9 +103,24 @@ async function enroll(
         },
       })
 
+      const data = await prisma.enrolled.findFirst({
+        where: {
+          User: userId,
+          SectionId: section.SectionId,
+        },
+        include: {
+          Section: true,
+        },
+      })
+
+      if (!data) {
+        throw internalServerError("Could not find enrolled record")
+      }
+
       return {
         status: "success",
         message: `${section.Course} (${section.SectionId}) WAITLISTED`,
+        data: data,
         waitlisted: true,
       }
     } else {
@@ -106,10 +137,7 @@ async function enroll(
   }
 }
 
-async function drop(
-  userId: string,
-  sectionId: number
-): Promise<Enrolled> {
+async function drop(userId: string, sectionId: number): Promise<Enrolled> {
   try {
     const enrolled = await prisma.enrolled.findFirst({
       where: {
@@ -190,7 +218,7 @@ async function drop(
       }
     }
 
-    return dropped;
+    return dropped
   } catch (e) {
     throw internalServerError("Could not drop class due to database error")
   }

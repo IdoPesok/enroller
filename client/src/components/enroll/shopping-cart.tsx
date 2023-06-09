@@ -49,19 +49,19 @@ export default function ShoppingCart({
     onSuccess: async (transactions) => {
       utils.home.userSections.invalidate()
       await cartSections.refetch()
-      for (const { status, message, waitlisted } of transactions) {
-        if (status === "success") {
+      for (const tsx of transactions) {
+        if (tsx.status === "success") {
           toast({
-            title: waitlisted
-              ? "Waitlisted for section"
-              : "Enrolled in section",
-            description: message,
-            variant: "success",
+            title: tsx.waitlisted
+              ? `Waitlisted for ${tsx.data.Section.Course} (${tsx.data.SectionId})`
+              : `Enrolled in ${tsx.data.Section.Course} (${tsx.data.SectionId})`,
+            description: tsx.message,
+            variant: tsx.waitlisted ? "warning" : "success",
           })
         } else {
           toast({
             title: "Failed to enroll in section",
-            description: message,
+            description: tsx.message,
             variant: "success",
           })
         }

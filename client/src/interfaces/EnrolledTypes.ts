@@ -18,8 +18,14 @@ export type EnrolledWithUserData = Enrolled & {
   userData: User
 }
 
-export interface EnrollmentTransaction {
-  status: "success" | "failure"
-  message: string
-  waitlisted?: boolean
-}
+export type EnrollmentTransaction =
+  | {
+      status: "success"
+      data: EnrolledWithSection
+      message: string
+      waitlisted: boolean
+    }
+  | {
+      status: "failure"
+      message: string
+    }
