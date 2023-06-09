@@ -71,6 +71,18 @@ const checkAndPushConflict = (
   v: (typeof DateValueArr)[number],
   conflictEvents: CalendarConflictEvent[]
 ) => {
+  // make sure all dates have 0 milliseconds and seconds
+  // set them as the same date
+  [sectionOneStart, sectionOneEnd, sectionTwoStart, sectionTwoEnd].forEach(
+    (date) => {
+      date.setMilliseconds(0)
+      date.setSeconds(0)
+      date.setFullYear(2023)
+      date.setMonth(5)
+      date.setDate(7)
+    }
+  )
+
   if (sectionOneStart < sectionTwoEnd && sectionOneEnd > sectionTwoStart) {
     conflictEvents.push(createConflictEvent(v, sectionOneStart, sectionOneEnd))
   } else if (
