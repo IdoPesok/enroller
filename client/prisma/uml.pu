@@ -124,6 +124,7 @@ entity Majors {
 
 entity User <<External>> {
   * Id: String
+  * Email: String
   FlowchartId: String?
   OnboardingComplete: Boolean?
   Role: Role_Type?
