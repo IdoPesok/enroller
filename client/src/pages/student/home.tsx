@@ -154,7 +154,9 @@ export default function Home() {
     </TableHead>
   ))
 
-  const enrolledUnits = trpc.degreeProgress.enrolledUnits.useQuery()
+  const enrolledUnits = trpc.degreeProgress.enrolledUnits.useQuery({
+    term: term!,
+  })
   let studentStatus = "Full-Time"
   if (enrolledUnits.data! < 12) {
     if (enrolledUnits.data === 0) {
