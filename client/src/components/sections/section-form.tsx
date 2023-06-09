@@ -119,8 +119,8 @@ export const SectionForm = ({
           }
         }
 
-        const startDate = new Date(updatingSection.Start)
-        const endDate = new Date(updatingSection.End)
+        const startDate = updatingSection.Start
+        const endDate = updatingSection.End
 
         // 15:10 18:00 needs to be converted to 03:10 PM and 06:00 PM
         startTime = startDate.toLocaleTimeString([], {
