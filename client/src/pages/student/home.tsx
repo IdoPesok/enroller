@@ -75,6 +75,7 @@ export default function Home() {
   const deleteMutation = trpc.enroll.delete.useMutation({
     onSuccess: async (data, variables, context) => {
       await utils.home.userSections.invalidate()
+      await utils.degreeProgress.enrolledUnits.invalidate()
       toast({
         title: "Section dropped!",
         description: "The section was successfully dropped.",
